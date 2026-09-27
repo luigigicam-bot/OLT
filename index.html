@@ -2,13 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>OLT · Recepción de programación</title>
 
+  <!-- Librería para leer Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -21,22 +27,23 @@
       --border: #d0d5dd;
 
       --blue: #2563eb;
-      --blue-hover: #1d4ed8;
+      --blue-soft: #dbeafe;
 
-      --red-bg: #fee2e2;
       --red: #b91c1c;
+      --red-bg: #fee2e2;
 
-      --yellow-bg: #fef3c7;
       --yellow: #92400e;
+      --yellow-bg: #fef3c7;
 
-      --green-bg: #dcfce7;
       --green: #166534;
+      --green-bg: #dcfce7;
 
-      --corrected-bg: #dbeafe;
+      --gray-bg: #f2f4f7;
     }
 
     body {
       margin: 0;
+
       font-family:
         Inter,
         system-ui,
@@ -44,13 +51,14 @@
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+
       background: var(--bg);
       color: var(--text);
     }
 
     header {
       background: #111827;
-      color: white;
+      color: #ffffff;
       padding: 24px 32px;
     }
 
@@ -65,31 +73,52 @@
     }
 
     main {
-      max-width: 1500px;
+      max-width: 1550px;
       margin: auto;
       padding: 30px;
     }
 
     .card {
       background: var(--card);
-      border: 1px solid #e4e7ec;
+
+      border:
+        1px solid
+        #e4e7ec;
+
       border-radius: 12px;
+
       padding: 24px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.04);
+
+      box-shadow:
+        0 2px 6px
+        rgba(0, 0, 0, .04);
+    }
+
+    h2 {
+      margin-top: 0;
     }
 
     .upload-area {
-      border: 2px dashed var(--border);
+      border:
+        2px dashed
+        var(--border);
+
       border-radius: 12px;
+
       padding: 40px;
+
       text-align: center;
+
       transition: .2s;
     }
 
     .upload-area:hover {
-      border-color: var(--blue);
-      background: #f8fbff;
+      border-color:
+        var(--blue);
+
+      background:
+        #f8fbff;
     }
 
     input[type="file"] {
@@ -98,10 +127,16 @@
 
     button {
       border: none;
+
       border-radius: 8px;
-      padding: 10px 16px;
+
+      padding:
+        11px 18px;
+
       font-size: 14px;
+
       font-weight: 600;
+
       cursor: pointer;
     }
 
@@ -121,7 +156,13 @@
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+
+      grid-template-columns:
+        repeat(
+          4,
+          1fr
+        );
+
       gap: 15px;
     }
 
@@ -132,160 +173,404 @@
 
     .summary-box strong {
       display: block;
+
       font-size: 28px;
+
+      margin-top: 4px;
     }
 
     .summary-errors {
-      background: var(--red-bg);
-      color: var(--red);
+      background:
+        var(--red-bg);
+
+      color:
+        var(--red);
     }
 
     .summary-warnings {
-      background: var(--yellow-bg);
-      color: var(--yellow);
+      background:
+        var(--yellow-bg);
+
+      color:
+        var(--yellow);
     }
 
-    .summary-ok {
-      background: var(--green-bg);
-      color: var(--green);
+    .summary-records {
+      background:
+        var(--green-bg);
+
+      color:
+        var(--green);
+    }
+
+    .summary-corrections {
+      background:
+        var(--blue-soft);
+
+      color:
+        #1d4ed8;
     }
 
     .message {
-      padding: 12px 14px;
-      margin: 8px 0;
-      border-radius: 8px;
-      font-size: 14px;
+      padding:
+        12px 14px;
+
+      margin:
+        8px 0;
+
+      border-radius:
+        8px;
+
+      font-size:
+        14px;
+
+      line-height:
+        1.45;
     }
 
     .message.error {
-      background: var(--red-bg);
-      color: var(--red);
+      background:
+        var(--red-bg);
+
+      color:
+        var(--red);
     }
 
     .message.warning {
-      background: var(--yellow-bg);
-      color: var(--yellow);
+      background:
+        var(--yellow-bg);
+
+      color:
+        var(--yellow);
     }
 
     .message.success {
-      background: var(--green-bg);
-      color: var(--green);
+      background:
+        var(--green-bg);
+
+      color:
+        var(--green);
+    }
+
+    .message.info {
+      background:
+        var(--blue-soft);
+
+      color:
+        #1e40af;
+    }
+
+    .legend {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 15px;
+
+      margin:
+        12px 0 18px;
+    }
+
+    .legend-item {
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      font-size:
+        13px;
+
+      color:
+        var(--muted);
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+
+      border-radius:
+        4px;
+    }
+
+    .legend-red {
+      background:
+        var(--red-bg);
+
+      border:
+        1px solid #fecaca;
+    }
+
+    .legend-yellow {
+      background:
+        var(--yellow-bg);
+
+      border:
+        1px solid #fde68a;
+    }
+
+    .legend-blue {
+      background:
+        var(--blue-soft);
+
+      border:
+        1px solid #bfdbfe;
     }
 
     .table-container {
       overflow: auto;
-      max-height: 620px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+
+      max-height:
+        650px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius:
+        10px;
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
-      min-width: 1800px;
-      font-size: 13px;
+
+      border-collapse:
+        collapse;
+
+      min-width:
+        2050px;
+
+      font-size:
+        13px;
     }
 
     th {
       position: sticky;
       top: 0;
+
       z-index: 5;
-      background: #f2f4f7;
-      border-bottom: 1px solid var(--border);
-      padding: 11px;
+
+      background:
+        #f2f4f7;
+
+      border-bottom:
+        1px solid
+        var(--border);
+
+      padding: 10px;
+
       text-align: left;
+
       white-space: nowrap;
     }
 
     td {
-      border-bottom: 1px solid #eaecf0;
-      border-right: 1px solid #eaecf0;
+      border-bottom:
+        1px solid
+        #eaecf0;
+
+      border-right:
+        1px solid
+        #eaecf0;
+
       padding: 4px;
+
       vertical-align: top;
     }
 
     td input {
       width: 100%;
-      min-width: 120px;
+
+      min-width: 115px;
+
       padding: 8px;
-      border: 1px solid transparent;
-      background: transparent;
-      border-radius: 5px;
-      font-size: 13px;
+
+      border:
+        1px solid
+        transparent;
+
+      background:
+        transparent;
+
+      border-radius:
+        5px;
+
+      font-size:
+        13px;
     }
 
     td input:focus {
-      outline: 2px solid #93c5fd;
-      background: white;
+      outline:
+        2px solid
+        #93c5fd;
+
+      background:
+        white;
     }
 
     td.error-cell {
-      background: var(--red-bg);
+      background:
+        var(--red-bg);
     }
 
     td.error-cell input {
-      color: var(--red);
+      color:
+        var(--red);
+
       font-weight: 600;
     }
 
     td.warning-cell {
-      background: var(--yellow-bg);
+      background:
+        var(--yellow-bg);
     }
 
     td.corrected-cell {
-      background: var(--corrected-bg);
+      background:
+        var(--blue-soft);
+    }
+
+    .row-number {
+      min-width: 65px;
+
+      text-align:
+        center;
+
+      background:
+        #f9fafb;
+
+      font-weight:
+        600;
+    }
+
+    .actions {
+      display: flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      gap: 15px;
+    }
+
+    .status {
+      color:
+        var(--muted);
+
+      font-size:
+        14px;
     }
 
     .hidden {
       display: none;
     }
 
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
+    .success-screen {
+      text-align: center;
+
+      padding:
+        35px 20px;
     }
 
-    .status {
-      color: var(--muted);
-      font-size: 14px;
+    .success-icon {
+      font-size: 54px;
     }
 
-    @media (max-width: 800px) {
+    .success-screen h2 {
+      color:
+        var(--green);
+
+      margin-bottom:
+        10px;
+    }
+
+    .success-details {
+      display: inline-block;
+
+      text-align: left;
+
+      margin-top: 15px;
+
+      padding: 15px 25px;
+
+      background:
+        var(--green-bg);
+
+      border-radius:
+        10px;
+
+      color:
+        var(--green);
+    }
+
+    @media (
+      max-width: 900px
+    ) {
+
       main {
         padding: 15px;
       }
 
       .summary {
-        grid-template-columns: 1fr;
+        grid-template-columns:
+          1fr 1fr;
       }
 
       .actions {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction:
+          column;
+
+        align-items:
+          stretch;
       }
+
     }
+
   </style>
 </head>
 
 <body>
 
 <header>
-  <h1>OLT · Recepción de programación</h1>
-  <p>Validación, homologación y envío de programación OLT</p>
+
+  <h1>
+    OLT · Recepción de programación
+  </h1>
+
+  <p>
+    Validación, homologación y envío de programación OLT
+  </p>
+
 </header>
 
 <main>
 
-  <section class="card">
-    <h2>1. Cargar programación</h2>
+  <!-- =====================================================
+       CARGA
+  ====================================================== -->
 
-    <div class="upload-area">
-      <strong>Selecciona el archivo Excel enviado por Operaciones</strong>
+  <section
+    class="card"
+    id="uploadCard"
+  >
+
+    <h2>
+      1. Cargar programación
+    </h2>
+
+    <div
+      class="upload-area"
+    >
+
+      <strong>
+        Selecciona el Excel enviado por Operaciones
+      </strong>
 
       <p>
-        El archivo será validado y homologado antes de permitir el envío.
+        El sistema detectará automáticamente la plantilla,
+        encabezados y registros.
       </p>
 
       <input
@@ -293,63 +578,243 @@
         id="excelFile"
         accept=".xlsx,.xls,.xlsm,.csv"
       >
+
     </div>
+
   </section>
 
-  <section id="resultsSection" class="hidden">
 
-    <div class="card">
-      <h2>2. Resultado de validación</h2>
+  <!-- =====================================================
+       RESULTADOS
+  ====================================================== -->
 
-      <div class="summary">
+  <section
+    id="resultsSection"
+    class="hidden"
+  >
 
-        <div class="summary-box summary-errors">
-          <span>Errores</span>
-          <strong id="errorCount">0</strong>
-          <small>Bloquean el envío</small>
+    <div
+      class="card"
+    >
+
+      <h2>
+        2. Resultado de validación
+      </h2>
+
+      <div
+        class="summary"
+      >
+
+        <div
+          class="summary-box summary-errors"
+        >
+
+          <span>
+            Errores
+          </span>
+
+          <strong
+            id="errorCount"
+          >
+            0
+          </strong>
+
+          <small>
+            Bloquean el envío
+          </small>
+
         </div>
 
-        <div class="summary-box summary-warnings">
-          <span>Advertencias</span>
-          <strong id="warningCount">0</strong>
-          <small>No bloquean el envío</small>
+
+        <div
+          class="summary-box summary-warnings"
+        >
+
+          <span>
+            Advertencias
+          </span>
+
+          <strong
+            id="warningCount"
+          >
+            0
+          </strong>
+
+          <small>
+            No bloquean
+          </small>
+
         </div>
 
-        <div class="summary-box summary-ok">
-          <span>Registros</span>
-          <strong id="rowCount">0</strong>
-          <small>Filas procesadas</small>
+
+        <div
+          class="summary-box summary-records"
+        >
+
+          <span>
+            Registros
+          </span>
+
+          <strong
+            id="rowCount"
+          >
+            0
+          </strong>
+
+          <small>
+            Registros encontrados
+          </small>
+
+        </div>
+
+
+        <div
+          class="summary-box summary-corrections"
+        >
+
+          <span>
+            Homologaciones
+          </span>
+
+          <strong
+            id="correctionCount"
+          >
+            0
+          </strong>
+
+          <small>
+            Correcciones automáticas
+          </small>
+
         </div>
 
       </div>
+
     </div>
 
-    <div class="card">
-      <h2>Detalle</h2>
-      <div id="messages"></div>
+
+    <!-- ===================================================
+         DIAGNÓSTICO
+    ==================================================== -->
+
+    <div
+      class="card"
+    >
+
+      <h2>
+        Diagnóstico
+      </h2>
+
+      <div
+        id="messages"
+      ></div>
+
     </div>
 
-    <div class="card">
-      <h2>3. Revisar información</h2>
 
-      <p class="status">
-        Puedes modificar directamente las celdas. La validación se recalculará.
+    <!-- ===================================================
+         TABLA
+    ==================================================== -->
+
+    <div
+      class="card"
+    >
+
+      <h2>
+        3. Revisar información
+      </h2>
+
+      <p
+        class="status"
+      >
+        Puedes modificar directamente cualquier celda.
+        La información se volverá a validar automáticamente.
       </p>
 
-      <div class="table-container">
-        <table id="dataTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
+
+      <div
+        class="legend"
+      >
+
+        <div
+          class="legend-item"
+        >
+
+          <span
+            class="legend-color legend-red"
+          ></span>
+
+          Rojo = error obligatorio
+
+        </div>
+
+
+        <div
+          class="legend-item"
+        >
+
+          <span
+            class="legend-color legend-yellow"
+          ></span>
+
+          Amarillo = advertencia
+
+        </div>
+
+
+        <div
+          class="legend-item"
+        >
+
+          <span
+            class="legend-color legend-blue"
+          ></span>
+
+          Azul = corregido automáticamente
+
+        </div>
+
       </div>
+
+
+      <div
+        class="table-container"
+      >
+
+        <table
+          id="dataTable"
+        >
+
+          <thead></thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
     </div>
 
-    <div class="card">
-      <div class="actions">
 
-        <span id="sendStatus" class="status">
+    <!-- ===================================================
+         ENVÍO
+    ==================================================== -->
+
+    <div
+      class="card"
+    >
+
+      <div
+        class="actions"
+      >
+
+        <span
+          id="sendStatus"
+          class="status"
+        >
           Esperando validación.
         </span>
+
 
         <button
           id="sendButton"
@@ -360,85 +825,176 @@
         </button>
 
       </div>
+
     </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       CONFIRMACIÓN
+  ====================================================== -->
+
+  <section
+    id="successSection"
+    class="card hidden success-screen"
+  >
+
+    <div
+      class="success-icon"
+    >
+      ✓
+    </div>
+
+    <h2>
+      Programación registrada correctamente
+    </h2>
+
+    <p>
+      La información fue enviada a
+      <strong>Recepción OLT</strong>.
+    </p>
+
+    <div
+      id="successDetails"
+      class="success-details"
+    ></div>
+
+    <br><br>
+
+    <button
+      class="btn-success"
+      onclick="resetPage()"
+    >
+      Cargar otra programación
+    </button>
 
   </section>
 
 </main>
 
+
 <script>
 
 /* =========================================================
-   CONFIGURACIÓN
+   CONFIGURACIÓN GENERAL
 ========================================================= */
 
-const FUZZY_THRESHOLD = 0.85;
-const FUZZY_DIFFERENCE = 0.10;
-const DEFAULT_YEAR = 2026;
+const DEFAULT_YEAR =
+  2026;
+
+const FUZZY_THRESHOLD =
+  0.85;
+
+const FUZZY_DIFFERENCE =
+  0.10;
+
 
 const APPS_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbzSoIs58p5NxuQjjpIamKHzIWnXqkNjPvHbdTRDu_BjvFttjzOHN66NAEPD8juwT1oS/exec";
 
 
 /* =========================================================
-   COLUMNAS
+   ESTRUCTURA OFICIAL
 ========================================================= */
 
 const COLUMNS = [
+
   "Fec. Despacho",
+
   "Área de OLT",
+
   "Entrega",
+
   "Factura/B.V.",
+
   "GR",
+
   "Am - Pm",
+
   "Cita",
+
   "Razón Social del Cliente",
+
   "Distrito",
+
   "Provincia",
+
   "Departamento",
+
   "Línea",
+
   "Bultos",
+
   "Volumen",
+
   "Peso",
+
   "Tipo de despacho",
+
   "Tipo de Transporte",
+
   "Tipo de Mercaderia",
+
   "Observación"
+
 ];
 
 
 /* =========================================================
-   COLUMNAS OBLIGATORIAS
+   CAMPOS OBLIGATORIOS
 ========================================================= */
 
-const REQUIRED = new Set([
-  "Fec. Despacho",
-  "Área de OLT",
-  "Entrega",
-  "Factura/B.V.",
-  "GR",
-  "Razón Social del Cliente",
-  "Línea",
-  "Tipo de despacho",
-  "Tipo de Transporte",
-  "Tipo de Mercaderia"
-]);
+const REQUIRED =
+  new Set([
+
+    "Fec. Despacho",
+
+    "Área de OLT",
+
+    "Entrega",
+
+    "Factura/B.V.",
+
+    "GR",
+
+    "Razón Social del Cliente",
+
+    "Línea",
+
+    "Tipo de despacho",
+
+    "Tipo de Transporte",
+
+    "Tipo de Mercaderia"
+
+  ]);
 
 
 /* =========================================================
-   OPCIONALES CON ADVERTENCIA
+   CAMPOS OPCIONALES CON ADVERTENCIA
 ========================================================= */
 
-const WARNING_COLUMNS = new Set([
-  "Am - Pm",
-  "Cita",
-  "Distrito",
-  "Provincia",
-  "Departamento",
-  "Bultos",
-  "Volumen",
-  "Peso"
-]);
+const WARNING_COLUMNS =
+  new Set([
+
+    "Am - Pm",
+
+    "Cita",
+
+    "Distrito",
+
+    "Provincia",
+
+    "Departamento",
+
+    "Bultos",
+
+    "Volumen",
+
+    "Peso"
+
+  ]);
 
 
 /* =========================================================
@@ -448,158 +1004,1028 @@ const WARNING_COLUMNS = new Set([
 const CATALOGS = {
 
   "Área de OLT": [
+
     "AREAS CLAVE",
+
     "OLT CONSUMO",
+
     "OLT SALUD"
+
   ],
+
 
   "Línea": [
+
     "FAES FARMA",
+
     "FERQUIM",
+
     "GENOMMA LAB",
+
     "ELEA",
+
     "RECKITT BENCKISER",
+
     "TAKEDA",
+
     "OMPHARMA",
+
     "BIOPAS",
+
     "TECNOFARMA",
+
     "CLINICA INTERNACIONAL"
+
   ],
+
 
   "Tipo de despacho": [
+
     "LIMA",
+
     "PROVINCIA"
+
   ],
+
 
   "Tipo de Transporte": [
+
     "CD SANTA ANITA",
+
     "EXCLUSIVO",
+
     "EN RUTA",
+
     "AEREO",
+
     "TERRESTRE",
+
     "RECOGE CLIENTE"
+
   ],
 
+
   "Tipo de Mercaderia": [
+
     "SECO",
+
     "REFRIGERADO",
+
     "CLIMATIZADO"
+
   ]
+
 };
 
 
 /* =========================================================
-   EQUIVALENCIAS ESPECIALES
+   EQUIVALENCIAS FIJAS DE NEGOCIO
 ========================================================= */
 
 const EXPLICIT_EQUIVALENCES = {
 
+  "Área de OLT": {
+
+    "AREAS CLAVES":
+      "AREAS CLAVE",
+
+    "ÁREAS CLAVES":
+      "AREAS CLAVE",
+
+    "AREA CLAVE":
+      "AREAS CLAVE",
+
+    "ÁREA CLAVE":
+      "AREAS CLAVE"
+
+  },
+
+
   "Línea": {
-    "ELEA PERU": "ELEA",
-    "ELEA PERÚ": "ELEA",
 
-    "ADIUM": "TECNOFARMA",
-    "ADIUM PERU": "TECNOFARMA",
-    "ADIUM PERÚ": "TECNOFARMA",
+    "ELEA PERU":
+      "ELEA",
 
-    "ELE": "ELEA",
-    "ELEO": "ELEA"
+    "ELEA PERÚ":
+      "ELEA",
+
+    "ELE":
+      "ELEA",
+
+    "ELEO":
+      "ELEA",
+
+    "ADIUM":
+      "TECNOFARMA",
+
+    "ADIUM PERU":
+      "TECNOFARMA",
+
+    "ADIUM PERÚ":
+      "TECNOFARMA"
+
+  },
+
+
+  "Tipo de Transporte": {
+
+    "AÉREO":
+      "AEREO"
+
   }
 
 };
 
 
 /* =========================================================
-   ESTADO
+   NOMBRES ALTERNATIVOS DE COLUMNAS
+
+   Aquí solucionamos las DOS plantillas reales.
+========================================================= */
+
+const HEADER_ALIASES = {
+
+  "Fec. Despacho": [
+
+    "FEC DESPACHO",
+
+    "FEC. DESPACHO",
+
+    "FECHA DE DESPACHO",
+
+    "FECHA DESPACHO"
+
+  ],
+
+
+  "Área de OLT": [
+
+    "AREA DE OLT",
+
+    "ÁREA DE OLT",
+
+    "AREA OLT",
+
+    "ÁREA OLT"
+
+  ],
+
+
+  "Entrega": [
+
+    "ENTREGA"
+
+  ],
+
+
+  "Factura/B.V.": [
+
+    "FACTURA/B.V.",
+
+    "FACTURA B.V.",
+
+    "FACTURA BV",
+
+    "FACTURA B V",
+
+    "FACTURA",
+
+    "BOLETA",
+
+    "FACTURA BOLETA"
+
+  ],
+
+
+  "GR": [
+
+    "GR",
+
+    "GUIA",
+
+    "GUÍA",
+
+    "GUIA DE REMISION",
+
+    "GUÍA DE REMISIÓN",
+
+    "GUIA REMISION"
+
+  ],
+
+
+  "Am - Pm": [
+
+    "AM PM",
+
+    "AM - PM",
+
+    "AM-PM",
+
+    "TURNO"
+
+  ],
+
+
+  "Cita": [
+
+    "CITA",
+
+    "HORA CITA",
+
+    "HORARIO CITA"
+
+  ],
+
+
+  "Razón Social del Cliente": [
+
+    "RAZON SOCIAL DEL CLIENTE",
+
+    "RAZÓN SOCIAL DEL CLIENTE",
+
+    "RAZON SOCIAL CLIENTE"
+
+  ],
+
+
+  "Distrito": [
+
+    "DISTRITO"
+
+  ],
+
+
+  "Provincia": [
+
+    "PROVINCIA",
+
+    "PROVINCIA (*)",
+
+    "PROVINCIA *"
+
+  ],
+
+
+  "Departamento": [
+
+    "DEPARTAMENTO"
+
+  ],
+
+
+  "Línea": [
+
+    "LINEA",
+
+    "LÍNEA"
+
+  ],
+
+
+  "Bultos": [
+
+    "BULTOS",
+
+    "BULTO"
+
+  ],
+
+
+  "Volumen": [
+
+    "VOLUMEN"
+
+  ],
+
+
+  "Peso": [
+
+    "PESO",
+
+    "PESO (*)",
+
+    "PESO *"
+
+  ],
+
+
+  "Tipo de despacho": [
+
+    "TIPO DE DESPACHO",
+
+    "TIPO DESPACHO"
+
+  ],
+
+
+  "Tipo de Transporte": [
+
+    "TIPO DE TRANSPORTE",
+
+    "TIPO TRANSPORTE"
+
+  ],
+
+
+  "Tipo de Mercaderia": [
+
+    "TIPO DE MERCADERIA",
+
+    "TIPO DE MERCADERÍA",
+
+    "TIPO MERCADERIA",
+
+    "TIPO MERCADERÍA"
+
+  ],
+
+
+  "Observación": [
+
+    "OBSERVACION",
+
+    "OBSERVACIÓN",
+
+    "OBSERVACIONES"
+
+  ]
+
+};
+
+
+/* =========================================================
+   ESTADO DE LA APLICACIÓN
 ========================================================= */
 
 let rows = [];
 
+
 let validationResult = {
+
   errors: [],
+
   warnings: [],
+
   corrections: []
+
+};
+
+
+let importDiagnostics = {
+
+  fileName: "",
+
+  sheet: "",
+
+  headerRow: null,
+
+  recognizedColumns: [],
+
+  ignoredColumns: [],
+
+  missingColumns: [],
+
+  records: 0
+
 };
 
 
 /* =========================================================
-   UTILIDADES
+   NORMALIZACIÓN
 ========================================================= */
 
-function normalizeText(value) {
+function removeAccents(
+  value
+) {
 
-  if (value === null || value === undefined) {
+  return String(
+    value ?? ""
+  )
+
+    .normalize(
+      "NFD"
+    )
+
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    );
+
+}
+
+
+function normalizeText(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
     return "";
+
   }
 
+
   return String(value)
+
     .trim()
-    .replace(/\s+/g, " ")
+
+    .replace(
+      /\s+/g,
+      " "
+    )
+
     .toUpperCase();
+
 }
 
 
-function removeAccents(text) {
-
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-
-function comparable(value) {
+function comparable(
+  value
+) {
 
   return removeAccents(
-    normalizeText(value)
+    normalizeText(
+      value
+    )
   );
+
 }
 
 
-function isEmpty(value) {
+function normalizeHeader(
+  value
+) {
+
+  return removeAccents(
+    value
+  )
+
+    .toUpperCase()
+
+    .replace(
+      /\(\s*\*\s*\)/g,
+      " "
+    )
+
+    .replace(
+      /\*/g,
+      " "
+    )
+
+    .replace(
+      /[^A-Z0-9]+/g,
+      " "
+    )
+
+    .replace(
+      /\s+/g,
+      " "
+    )
+
+    .trim();
+
+}
+
+
+function isEmpty(
+  value
+) {
 
   return (
+
     value === null ||
+
     value === undefined ||
-    String(value).trim() === ""
+
+    String(value)
+      .trim() === ""
+
   );
+
+}
+
+
+function isMissingOptional(
+  value
+) {
+
+  if (
+    isEmpty(value)
+  ) {
+
+    return true;
+
+  }
+
+
+  const normalized =
+    normalizeText(
+      value
+    );
+
+
+  return (
+
+    normalized === "-" ||
+
+    normalized === "S/D" ||
+
+    normalized === "SD"
+
+  );
+
 }
 
 
 /* =========================================================
-   LEVENSHTEIN
+   MAPA DE ALIAS
 ========================================================= */
 
-function levenshtein(a, b) {
+const HEADER_LOOKUP =
+  new Map();
 
-  a = comparable(a);
-  b = comparable(b);
 
-  const matrix = [];
+Object.entries(
+  HEADER_ALIASES
+)
+.forEach(
+  (
+    [
+      canonical,
+      aliases
+    ]
+  ) => {
 
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
+    HEADER_LOOKUP.set(
+
+      normalizeHeader(
+        canonical
+      ),
+
+      canonical
+
+    );
+
+
+    aliases.forEach(
+      alias => {
+
+        HEADER_LOOKUP.set(
+
+          normalizeHeader(
+            alias
+          ),
+
+          canonical
+
+        );
+
+      }
+    );
+
+  }
+);
+
+
+function getCanonicalHeader(
+  value
+) {
+
+  return (
+
+    HEADER_LOOKUP.get(
+      normalizeHeader(
+        value
+      )
+    )
+
+    ||
+
+    null
+
+  );
+
+}
+
+
+/* =========================================================
+   DETECTAR FILA REAL DE CABECERA
+========================================================= */
+
+function scoreHeaderRow(
+  row
+) {
+
+  const recognized =
+    new Set();
+
+
+  row.forEach(
+    value => {
+
+      const canonical =
+        getCanonicalHeader(
+          value
+        );
+
+
+      if (
+        canonical
+      ) {
+
+        recognized.add(
+          canonical
+        );
+
+      }
+
+    }
+  );
+
+
+  return {
+
+    score:
+      recognized.size,
+
+    columns:
+      [
+        ...recognized
+      ]
+
+  };
+
+}
+
+
+function detectHeaderRow(
+  matrix
+) {
+
+  let best = {
+
+    index: -1,
+
+    score: 0,
+
+    columns: []
+
+  };
+
+
+  const maximumRows =
+    Math.min(
+      matrix.length,
+      30
+    );
+
+
+  for (
+    let rowIndex = 0;
+
+    rowIndex <
+      maximumRows;
+
+    rowIndex++
+  ) {
+
+    const result =
+      scoreHeaderRow(
+        matrix[
+          rowIndex
+        ] || []
+      );
+
+
+    if (
+      result.score >
+      best.score
+    ) {
+
+      best = {
+
+        index:
+          rowIndex,
+
+        score:
+          result.score,
+
+        columns:
+          result.columns
+
+      };
+
+    }
+
   }
 
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
+
+  /*
+    Las plantillas reales tienen
+    bastantes columnas.
+
+    Con 6 coincidencias ya podemos
+    reconocer una plantilla razonablemente.
+  */
+
+  if (
+    best.score < 6
+  ) {
+
+    return null;
+
   }
 
-  for (let i = 1; i <= b.length; i++) {
 
-    for (let j = 1; j <= a.length; j++) {
+  return best;
 
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+}
+
+
+/* =========================================================
+   ENCONTRAR LA HOJA CORRECTA
+========================================================= */
+
+function findBestWorksheet(
+  workbook
+) {
+
+  let best =
+    null;
+
+
+  workbook
+    .SheetNames
+    .forEach(
+      sheetName => {
+
+        const sheet =
+          workbook
+            .Sheets[
+              sheetName
+            ];
+
+
+        /*
+          IMPORTANTE:
+
+          raw:true
+          cellDates:false
+
+          Así evitamos problemas de zona horaria
+          con las fechas de Excel.
+        */
+
+        const matrix =
+          XLSX.utils
+            .sheet_to_json(
+              sheet,
+              {
+
+                header: 1,
+
+                defval: "",
+
+                raw: true,
+
+                blankrows: true
+
+              }
+            );
+
+
+        const header =
+          detectHeaderRow(
+            matrix
+          );
+
+
+        if (
+          !header
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+
+          !best ||
+
+          header.score >
+            best.header.score
+
+        ) {
+
+          best = {
+
+            sheetName,
+
+            sheet,
+
+            matrix,
+
+            header
+
+          };
+
+        }
+
+      }
+    );
+
+
+  return best;
+
+}
+
+
+/* =========================================================
+   MAPEAR COLUMNAS
+========================================================= */
+
+function buildColumnMap(
+  headerRow
+) {
+
+  const map = {};
+
+  const recognized = [];
+
+  const ignored = [];
+
+
+  headerRow.forEach(
+    (
+      header,
+      index
+    ) => {
+
+      const canonical =
+        getCanonicalHeader(
+          header
+        );
+
+
+      if (
+        canonical
+      ) {
+
+        if (
+          map[
+            canonical
+          ] === undefined
+        ) {
+
+          map[
+            canonical
+          ] =
+            index;
+
+
+          recognized.push(
+            String(
+              header
+            ).trim()
+          );
+
+        }
+
+      }
+      else if (
+        !isEmpty(
+          header
+        )
+      ) {
+
+        ignored.push(
+          String(
+            header
+          ).trim()
+        );
+
+      }
+
+    }
+  );
+
+
+  return {
+
+    map,
+
+    recognized,
+
+    ignored
+
+  };
+
+}
+
+
+/* =========================================================
+   FUZZY · LEVENSHTEIN
+========================================================= */
+
+function levenshtein(
+  a,
+  b
+) {
+
+  a =
+    comparable(a);
+
+  b =
+    comparable(b);
+
+
+  const matrix =
+    [];
+
+
+  for (
+    let i = 0;
+    i <= b.length;
+    i++
+  ) {
+
+    matrix[i] =
+      [i];
+
+  }
+
+
+  for (
+    let j = 0;
+    j <= a.length;
+    j++
+  ) {
+
+    matrix[0][j] =
+      j;
+
+  }
+
+
+  for (
+    let i = 1;
+    i <= b.length;
+    i++
+  ) {
+
+    for (
+      let j = 1;
+      j <= a.length;
+      j++
+    ) {
+
+      if (
+        b.charAt(
+          i - 1
+        )
+        ===
+        a.charAt(
+          j - 1
+        )
+      ) {
 
         matrix[i][j] =
-          matrix[i - 1][j - 1];
+          matrix[
+            i - 1
+          ][
+            j - 1
+          ];
 
-      } else {
+      }
+      else {
 
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
+        matrix[i][j] =
+          Math.min(
+
+            matrix[
+              i - 1
+            ][
+              j - 1
+            ] + 1,
+
+            matrix[
+              i
+            ][
+              j - 1
+            ] + 1,
+
+            matrix[
+              i - 1
+            ][
+              j
+            ] + 1
+
+          );
 
       }
 
@@ -607,28 +2033,74 @@ function levenshtein(a, b) {
 
   }
 
-  return matrix[b.length][a.length];
+
+  return matrix[
+    b.length
+  ][
+    a.length
+  ];
+
 }
 
 
-function similarity(a, b) {
+function similarity(
+  a,
+  b
+) {
 
-  const x = comparable(a);
-  const y = comparable(b);
+  const first =
+    comparable(a);
 
-  if (!x.length && !y.length) {
+  const second =
+    comparable(b);
+
+
+  if (
+    !first.length &&
+    !second.length
+  ) {
+
     return 1;
+
   }
+
 
   const maxLength =
-    Math.max(x.length, y.length);
+    Math.max(
 
-  if (!maxLength) {
+      first.length,
+
+      second.length
+
+    );
+
+
+  if (
+    maxLength === 0
+  ) {
+
     return 1;
+
   }
 
-  return 1 -
-    levenshtein(x, y) / maxLength;
+
+  return (
+
+    1 -
+
+    (
+      levenshtein(
+        first,
+        second
+      )
+
+      /
+
+      maxLength
+    )
+
+  );
+
 }
 
 
@@ -636,33 +2108,88 @@ function similarity(a, b) {
    HOMOLOGACIÓN
 ========================================================= */
 
-function homologate(column, originalValue) {
+function homologate(
+  column,
+  originalValue
+) {
 
-  let value = normalizeText(originalValue);
+  const value =
+    normalizeText(
+      originalValue
+    );
 
-  if (!value) {
+
+  if (
+    !value
+  ) {
+
     return {
+
       value: "",
+
       corrected: false
+
     };
+
   }
 
 
+  /*
+    1. EQUIVALENCIAS EXPLÍCITAS
+  */
+
   const equivalents =
-    EXPLICIT_EQUIVALENCES[column];
+    EXPLICIT_EQUIVALENCES[
+      column
+    ];
 
-  if (equivalents) {
 
-    const key = comparable(value);
+  if (
+    equivalents
+  ) {
 
-    for (const [from, to] of Object.entries(equivalents)) {
+    for (
+      const [
+        original,
+        destination
+      ]
+      of
+      Object.entries(
+        equivalents
+      )
+    ) {
 
-      if (comparable(from) === key) {
+      if (
+
+        comparable(
+          original
+        )
+
+        ===
+
+        comparable(
+          value
+        )
+
+      ) {
 
         return {
-          value: to,
-          corrected: true,
-          reason: "equivalencia"
+
+          value:
+            destination,
+
+          corrected:
+            comparable(
+              originalValue
+            )
+            !==
+            comparable(
+              destination
+            ),
+
+          reason:
+            "equivalencia de negocio"
+
         };
 
       }
@@ -672,89 +2199,181 @@ function homologate(column, originalValue) {
   }
 
 
-  const catalog =
-    CATALOGS[column];
+  /*
+    2. CATÁLOGO
+  */
 
-  if (!catalog) {
+  const catalog =
+    CATALOGS[
+      column
+    ];
+
+
+  if (
+    !catalog
+  ) {
 
     return {
+
       value,
+
       corrected:
-        value !== String(originalValue).trim()
+        value !==
+        String(
+          originalValue
+        ).trim()
+
     };
 
   }
 
+
+  /*
+    3. COINCIDENCIA EXACTA
+  */
 
   const exact =
     catalog.find(
-      item =>
-        comparable(item) ===
-        comparable(value)
+      option =>
+
+        comparable(
+          option
+        )
+
+        ===
+
+        comparable(
+          value
+        )
     );
 
-  if (exact) {
+
+  if (
+    exact
+  ) {
 
     return {
-      value: exact,
+
+      value:
+        exact,
+
       corrected:
-        exact !== originalValue
+        String(
+          originalValue
+        ).trim()
+        !==
+        exact
+
     };
 
   }
 
 
+  /*
+    4. FUZZY
+  */
+
   const candidates =
     catalog
-      .map(item => ({
-        item,
-        score:
-          similarity(value, item)
-      }))
+
+      .map(
+        option => ({
+
+          option,
+
+          score:
+            similarity(
+              value,
+              option
+            )
+
+        })
+      )
+
       .sort(
-        (a, b) =>
-          b.score - a.score
+        (
+          a,
+          b
+        ) =>
+
+          b.score -
+          a.score
       );
 
 
-  const best = candidates[0];
+  const first =
+    candidates[0];
+
 
   const second =
-    candidates[1] || {
+    candidates[1]
+    ||
+    {
       score: 0
     };
 
 
   if (
-    best &&
-    best.score >= FUZZY_THRESHOLD &&
+
+    first &&
+
+    first.score >=
+      FUZZY_THRESHOLD &&
+
     (
-      best.score -
+      first.score -
       second.score
-    ) >= FUZZY_DIFFERENCE
+    )
+    >=
+    FUZZY_DIFFERENCE
+
   ) {
 
     return {
-      value: best.item,
-      corrected: true,
+
+      value:
+        first.option,
+
+      corrected:
+        true,
+
       reason:
         `fuzzy ${Math.round(
-          best.score * 100
+          first.score *
+          100
         )}%`
+
     };
 
   }
 
 
   return {
+
     value,
-    corrected: false,
-    invalid: true,
+
+    corrected:
+      false,
+
+    invalid:
+      true,
+
     suggestion:
-      best ? best.item : null,
+      first
+        ?
+        first.option
+        :
+        null,
+
     similarity:
-      best ? best.score : 0
+      first
+        ?
+        first.score
+        :
+        0
+
   };
+
 }
 
 
@@ -763,58 +2382,167 @@ function homologate(column, originalValue) {
 ========================================================= */
 
 const MONTHS = {
+
   ENE: 1,
+  JAN: 1,
+
   FEB: 2,
+
   MAR: 3,
+
   ABR: 4,
+  APR: 4,
+
   MAY: 5,
+
   JUN: 6,
+
   JUL: 7,
+
   AGO: 8,
+  AUG: 8,
+
   SET: 9,
   SEP: 9,
+
   OCT: 10,
+
   NOV: 11,
-  DIC: 12
+
+  DIC: 12,
+  DEC: 12
+
 };
 
 
-function parseDispatchDate(value) {
+function pad(
+  number
+) {
 
-  if (value instanceof Date) {
+  return String(
+    number
+  )
+  .padStart(
+    2,
+    "0"
+  );
 
-    if (!isNaN(value)) {
+}
 
-      return {
-        valid: true,
-        value: formatDate(value)
-      };
 
-    }
+function normalizeYear(
+  year
+) {
+
+  year =
+    Number(
+      year
+    );
+
+
+  if (
+    year < 100
+  ) {
+
+    return (
+      2000 +
+      year
+    );
 
   }
 
 
+  return year;
+
+}
+
+
+function validDate(
+  day,
+  month,
+  year
+) {
+
+  const date =
+    new Date(
+      year,
+      month - 1,
+      day
+    );
+
+
+  return (
+
+    date.getFullYear() ===
+      year
+
+    &&
+
+    date.getMonth() ===
+      month - 1
+
+    &&
+
+    date.getDate() ===
+      day
+
+  );
+
+}
+
+
+function parseDispatchDate(
+  value
+) {
+
+  /*
+    SERIAL NUMÉRICO DE EXCEL
+  */
+
   if (
-    typeof value === "number" &&
+
+    typeof value ===
+      "number"
+
+    &&
+
     window.XLSX
+
   ) {
 
     const parsed =
-      XLSX.SSF.parse_date_code(value);
-
-    if (parsed) {
-
-      const date =
-        new Date(
-          parsed.y,
-          parsed.m - 1,
-          parsed.d
+      XLSX.SSF
+        .parse_date_code(
+          value
         );
 
+
+    if (
+
+      parsed
+
+      &&
+
+      validDate(
+        parsed.d,
+        parsed.m,
+        parsed.y
+      )
+
+    ) {
+
       return {
-        valid: true,
-        value: formatDate(date)
+
+        valid:
+          true,
+
+        value:
+          `${pad(
+            parsed.d
+          )}/${pad(
+            parsed.m
+          )}/${parsed.y}`
+
       };
 
     }
@@ -823,35 +2551,80 @@ function parseDispatchDate(value) {
 
 
   const text =
-    normalizeText(value);
-
-
-  const shortMatch =
-    text.match(
-      /^(\d{1,2})[-\/](ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SET|SEP|OCT|NOV|DIC)$/
+    normalizeText(
+      value
     );
 
 
-  if (shortMatch) {
+  if (
+    !text
+  ) {
+
+    return {
+
+      valid:
+        false,
+
+      value:
+        ""
+
+    };
+
+  }
+
+
+  /*
+    26-SET
+  */
+
+  let match =
+    text.match(
+      /^(\d{1,2})[-\/ ]([A-Z]{3})$/
+    );
+
+
+  if (
+    match
+  ) {
 
     const day =
-      Number(shortMatch[1]);
+      Number(
+        match[1]
+      );
+
 
     const month =
-      MONTHS[shortMatch[2]];
+      MONTHS[
+        match[2]
+      ];
+
 
     if (
+
+      month
+
+      &&
+
       validDate(
         day,
         month,
         DEFAULT_YEAR
       )
+
     ) {
 
       return {
-        valid: true,
+
+        valid:
+          true,
+
         value:
-          `${pad(day)}/${pad(month)}/${DEFAULT_YEAR}`
+          `${pad(
+            day
+          )}/${pad(
+            month
+          )}/${DEFAULT_YEAR}`
+
       };
 
     }
@@ -859,22 +2632,101 @@ function parseDispatchDate(value) {
   }
 
 
-  const complete =
+  /*
+    26-SET-2026
+  */
+
+  match =
     text.match(
-      /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/
+      /^(\d{1,2})[-\/ ]([A-Z]{3})[-\/ ](\d{2,4})$/
     );
 
 
-  if (complete) {
+  if (
+    match
+  ) {
 
     const day =
-      Number(complete[1]);
+      Number(
+        match[1]
+      );
+
 
     const month =
-      Number(complete[2]);
+      MONTHS[
+        match[2]
+      ];
+
 
     const year =
-      Number(complete[3]);
+      normalizeYear(
+        match[3]
+      );
+
+
+    if (
+
+      month
+
+      &&
+
+      validDate(
+        day,
+        month,
+        year
+      )
+
+    ) {
+
+      return {
+
+        valid:
+          true,
+
+        value:
+          `${pad(
+            day
+          )}/${pad(
+            month
+          )}/${year}`
+
+      };
+
+    }
+
+  }
+
+
+  /*
+    YYYY-MM-DD
+  */
+
+  match =
+    text.match(
+      /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/
+    );
+
+
+  if (
+    match
+  ) {
+
+    const year =
+      Number(
+        match[1]
+      );
+
+
+    const month =
+      Number(
+        match[2]
+      );
+
+
+    const day =
+      Number(
+        match[3]
+      );
 
 
     if (
@@ -886,9 +2738,112 @@ function parseDispatchDate(value) {
     ) {
 
       return {
-        valid: true,
+
+        valid:
+          true,
+
         value:
-          `${pad(day)}/${pad(month)}/${year}`
+          `${pad(
+            day
+          )}/${pad(
+            month
+          )}/${year}`
+
+      };
+
+    }
+
+  }
+
+
+  /*
+    DD/MM/YYYY
+
+    Si el segundo número es > 12,
+    entendemos que vino como MM/DD/YYYY.
+  */
+
+  match =
+    text.match(
+      /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/
+    );
+
+
+  if (
+    match
+  ) {
+
+    const first =
+      Number(
+        match[1]
+      );
+
+
+    const second =
+      Number(
+        match[2]
+      );
+
+
+    const year =
+      normalizeYear(
+        match[3]
+      );
+
+
+    let day;
+
+    let month;
+
+
+    if (
+
+      second > 12
+
+      &&
+
+      first <= 12
+
+    ) {
+
+      month =
+        first;
+
+      day =
+        second;
+
+    }
+    else {
+
+      day =
+        first;
+
+      month =
+        second;
+
+    }
+
+
+    if (
+      validDate(
+        day,
+        month,
+        year
+      )
+    ) {
+
+      return {
+
+        valid:
+          true,
+
+        value:
+          `${pad(
+            day
+          )}/${pad(
+            month
+          )}/${year}`
+
       };
 
     }
@@ -897,147 +2852,627 @@ function parseDispatchDate(value) {
 
 
   return {
-    valid: false,
-    value
+
+    valid:
+      false,
+
+    value:
+      value
+
   };
-}
 
-
-function validDate(day, month, year) {
-
-  const date =
-    new Date(
-      year,
-      month - 1,
-      day
-    );
-
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
-
-
-function pad(value) {
-
-  return String(value)
-    .padStart(2, "0");
-}
-
-
-function formatDate(date) {
-
-  return (
-    `${pad(date.getDate())}/` +
-    `${pad(date.getMonth() + 1)}/` +
-    `${date.getFullYear()}`
-  );
 }
 
 
 /* =========================================================
-   MERCADERÍA DESDE OBSERVACIÓN
+   HORAS EXCEL
+
+   Ejemplo:
+   0.333333333 = 08:00
 ========================================================= */
 
-function detectMerchandiseFromObservation(observation) {
+function excelTimeToString(
+  value
+) {
+
+  if (
+
+    typeof value ===
+      "number"
+
+    &&
+
+    value >= 0
+
+    &&
+
+    value < 1
+
+  ) {
+
+    let totalMinutes =
+      Math.round(
+
+        value *
+
+        24 *
+
+        60
+
+      );
+
+
+    totalMinutes =
+      totalMinutes %
+      1440;
+
+
+    const hours =
+      Math.floor(
+        totalMinutes /
+        60
+      );
+
+
+    const minutes =
+      totalMinutes %
+      60;
+
+
+    return (
+
+      `${pad(
+        hours
+      )}:`
+
+      +
+
+      `${pad(
+        minutes
+      )}`
+
+    );
+
+  }
+
+
+  return value;
+
+}
+
+
+/* =========================================================
+   PREPARAR DATOS EXTRAÍDOS
+========================================================= */
+
+function prepareImportedValue(
+  column,
+  value
+) {
+
+  if (
+
+    value === null
+
+    ||
+
+    value === undefined
+
+  ) {
+
+    return "";
+
+  }
+
+
+  /*
+    CITA
+  */
+
+  if (
+    column ===
+      "Cita"
+  ) {
+
+    value =
+      excelTimeToString(
+        value
+      );
+
+
+    if (
+      normalizeText(
+        value
+      ) === "-"
+    ) {
+
+      return "";
+
+    }
+
+
+    return String(
+      value
+    ).trim();
+
+  }
+
+
+  /*
+    AM - PM
+  */
+
+  if (
+    column ===
+      "Am - Pm"
+  ) {
+
+    if (
+      normalizeText(
+        value
+      ) === "-"
+    ) {
+
+      return "";
+
+    }
+
+
+    return String(
+      value
+    ).trim();
+
+  }
+
+
+  /*
+    CAMPOS QUE NO QUEREMOS
+    QUE JS CONVIERTA RARO
+  */
+
+  const textColumns =
+    new Set([
+
+      "Área de OLT",
+
+      "Entrega",
+
+      "Factura/B.V.",
+
+      "GR",
+
+      "Razón Social del Cliente",
+
+      "Distrito",
+
+      "Provincia",
+
+      "Departamento",
+
+      "Línea",
+
+      "Tipo de despacho",
+
+      "Tipo de Transporte",
+
+      "Tipo de Mercaderia",
+
+      "Observación"
+
+    ]);
+
+
+  if (
+    textColumns.has(
+      column
+    )
+  ) {
+
+    return String(
+      value
+    ).trim();
+
+  }
+
+
+  return value;
+
+}
+
+
+/* =========================================================
+   DETECTAR MERCADERÍA EN OBSERVACIÓN
+========================================================= */
+
+function detectMerchandiseFromObservation(
+  observation
+) {
 
   const text =
-    comparable(observation);
+    comparable(
+      observation
+    );
 
-  if (!text) {
+
+  if (
+    !text
+  ) {
+
     return null;
+
   }
 
 
   const matches =
-    CATALOGS["Tipo de Mercaderia"]
-      .filter(
-        item =>
-          text.includes(
-            comparable(item)
+    CATALOGS[
+      "Tipo de Mercaderia"
+    ]
+    .filter(
+      option =>
+
+        text.includes(
+          comparable(
+            option
           )
-      );
+        )
+    );
 
 
-  if (matches.length === 1) {
+  /*
+    SOLO completamos cuando
+    encontramos exactamente un tipo.
+  */
+
+  if (
+    matches.length === 1
+  ) {
+
     return matches[0];
+
   }
 
+
   return null;
+
 }
 
 
 /* =========================================================
-   CARGA EXCEL
+   MERCADERÍA MÚLTIPLE
+========================================================= */
+
+function detectMultipleMerchandise(
+  value
+) {
+
+  const text =
+    comparable(
+      value
+    );
+
+
+  if (
+    !text
+  ) {
+
+    return [];
+
+  }
+
+
+  return CATALOGS[
+    "Tipo de Mercaderia"
+  ]
+  .filter(
+    option =>
+
+      text.includes(
+        comparable(
+          option
+        )
+      )
+  );
+
+}
+
+
+/* =========================================================
+   ABRIR EXCEL
 ========================================================= */
 
 document
-  .getElementById("excelFile")
+  .getElementById(
+    "excelFile"
+  )
   .addEventListener(
     "change",
     handleExcel
   );
 
 
-async function handleExcel(event) {
+async function handleExcel(
+  event
+) {
 
   const file =
-    event.target.files[0];
+    event.target
+      .files[0];
 
-  if (!file) {
+
+  if (
+    !file
+  ) {
+
     return;
+
   }
 
 
   try {
 
+    rows = [];
+
+
+    validationResult = {
+
+      errors: [],
+
+      warnings: [],
+
+      corrections: []
+
+    };
+
+
     const buffer =
-      await file.arrayBuffer();
+      await file
+        .arrayBuffer();
+
+
+    /*
+      IMPORTANTE:
+
+      cellDates:false
+
+      Esto deja las fechas en su valor
+      serial original de Excel y evita
+      errores por zona horaria.
+    */
 
     const workbook =
       XLSX.read(
         buffer,
         {
-          type: "array",
-          cellDates: true
+
+          type:
+            "array",
+
+          cellDates:
+            false
+
         }
       );
 
 
-    const firstSheet =
-      workbook.SheetNames[0];
+    /*
+      BUSCAR HOJA Y ENCABEZADOS
+    */
 
-    const sheet =
-      workbook.Sheets[firstSheet];
+    const detected =
+      findBestWorksheet(
+        workbook
+      );
 
 
-    const rawRows =
-      XLSX.utils.sheet_to_json(
-        sheet,
-        {
-          defval: "",
-          raw: true
+    if (
+      !detected
+    ) {
+
+      throw new Error(
+
+        "No pude encontrar automáticamente los encabezados de la programación."
+
+        +
+
+        "\n\nVerifica que el archivo corresponda al formato OLT."
+
+      );
+
+    }
+
+
+    const {
+      sheetName,
+      matrix,
+      header
+    } =
+      detected;
+
+
+    const headerValues =
+      matrix[
+        header.index
+      ] || [];
+
+
+    const mapping =
+      buildColumnMap(
+        headerValues
+      );
+
+
+    /*
+      COLUMNAS NO PRESENTES
+    */
+
+    const missing =
+      COLUMNS.filter(
+        column =>
+
+          mapping.map[
+            column
+          ]
+          ===
+          undefined
+      );
+
+
+    importDiagnostics = {
+
+      fileName:
+        file.name,
+
+      sheet:
+        sheetName,
+
+      headerRow:
+        header.index + 1,
+
+      recognizedColumns:
+        mapping.recognized,
+
+      ignoredColumns:
+        mapping.ignored,
+
+      missingColumns:
+        missing,
+
+      records:
+        0
+
+    };
+
+
+    /*
+      EXTRAER REGISTROS DESDE
+      LA FILA POSTERIOR AL ENCABEZADO
+    */
+
+    const importedRows =
+      [];
+
+
+    for (
+
+      let sourceIndex =
+        header.index + 1;
+
+      sourceIndex <
+        matrix.length;
+
+      sourceIndex++
+
+    ) {
+
+      const sourceRow =
+        matrix[
+          sourceIndex
+        ] || [];
+
+
+      const result =
+        {};
+
+
+      let hasData =
+        false;
+
+
+      COLUMNS.forEach(
+        column => {
+
+          const sourceColumn =
+            mapping.map[
+              column
+            ];
+
+
+          let value =
+            "";
+
+
+          if (
+            sourceColumn !==
+              undefined
+          ) {
+
+            value =
+              sourceRow[
+                sourceColumn
+              ];
+
+          }
+
+
+          value =
+            prepareImportedValue(
+              column,
+              value
+            );
+
+
+          result[
+            column
+          ] =
+            value;
+
+
+          if (
+            !isEmpty(
+              value
+            )
+          ) {
+
+            hasData =
+              true;
+
+          }
+
         }
       );
 
 
-    if (!rawRows.length) {
+      /*
+        IGNORAR FILAS TOTALMENTE VACÍAS
+      */
 
-      alert(
-        "El archivo no contiene registros."
+      if (
+        hasData
+      ) {
+
+        result.__sourceRow =
+          sourceIndex + 1;
+
+
+        importedRows.push(
+          result
+        );
+
+      }
+
+    }
+
+
+    if (
+      importedRows.length ===
+      0
+    ) {
+
+      throw new Error(
+
+        "Encontré los encabezados, pero no encontré registros debajo."
+
       );
-
-      return;
 
     }
 
 
     rows =
-      rawRows.map(
-        normalizeIncomingRow
-      );
+      importedRows;
+
+
+    importDiagnostics.records =
+      rows.length;
 
 
     document
@@ -1045,18 +3480,59 @@ async function handleExcel(event) {
         "resultsSection"
       )
       .classList
-      .remove("hidden");
+      .remove(
+        "hidden"
+      );
+
+
+    document
+      .getElementById(
+        "successSection"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
 
 
     validateAll();
 
-  }
-  catch (error) {
 
-    console.error(error);
+    console.log(
+      "ARCHIVO:",
+      file.name
+    );
+
+
+    console.log(
+      "DIAGNÓSTICO:",
+      importDiagnostics
+    );
+
+
+    console.log(
+      "DATOS IMPORTADOS:",
+      rows
+    );
+
+  }
+  catch (
+    error
+  ) {
+
+    console.error(
+      error
+    );
+
 
     alert(
-      "No se pudo leer el archivo Excel."
+
+      "NO SE PUDO LEER EL ARCHIVO\n\n"
+
+      +
+
+      error.message
+
     );
 
   }
@@ -1065,114 +3541,142 @@ async function handleExcel(event) {
 
 
 /* =========================================================
-   NORMALIZAR COLUMNAS
-========================================================= */
-
-function normalizeIncomingRow(row) {
-
-  const result = {};
-
-  for (const expectedColumn of COLUMNS) {
-
-    const foundKey =
-      Object.keys(row)
-        .find(
-          key =>
-            comparable(key) ===
-            comparable(expectedColumn)
-        );
-
-
-    result[expectedColumn] =
-      foundKey
-        ? row[foundKey]
-        : "";
-  }
-
-  return result;
-}
-
-
-/* =========================================================
-   VALIDACIÓN GENERAL
+   VALIDAR TODO
 ========================================================= */
 
 function validateAll() {
 
   validationResult = {
+
     errors: [],
+
     warnings: [],
+
     corrections: []
+
   };
 
 
   rows.forEach(
-    (row, index) =>
-      validateRow(row, index)
+    (
+      row,
+      index
+    ) => {
+
+      validateRow(
+        row,
+        index
+      );
+
+    }
   );
 
 
   render();
+
 }
 
 
 /* =========================================================
-   VALIDACIÓN DE FILA
+   VALIDAR FILA
 ========================================================= */
 
-function validateRow(row, rowIndex) {
+function validateRow(
+  row,
+  rowIndex
+) {
+
+  /*
+    FILA ORIGINAL DEL EXCEL
+  */
 
   const excelRow =
+    row.__sourceRow
+    ||
     rowIndex + 2;
 
 
-  /* FECHA */
+  /* =======================================================
+     FECHA
+  ======================================================= */
 
   if (
     isEmpty(
-      row["Fec. Despacho"]
+      row[
+        "Fec. Despacho"
+      ]
     )
   ) {
 
     addError(
+
       rowIndex,
+
       "Fec. Despacho",
+
       `Fila ${excelRow} · Fec. Despacho: campo obligatorio vacío.`
+
     );
 
   }
   else {
 
-    const dateResult =
+    const result =
       parseDispatchDate(
-        row["Fec. Despacho"]
+        row[
+          "Fec. Despacho"
+        ]
       );
 
 
-    if (!dateResult.valid) {
+    if (
+      !result.valid
+    ) {
 
       addError(
+
         rowIndex,
+
         "Fec. Despacho",
-        `Fila ${excelRow} · Fec. Despacho: fecha no reconocida.`
+
+        `Fila ${excelRow} · Fec. Despacho: fecha no reconocida "${row["Fec. Despacho"]}".`
+
       );
 
     }
     else {
 
-      if (
+      const original =
         String(
-          row["Fec. Despacho"]
-        ) !==
-        dateResult.value
+          row[
+            "Fec. Despacho"
+          ]
+        );
+
+
+      if (
+        original !==
+        result.value
       ) {
 
-        row["Fec. Despacho"] =
-          dateResult.value;
+        row[
+          "Fec. Despacho"
+        ] =
+          result.value;
+
 
         addCorrection(
+
           rowIndex,
-          "Fec. Despacho"
+
+          "Fec. Despacho",
+
+          original,
+
+          result.value,
+
+          "fecha normalizada"
+
         );
 
       }
@@ -1182,181 +3686,409 @@ function validateRow(row, rowIndex) {
   }
 
 
-  /* OBLIGATORIOS */
+  /* =======================================================
+     OBLIGATORIOS
+  ======================================================= */
 
-  REQUIRED.forEach(column => {
-
-    if (
-      column ===
-      "Fec. Despacho"
-    ) {
-      return;
-    }
-
-
-    if (
-      isEmpty(
-        row[column]
-      )
-    ) {
+  REQUIRED.forEach(
+    column => {
 
       if (
         column ===
-        "Tipo de Mercaderia"
+        "Fec. Despacho"
       ) {
 
-        const detected =
-          detectMerchandiseFromObservation(
-            row["Observación"]
-          );
-
-
-        if (detected) {
-
-          row[column] =
-            detected;
-
-          addCorrection(
-            rowIndex,
-            column
-          );
-
-          return;
-        }
+        return;
 
       }
 
 
-      addError(
-        rowIndex,
-        column,
-        `Fila ${excelRow} · ${column}: campo obligatorio vacío.`
-      );
+      if (
+        isEmpty(
+          row[
+            column
+          ]
+        )
+      ) {
+
+        /*
+          TIPO DE MERCADERÍA:
+
+          intentar recuperarlo desde
+          Observación.
+        */
+
+        if (
+          column ===
+          "Tipo de Mercaderia"
+        ) {
+
+          const detected =
+            detectMerchandiseFromObservation(
+
+              row[
+                "Observación"
+              ]
+
+            );
+
+
+          if (
+            detected
+          ) {
+
+            row[
+              column
+            ] =
+              detected;
+
+
+            addCorrection(
+
+              rowIndex,
+
+              column,
+
+              "",
+
+              detected,
+
+              "detectado desde Observación"
+
+            );
+
+
+            return;
+
+          }
+
+        }
+
+
+        addError(
+
+          rowIndex,
+
+          column,
+
+          `Fila ${excelRow} · ${column}: campo obligatorio vacío.`
+
+        );
+
+      }
 
     }
+  );
 
-  });
 
+  /* =======================================================
+     "-" INVÁLIDO
 
-  /* GUIONES */
+     ENTREGA
+     FACTURA
+     GR
+  ======================================================= */
 
   [
+
     "Entrega",
+
     "Factura/B.V.",
+
     "GR"
-  ].forEach(column => {
+
+  ]
+  .forEach(
+    column => {
+
+      if (
+        normalizeText(
+          row[
+            column
+          ]
+        )
+        ===
+        "-"
+      ) {
+
+        addError(
+
+          rowIndex,
+
+          column,
+
+          `Fila ${excelRow} · ${column}: el valor "-" no es válido.`
+
+        );
+
+      }
+
+    }
+  );
+
+
+  /*
+    S/F ES VÁLIDO EN FACTURA/B.V.
+  */
+
+
+  /* =======================================================
+     TIPO MERCADERÍA MÚLTIPLE
+  ======================================================= */
+
+  if (
+    !isEmpty(
+      row[
+        "Tipo de Mercaderia"
+      ]
+    )
+  ) {
+
+    const multiple =
+      detectMultipleMerchandise(
+
+        row[
+          "Tipo de Mercaderia"
+        ]
+
+      );
+
 
     if (
-      normalizeText(
-        row[column]
-      ) === "-"
+      multiple.length >
+      1
     ) {
 
       addError(
+
         rowIndex,
-        column,
-        `Fila ${excelRow} · ${column}: el valor "-" no es válido.`
+
+        "Tipo de Mercaderia",
+
+        `Fila ${excelRow} · Tipo de Mercaderia: contiene más de un tipo (${multiple.join(" + ")}). Debe quedar solo SECO, REFRIGERADO o CLIMATIZADO.`
+
       );
 
     }
 
-  });
+  }
 
 
-  /* CATÁLOGOS + FUZZY */
+  /* =======================================================
+     CATÁLOGOS + HOMOLOGACIÓN
+  ======================================================= */
 
-  Object
-    .keys(CATALOGS)
-    .forEach(column => {
+  Object.keys(
+    CATALOGS
+  )
+  .forEach(
+    column => {
 
       if (
         isEmpty(
-          row[column]
+          row[
+            column
+          ]
         )
       ) {
+
         return;
+
+      }
+
+
+      /*
+        Evitamos duplicar error
+        de mercadería múltiple.
+      */
+
+      if (
+
+        column ===
+          "Tipo de Mercaderia"
+
+        &&
+
+        detectMultipleMerchandise(
+          row[
+            column
+          ]
+        ).length >
+        1
+
+      ) {
+
+        return;
+
       }
 
 
       const original =
-        row[column];
+        row[
+          column
+        ];
 
 
       const result =
         homologate(
+
           column,
+
           original
+
         );
 
 
-      if (result.invalid) {
+      if (
+        result.invalid
+      ) {
 
         const percent =
           Math.round(
-            result.similarity * 100
+
+            result.similarity *
+
+            100
+
           );
 
 
+        let message =
+
+          `Fila ${excelRow} · ${column}: "${original}" no es un valor permitido.`;
+
+
+        if (
+          result.suggestion
+        ) {
+
+          message +=
+
+            ` Posible coincidencia: "${result.suggestion}" (${percent}%).`;
+
+        }
+
+
         addError(
+
           rowIndex,
+
           column,
-          `Fila ${excelRow} · ${column}: "${original}" no coincide con un valor permitido.` +
-          (
-            result.suggestion
-              ? ` Posible valor: "${result.suggestion}" (${percent}% de similitud).`
-              : ""
-          )
+
+          message
+
         );
 
 
         return;
+
       }
 
 
       if (
-        result.corrected &&
-        result.value !== original
+
+        result.corrected
+
+        &&
+
+        String(
+          result.value
+        )
+
+        !==
+
+        String(
+          original
+        )
+
       ) {
 
-        row[column] =
+        row[
+          column
+        ] =
           result.value;
 
 
         addCorrection(
+
           rowIndex,
-          column
+
+          column,
+
+          original,
+
+          result.value,
+
+          result.reason
+          ||
+          "homologación"
+
         );
 
       }
 
-    });
+    }
+  );
 
 
-  /* ADVERTENCIAS */
+  /* =======================================================
+     OPCIONALES CON ADVERTENCIA
+  ======================================================= */
 
-  WARNING_COLUMNS
-    .forEach(column => {
+  WARNING_COLUMNS.forEach(
+    column => {
 
       if (
-        isEmpty(
-          row[column]
+        isMissingOptional(
+          row[
+            column
+          ]
         )
       ) {
 
+        /*
+          "-" en campos opcionales
+          lo convertimos en vacío.
+        */
+
+        if (
+          normalizeText(
+            row[
+              column
+            ]
+          )
+          ===
+          "-"
+        ) {
+
+          row[
+            column
+          ] =
+            "";
+
+        }
+
+
         addWarning(
+
           rowIndex,
+
           column,
+
           `Fila ${excelRow} · ${column}: celda vacía.`
+
         );
 
       }
 
-    });
+    }
+  );
+
 }
 
 
 /* =========================================================
-   REGISTRO RESULTADOS
+   REGISTRAR ERRORES
 ========================================================= */
 
 function addError(
@@ -1365,14 +4097,51 @@ function addError(
   message
 ) {
 
-  validationResult.errors.push({
-    rowIndex,
-    column,
-    message
-  });
+  const exists =
+    validationResult
+      .errors
+      .some(
+        error =>
+
+          error.rowIndex ===
+            rowIndex
+
+          &&
+
+          error.column ===
+            column
+
+          &&
+
+          error.message ===
+            message
+      );
+
+
+  if (
+    !exists
+  ) {
+
+    validationResult
+      .errors
+      .push({
+
+        rowIndex,
+
+        column,
+
+        message
+
+      });
+
+  }
 
 }
 
+
+/* =========================================================
+   REGISTRAR ADVERTENCIAS
+========================================================= */
 
 function addWarning(
   rowIndex,
@@ -1380,24 +4149,48 @@ function addWarning(
   message
 ) {
 
-  validationResult.warnings.push({
-    rowIndex,
-    column,
-    message
-  });
+  validationResult
+    .warnings
+    .push({
+
+      rowIndex,
+
+      column,
+
+      message
+
+    });
 
 }
 
 
+/* =========================================================
+   REGISTRAR CORRECCIONES
+========================================================= */
+
 function addCorrection(
   rowIndex,
-  column
+  column,
+  from,
+  to,
+  reason
 ) {
 
-  validationResult.corrections.push({
-    rowIndex,
-    column
-  });
+  validationResult
+    .corrections
+    .push({
+
+      rowIndex,
+
+      column,
+
+      from,
+
+      to,
+
+      reason
+
+    });
 
 }
 
@@ -1409,8 +4202,11 @@ function addCorrection(
 function render() {
 
   renderSummary();
+
   renderMessages();
+
   renderTable();
+
   updateSendButton();
 
 }
@@ -1427,7 +4223,9 @@ function renderSummary() {
       "errorCount"
     )
     .textContent =
-      validationResult.errors.length;
+      validationResult
+        .errors
+        .length;
 
 
   document
@@ -1435,7 +4233,9 @@ function renderSummary() {
       "warningCount"
     )
     .textContent =
-      validationResult.warnings.length;
+      validationResult
+        .warnings
+        .length;
 
 
   document
@@ -1444,6 +4244,102 @@ function renderSummary() {
     )
     .textContent =
       rows.length;
+
+
+  document
+    .getElementById(
+      "correctionCount"
+    )
+    .textContent =
+      validationResult
+        .corrections
+        .length;
+
+}
+
+
+/* =========================================================
+   AGRUPACIÓN
+========================================================= */
+
+function groupByColumn(
+  items
+) {
+
+  return items.reduce(
+    (
+      result,
+      item
+    ) => {
+
+      if (
+        !result[
+          item.column
+        ]
+      ) {
+
+        result[
+          item.column
+        ] =
+          [];
+
+      }
+
+
+      result[
+        item.column
+      ]
+      .push(
+        item
+      );
+
+
+      return result;
+
+    },
+    {}
+  );
+
+}
+
+
+/* =========================================================
+   SEGURIDAD HTML
+========================================================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
 }
 
 
@@ -1454,95 +4350,485 @@ function renderSummary() {
 function renderMessages() {
 
   const container =
-    document.getElementById(
-      "messages"
+    document
+      .getElementById(
+        "messages"
+      );
+
+
+  container.innerHTML =
+    "";
+
+
+  /* =======================================================
+     ARCHIVO RECONOCIDO
+  ======================================================= */
+
+  const fileInfo =
+    document.createElement(
+      "div"
     );
 
 
-  container.innerHTML = "";
+  fileInfo.className =
+    "message success";
+
+
+  fileInfo.innerHTML =
+
+    `<strong>✓ Archivo reconocido correctamente</strong><br>`
+
+    +
+
+    `Archivo: ${escapeHtml(
+      importDiagnostics.fileName
+    )}<br>`
+
+    +
+
+    `Hoja detectada: ${escapeHtml(
+      importDiagnostics.sheet
+    )}<br>`
+
+    +
+
+    `Encabezados encontrados en la fila: ${importDiagnostics.headerRow}<br>`
+
+    +
+
+    `Registros encontrados: ${rows.length}`;
+
+
+  container.appendChild(
+    fileInfo
+  );
+
+
+  /* =======================================================
+     COLUMNAS RECONOCIDAS
+  ======================================================= */
+
+  const recognized =
+    document.createElement(
+      "div"
+    );
+
+
+  recognized.className =
+    "message info";
+
+
+  recognized.innerHTML =
+
+    `<strong>Columnas reconocidas:</strong> `
+
+    +
+
+    importDiagnostics
+      .recognizedColumns
+
+      .map(
+        escapeHtml
+      )
+
+      .join(
+        ", "
+      );
+
+
+  container.appendChild(
+    recognized
+  );
+
+
+  /* =======================================================
+     COLUMNAS IGNORADAS
+  ======================================================= */
+
+  if (
+    importDiagnostics
+      .ignoredColumns
+      .length
+  ) {
+
+    const ignored =
+      document.createElement(
+        "div"
+      );
+
+
+    ignored.className =
+      "message warning";
+
+
+    ignored.innerHTML =
+
+      `<strong>Columnas del Excel no utilizadas por esta recepción:</strong> `
+
+      +
+
+      importDiagnostics
+        .ignoredColumns
+
+        .map(
+          escapeHtml
+        )
+
+        .join(
+          ", "
+        );
+
+
+    container.appendChild(
+      ignored
+    );
+
+  }
+
+
+  /* =======================================================
+     COLUMNAS FALTANTES
+  ======================================================= */
+
+  const missingRequired =
+    importDiagnostics
+      .missingColumns
+      .filter(
+        column =>
+          REQUIRED.has(
+            column
+          )
+      );
+
+
+  const missingOptional =
+    importDiagnostics
+      .missingColumns
+      .filter(
+        column =>
+          !REQUIRED.has(
+            column
+          )
+      );
 
 
   if (
-    validationResult.errors.length
+    missingRequired.length
   ) {
 
-    const groupedErrors =
-      groupByColumn(
-        validationResult.errors
+    const div =
+      document.createElement(
+        "div"
       );
 
 
-    Object
-      .entries(groupedErrors)
-      .forEach(
-        ([column, items]) => {
-
-          const div =
-            document.createElement(
-              "div"
-            );
+    div.className =
+      "message error";
 
 
-          div.className =
-            "message error";
+    div.innerHTML =
+
+      `<strong>Columnas obligatorias no encontradas en la plantilla:</strong> `
+
+      +
+
+      missingRequired
+        .map(
+          escapeHtml
+        )
+
+        .join(
+          ", "
+        );
 
 
-          div.textContent =
-            `${column}: ${items.length} error(es).`;
-
-
-          container.appendChild(
-            div
-          );
-
-        }
-      );
+    container.appendChild(
+      div
+    );
 
   }
 
 
   if (
-    validationResult.warnings.length
+    missingOptional.length
   ) {
 
-    const groupedWarnings =
-      groupByColumn(
-        validationResult.warnings
+    const div =
+      document.createElement(
+        "div"
       );
 
 
-    Object
-      .entries(groupedWarnings)
-      .forEach(
-        ([column, items]) => {
+    div.className =
+      "message warning";
 
-          const div =
-            document.createElement(
-              "div"
+
+    div.innerHTML =
+
+      `<strong>Columnas opcionales no encontradas en esta plantilla:</strong> `
+
+      +
+
+      missingOptional
+        .map(
+          escapeHtml
+        )
+
+        .join(
+          ", "
+        );
+
+
+    container.appendChild(
+      div
+    );
+
+  }
+
+
+  /* =======================================================
+     CORRECCIONES AUTOMÁTICAS
+  ======================================================= */
+
+  if (
+    validationResult
+      .corrections
+      .length
+  ) {
+
+    const grouped =
+      groupByColumn(
+        validationResult
+          .corrections
+      );
+
+
+    Object.entries(
+      grouped
+    )
+    .forEach(
+      (
+        [
+          column,
+          items
+        ]
+      ) => {
+
+        const div =
+          document.createElement(
+            "div"
+          );
+
+
+        div.className =
+          "message info";
+
+
+        const examples =
+          items
+
+            .slice(
+              0,
+              4
+            )
+
+            .map(
+              item =>
+
+                `${escapeHtml(
+                  item.from
+                )} → ${escapeHtml(
+                  item.to
+                )}`
+
+            )
+
+            .join(
+              " | "
             );
 
 
-          div.className =
-            "message warning";
+        div.innerHTML =
 
+          `<strong>${escapeHtml(
+            column
+          )}: ${items.length} corrección(es) automática(s).</strong>`
 
-          div.textContent =
-            `${column}: ${items.length} celda(s) vacía(s) de ${rows.length} registros.`;
+          +
 
-
-          container.appendChild(
-            div
+          (
+            examples
+            ?
+            `<br>${examples}`
+            :
+            ""
           );
 
-        }
+
+        container.appendChild(
+          div
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     ERRORES
+  ======================================================= */
+
+  if (
+    validationResult
+      .errors
+      .length
+  ) {
+
+    const grouped =
+      groupByColumn(
+        validationResult
+          .errors
       );
+
+
+    Object.entries(
+      grouped
+    )
+    .forEach(
+      (
+        [
+          column,
+          items
+        ]
+      ) => {
+
+        const div =
+          document.createElement(
+            "div"
+          );
+
+
+        div.className =
+          "message error";
+
+
+        const details =
+          items
+
+            .slice(
+              0,
+              5
+            )
+
+            .map(
+              item =>
+                escapeHtml(
+                  item.message
+                )
+            )
+
+            .join(
+              "<br>"
+            );
+
+
+        div.innerHTML =
+
+          `<strong>${escapeHtml(
+            column
+          )}: ${items.length} error(es).</strong>`
+
+          +
+
+          `<br>${details}`
+
+          +
+
+          (
+            items.length > 5
+            ?
+            `<br>... y ${items.length - 5} error(es) más.`
+            :
+            ""
+          );
+
+
+        container.appendChild(
+          div
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     ADVERTENCIAS
+  ======================================================= */
+
+  if (
+    validationResult
+      .warnings
+      .length
+  ) {
+
+    const grouped =
+      groupByColumn(
+        validationResult
+          .warnings
+      );
+
+
+    Object.entries(
+      grouped
+    )
+    .forEach(
+      (
+        [
+          column,
+          items
+        ]
+      ) => {
+
+        const div =
+          document.createElement(
+            "div"
+          );
+
+
+        div.className =
+          "message warning";
+
+
+        div.textContent =
+
+          `${column}: ${items.length} celda(s) vacía(s) de ${rows.length} registro(s).`;
+
+
+        container.appendChild(
+          div
+        );
+
+      }
+    );
 
   }
 
 
   if (
-    !validationResult.errors.length &&
-    !validationResult.warnings.length
+
+    validationResult
+      .errors
+      .length === 0
+
+    &&
+
+    validationResult
+      .warnings
+      .length === 0
+
   ) {
 
     const div =
@@ -1556,7 +4842,8 @@ function renderMessages() {
 
 
     div.textContent =
-      "La programación no presenta errores ni advertencias.";
+
+      "✓ La programación no presenta errores ni advertencias.";
 
 
     container.appendChild(
@@ -1568,30 +4855,6 @@ function renderMessages() {
 }
 
 
-function groupByColumn(items) {
-
-  return items.reduce(
-    (result, item) => {
-
-      if (
-        !result[item.column]
-      ) {
-        result[item.column] = [];
-      }
-
-
-      result[item.column]
-        .push(item);
-
-
-      return result;
-
-    },
-    {}
-  );
-}
-
-
 /* =========================================================
    TABLA EDITABLE
 ========================================================= */
@@ -1599,9 +4862,10 @@ function groupByColumn(items) {
 function renderTable() {
 
   const table =
-    document.getElementById(
-      "dataTable"
-    );
+    document
+      .getElementById(
+        "dataTable"
+      );
 
 
   const thead =
@@ -1616,9 +4880,17 @@ function renderTable() {
     );
 
 
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
+  thead.innerHTML =
+    "";
 
+
+  tbody.innerHTML =
+    "";
+
+
+  /*
+    ENCABEZADOS
+  */
 
   const headerRow =
     document.createElement(
@@ -1633,7 +4905,7 @@ function renderTable() {
 
 
   rowNumberHeader.textContent =
-    "Fila";
+    "Fila Excel";
 
 
   headerRow.appendChild(
@@ -1641,30 +4913,37 @@ function renderTable() {
   );
 
 
-  COLUMNS.forEach(column => {
+  COLUMNS.forEach(
+    column => {
 
-    const th =
-      document.createElement(
-        "th"
+      const th =
+        document.createElement(
+          "th"
+        );
+
+
+      th.textContent =
+        column;
+
+
+      if (
+        REQUIRED.has(
+          column
+        )
+      ) {
+
+        th.textContent +=
+          " *";
+
+      }
+
+
+      headerRow.appendChild(
+        th
       );
 
-
-    th.textContent =
-      column;
-
-
-    if (
-      REQUIRED.has(column)
-    ) {
-      th.textContent += " *";
     }
-
-
-    headerRow.appendChild(
-      th
-    );
-
-  });
+  );
 
 
   thead.appendChild(
@@ -1672,8 +4951,15 @@ function renderTable() {
   );
 
 
+  /*
+    FILAS
+  */
+
   rows.forEach(
-    (row, rowIndex) => {
+    (
+      row,
+      rowIndex
+    ) => {
 
       const tr =
         document.createElement(
@@ -1681,18 +4967,24 @@ function renderTable() {
         );
 
 
-      const numberCell =
+      const sourceCell =
         document.createElement(
           "td"
         );
 
 
-      numberCell.textContent =
+      sourceCell.className =
+        "row-number";
+
+
+      sourceCell.textContent =
+        row.__sourceRow
+        ||
         rowIndex + 2;
 
 
       tr.appendChild(
-        numberCell
+        sourceCell
       );
 
 
@@ -1705,48 +4997,75 @@ function renderTable() {
             );
 
 
-          const hasError =
-            validationResult.errors
-              .some(
-                error =>
-                  error.rowIndex === rowIndex &&
-                  error.column === column
+          const error =
+            validationResult
+              .errors
+              .find(
+                item =>
+
+                  item.rowIndex ===
+                    rowIndex
+
+                  &&
+
+                  item.column ===
+                    column
               );
 
 
-          const hasWarning =
-            validationResult.warnings
-              .some(
-                warning =>
-                  warning.rowIndex === rowIndex &&
-                  warning.column === column
+          const warning =
+            validationResult
+              .warnings
+              .find(
+                item =>
+
+                  item.rowIndex ===
+                    rowIndex
+
+                  &&
+
+                  item.column ===
+                    column
               );
 
 
           const corrected =
-            validationResult.corrections
-              .some(
-                correction =>
-                  correction.rowIndex === rowIndex &&
-                  correction.column === column
+            validationResult
+              .corrections
+              .find(
+                item =>
+
+                  item.rowIndex ===
+                    rowIndex
+
+                  &&
+
+                  item.column ===
+                    column
               );
 
 
-          if (hasError) {
+          if (
+            error
+          ) {
 
             td.classList.add(
               "error-cell"
             );
 
           }
-          else if (hasWarning) {
+          else if (
+            warning
+          ) {
 
             td.classList.add(
               "warning-cell"
             );
 
           }
-          else if (corrected) {
+          else if (
+            corrected
+          ) {
 
             td.classList.add(
               "corrected-cell"
@@ -1762,15 +5081,52 @@ function renderTable() {
 
 
           input.value =
-            row[column] ?? "";
+            row[
+              column
+            ]
+            ??
+            "";
+
+
+          if (
+            error
+          ) {
+
+            input.title =
+              error.message;
+
+          }
+          else if (
+            warning
+          ) {
+
+            input.title =
+              warning.message;
+
+          }
+          else if (
+            corrected
+          ) {
+
+            input.title =
+
+              `Corregido automáticamente: ${corrected.from} → ${corrected.to}`;
+
+          }
 
 
           input.addEventListener(
             "change",
             event => {
 
-              rows[rowIndex][column] =
-                event.target.value;
+              rows[
+                rowIndex
+              ][
+                column
+              ] =
+                event
+                  .target
+                  .value;
 
 
               validateAll();
@@ -1798,147 +5154,271 @@ function renderTable() {
 
     }
   );
+
 }
 
 
 /* =========================================================
-   BOTÓN
+   BOTÓN DE ENVÍO
 ========================================================= */
 
 function updateSendButton() {
 
   const button =
-    document.getElementById(
-      "sendButton"
-    );
+    document
+      .getElementById(
+        "sendButton"
+      );
 
 
   const status =
-    document.getElementById(
-      "sendStatus"
-    );
+    document
+      .getElementById(
+        "sendStatus"
+      );
 
 
   const errors =
-    validationResult.errors.length;
+    validationResult
+      .errors
+      .length;
 
 
   const warnings =
-    validationResult.warnings.length;
+    validationResult
+      .warnings
+      .length;
 
 
-  if (errors > 0) {
+  if (
+    errors > 0
+  ) {
 
-    button.disabled = true;
+    button.disabled =
+      true;
 
 
     status.textContent =
+
       `No se puede enviar. Existen ${errors} error(es) que deben corregirse.`;
 
 
     return;
+
   }
 
 
-  button.disabled = false;
+  button.disabled =
+    false;
 
 
-  if (warnings > 0) {
+  if (
+    warnings > 0
+  ) {
 
     status.textContent =
-      `Puedes enviar. Existen ${warnings} advertencia(s) que no bloquean el proceso.`;
+
+      `Puedes enviar. Existen ${warnings} advertencia(s) que no bloquean el envío.`;
 
   }
   else {
 
     status.textContent =
-      "Programación validada correctamente.";
+
+      "✓ Programación validada correctamente.";
+
   }
+
 }
 
 
 /* =========================================================
-   ENVÍO A GOOGLE SHEETS
+   PREPARAR FILAS PARA APPS SCRIPT
+========================================================= */
+
+function getRowsForSending() {
+
+  return rows.map(
+    row => {
+
+      const clean =
+        {};
+
+
+      COLUMNS.forEach(
+        column => {
+
+          clean[
+            column
+          ] =
+            row[
+              column
+            ]
+            ??
+            "";
+
+        }
+      );
+
+
+      return clean;
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   ENVÍO
 ========================================================= */
 
 document
-  .getElementById("sendButton")
-  .addEventListener("click", sendProgramming);
+  .getElementById(
+    "sendButton"
+  )
+  .addEventListener(
+    "click",
+    sendProgramming
+  );
 
 
 async function sendProgramming() {
 
-  const button =
-    document.getElementById("sendButton");
-
-  const status =
-    document.getElementById("sendStatus");
-
-
-  if (validationResult.errors.length > 0) {
+  if (
+    validationResult
+      .errors
+      .length >
+    0
+  ) {
 
     alert(
-      "Todavía existen errores obligatorios. Corrígelos antes de enviar."
+
+      "Todavía existen errores obligatorios."
+
+      +
+
+      "\n\nCorrige las celdas rojas antes de enviar."
+
     );
 
+
     return;
+
   }
 
 
-  if (!rows.length) {
+  if (
+    rows.length === 0
+  ) {
 
     alert(
+
       "No existen registros para enviar."
+
     );
 
+
     return;
-  }
-
-
-  const warningCount =
-    validationResult.warnings.length;
-
-
-  let confirmationMessage =
-    `Se enviarán ${rows.length} registro(s) a Google Sheets.`;
-
-
-  if (warningCount > 0) {
-
-    confirmationMessage +=
-      `\n\nExisten ${warningCount} advertencia(s) amarilla(s).`;
 
   }
 
 
-  confirmationMessage +=
+  const warnings =
+    validationResult
+      .warnings
+      .length;
+
+
+  let confirmation =
+
+    `Se enviarán ${rows.length} registro(s) a Recepción OLT.`;
+
+
+  if (
+    warnings > 0
+  ) {
+
+    confirmation +=
+
+      `\n\nExisten ${warnings} advertencia(s) amarilla(s).`
+
+      +
+
+      "\nEstas advertencias NO bloquean el envío.";
+
+  }
+
+
+  confirmation +=
+
     "\n\n¿Deseas continuar?";
 
 
-  const confirmed =
-    confirm(confirmationMessage);
+  if (
+    !confirm(
+      confirmation
+    )
+  ) {
 
-
-  if (!confirmed) {
     return;
+
   }
 
 
-  button.disabled = true;
+  const button =
+    document
+      .getElementById(
+        "sendButton"
+      );
+
+
+  const status =
+    document
+      .getElementById(
+        "sendStatus"
+      );
+
+
+  button.disabled =
+    true;
+
 
   button.textContent =
     "Enviando...";
 
+
   status.textContent =
+
     `Enviando ${rows.length} registro(s) a Recepción OLT...`;
 
 
   try {
 
+    const rowsToSend =
+      getRowsForSending();
+
+
     const payload = {
-      rows: rows,
-      origen: "OLT GitHub Pages",
-      total: rows.length
+
+      rows:
+        rowsToSend,
+
+      origen:
+        "OLT GitHub Pages",
+
+      archivo:
+        importDiagnostics
+          .fileName,
+
+      hoja:
+        importDiagnostics
+          .sheet,
+
+      total:
+        rowsToSend
+          .length
+
     };
 
 
@@ -1946,20 +5426,27 @@ async function sendProgramming() {
       await fetch(
         APPS_SCRIPT_URL,
         {
-          method: "POST",
+
+          method:
+            "POST",
 
           headers: {
+
             "Content-Type":
               "text/plain;charset=utf-8"
+
           },
 
           body:
-            JSON.stringify(payload)
+            JSON.stringify(
+              payload
+            )
+
         }
       );
 
 
-    const text =
+    const responseText =
       await response.text();
 
 
@@ -1969,97 +5456,165 @@ async function sendProgramming() {
     try {
 
       result =
-        JSON.parse(text);
+        JSON.parse(
+          responseText
+        );
 
     }
-    catch (error) {
+    catch (
+      error
+    ) {
 
       console.error(
-        "Respuesta recibida:",
-        text
+        "Respuesta Apps Script:",
+        responseText
       );
+
 
       throw new Error(
-        "El servidor respondió, pero la respuesta no pudo interpretarse."
+
+        "Apps Script respondió, pero la respuesta no pudo interpretarse."
+
       );
+
     }
 
 
-    if (!result.ok) {
-
-      console.error(
-        "Error Apps Script:",
-        result
-      );
-
+    if (
+      !result.ok
+    ) {
 
       let message =
-        result.error ||
+
+        result.error
+
+        ||
+
         "Google Sheets rechazó la información.";
 
 
       if (
-        result.errores &&
+
+        result.errores
+
+        &&
+
         result.errores.length
+
       ) {
 
-        const examples =
+        message +=
+
+          "\n\n"
+
+          +
+
           result.errores
-            .slice(0, 5)
+
+            .slice(
+              0,
+              8
+            )
+
             .map(
               error =>
+
                 `Fila ${error.fila} · ${error.columna}: ${error.mensaje}`
+
             )
-            .join("\n");
 
+            .join(
+              "\n"
+            );
 
-        message +=
-          "\n\nPrimeros errores:\n" +
-          examples;
       }
 
 
       throw new Error(
         message
       );
+
     }
 
 
-    status.textContent =
-      `Envío realizado correctamente. ID: ${result.idEnvio}`;
+    /*
+      ÉXITO
+    */
+
+    document
+      .getElementById(
+        "resultsSection"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
 
 
-    alert(
-      "PROGRAMACIÓN ENVIADA CORRECTAMENTE\n\n" +
-
-      `Registros: ${result.registros}\n` +
-
-      `ID de envío: ${result.idEnvio}\n` +
-
-      `Fecha/Hora: ${result.fechaRecepcion}\n\n` +
-
-      `Guardado en: Recepción OLT`
-    );
+    document
+      .getElementById(
+        "successSection"
+      )
+      .classList
+      .remove(
+        "hidden"
+      );
 
 
-    console.log(
-      "Respuesta Apps Script:",
-      result
-    );
+    document
+      .getElementById(
+        "successDetails"
+      )
+      .innerHTML =
+
+        `<strong>ID de envío:</strong> ${escapeHtml(
+          result.idEnvio
+        )}<br>`
+
+        +
+
+        `<strong>Registros:</strong> ${escapeHtml(
+          result.registros
+        )}<br>`
+
+        +
+
+        `<strong>Fecha/Hora:</strong> ${escapeHtml(
+          result.fechaRecepcion
+        )}<br>`
+
+        +
+
+        `<strong>Destino:</strong> Recepción OLT`;
+
 
   }
-  catch (error) {
+  catch (
+    error
+  ) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
 
     status.textContent =
+
       "No se pudo completar el envío.";
 
 
     alert(
-      "ERROR AL ENVIAR\n\n" +
+
+      "ERROR AL ENVIAR"
+
+      +
+
+      "\n\n"
+
+      +
+
       error.message
+
     );
 
   }
@@ -2068,9 +5623,90 @@ async function sendProgramming() {
     button.textContent =
       "Enviar programación";
 
+
     updateSendButton();
 
   }
+
+}
+
+
+/* =========================================================
+   REINICIAR
+========================================================= */
+
+function resetPage() {
+
+  rows =
+    [];
+
+
+  validationResult = {
+
+    errors: [],
+
+    warnings: [],
+
+    corrections: []
+
+  };
+
+
+  importDiagnostics = {
+
+    fileName: "",
+
+    sheet: "",
+
+    headerRow: null,
+
+    recognizedColumns: [],
+
+    ignoredColumns: [],
+
+    missingColumns: [],
+
+    records: 0
+
+  };
+
+
+  document
+    .getElementById(
+      "excelFile"
+    )
+    .value =
+      "";
+
+
+  document
+    .getElementById(
+      "resultsSection"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "successSection"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  window.scrollTo({
+
+    top: 0,
+
+    behavior:
+      "smooth"
+
+  });
 
 }
 
