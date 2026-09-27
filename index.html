@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>OLT · Recepción de programación</title>
+
+  <!-- Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Fuzzy matching -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #667085;
+      --border: #d0d5dd;
+
+      --blue: #2563eb;
+      --blue-hover: #1d4ed8;
+
+      --red-bg: #fee2e2;
+      --red: #b91c1c;
+
+      --yellow-bg: #fef3c7;
+      --yellow: #92400e;
+
+      --green-bg: #dcfce7;
+      --green: #166534;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 24px 32px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #cbd5e1;
+    }
+
+    main {
+      max-width: 1500px;
+      margin: auto;
+      padding: 30px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      transition: .2s;
+    }
+
+    .upload-area:hover {
+      border-color: var(--blue);
+      background: #f8fbff;
+    }
+
+    input[type="file"] {
+      margin-top: 15px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-hover);
+    }
+
+    .btn-success {
+      background: #16a34a;
+      color: white;
+    }
+
+    .btn-success:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .summary-box {
+      padding: 18px;
+      border-radius: 10px;
+    }
+
+    .summary-box strong {
+      display: block;
+      font-size: 28px;
+    }
+
+    .summary-errors {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .summary-warnings {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+    }
+
+    .summary-ok {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .message {
+      padding: 12px 14px;
+      margin: 8px 0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .message.error {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .message.warning {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+    }
+
+    .message.success {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .table-container {
+      overflow: auto;
+      max-height: 600px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1800px;
+      font-size: 13px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #f2f4f7;
+      border-bottom: 1px solid var(--border);
+      padding: 11px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    td {
+      border-bottom: 1px solid #eaecf0;
+      border-right: 1px solid #eaecf0;
+      padding: 4px;
+      vertical-align: top;
+    }
+
+    td input {
+      width: 100%;
+      min-width: 120px;
+      padding: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+
+    td input:focus {
+      outline: 2px solid #93c5fd;
+      background: white;
+    }
+
+    td.error-cell {
+      background: var(--red-bg);
+    }
+
+    td.error-cell input {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    td.warning-cell {
+      background: var(--yellow-bg);
+    }
+
+    td.corrected-cell {
+      background: #dbeafe;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 800px) {
+      main {
+        padding: 15px;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>OLT · Recepción de programación</h1>
+  <p>Validación, homologación y revisión de programación OLT</p>
+</header>
+
+<main>
+
+  <!-- CARGA -->
+  <section class="card">
+
+    <h2>1. Cargar programación</h2>
+
+    <div class="upload-area">
+
+      <strong>Selecciona el archivo Excel enviado por Operaciones</strong>
+
+      <p>
+        El archivo será procesado y validado antes de permitir el envío.
+      </p>
+
+      <input
+        type="file"
+        id="excelFile"
+        accept=".xlsx,.xls,.xlsm,.csv"
+      >
+
+    </div>
+
+  </section>
+
+  <!-- RESUMEN -->
+  <section id="resultsSection" class="hidden">
+
+    <div class="card">
+
+      <h2>2. Resultado de validación</h2>
+
+      <div class="summary">
+
+        <div class="summary-box summary-errors">
+          <span>Errores</span>
+          <strong id="errorCount">0</strong>
+          <small>Bloquean el envío</small>
+        </div>
+
+        <div class="summary-box summary-warnings">
+          <span>Advertencias</span>
+          <strong id="warningCount">0</strong>
+          <small>No bloquean el envío</small>
+        </div>
+
+        <div class="summary-box summary-ok">
+          <span>Registros</span>
+          <strong id="rowCount">0</strong>
+          <small>Filas procesadas</small>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- MENSAJES -->
+    <div class="card">
+
+      <h2>Detalle</h2>
+
+      <div id="messages"></div>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="card">
+
+      <h2>3. Revisar información</h2>
+
+      <p class="status">
+        Puedes modificar directamente las celdas. La validación se actualizará.
+      </p>
+
+      <div class="table-container">
+
+        <table id="dataTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+
+      </div>
+
+    </div>
+
+    <!-- ENVÍO -->
+    <div class="card">
+
+      <div class="actions">
+
+        <span id="sendStatus" class="status">
+          Esperando validación.
+        </span>
+
+        <button
+          id="sendButton"
+          class="btn-success"
+          disabled
+        >
+          Enviar programación
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+
+/* =========================================================
+   CONFIGURACIÓN
+========================================================= */
+
+const FUZZY_THRESHOLD = 0.85;
+const FUZZY_DIFFERENCE = 0.10;
+
+/*
+  Año que se utilizará cuando Operaciones envíe:
+  26-Set
+  en lugar de una fecha completa.
+*/
+const DEFAULT_YEAR = 2026;
+
+
+/* =========================================================
+   COLUMNAS ESPERADAS
+========================================================= */
+
+const COLUMNS = [
+
+  "Fec. Despacho",
+  "Área de OLT",
+  "Entrega",
+  "Factura/B.V.",
+  "GR",
+  "Am - Pm",
+  "Cita",
+  "Razón Social del Cliente",
+  "Distrito",
+  "Provincia",
+  "Departamento",
+  "Línea",
+  "Bultos",
+  "Volumen",
+  "Peso",
+  "Tipo de despacho",
+  "Tipo de Transporte",
+  "Tipo de Mercaderia",
+  "Observación"
+
+];
+
+
+/* =========================================================
+   COLUMNAS OBLIGATORIAS
+========================================================= */
+
+const REQUIRED = new Set([
+
+  "Fec. Despacho",
+  "Área de OLT",
+  "Entrega",
+  "Factura/B.V.",
+  "GR",
+  "Razón Social del Cliente",
+  "Línea",
+  "Tipo de despacho",
+  "Tipo de Transporte",
+  "Tipo de Mercaderia"
+
+]);
+
+
+/* =========================================================
+   OPCIONALES CON ADVERTENCIA
+========================================================= */
+
+const WARNING_COLUMNS = new Set([
+
+  "Am - Pm",
+  "Cita",
+  "Distrito",
+  "Provincia",
+  "Departamento",
+  "Bultos",
+  "Volumen",
+  "Peso"
+
+]);
+
+
+/* =========================================================
+   CATÁLOGOS
+========================================================= */
+
+const CATALOGS = {
+
+  "Área de OLT": [
+    "AREAS CLAVE",
+    "OLT CONSUMO",
+    "OLT SALUD"
+  ],
+
+  "Línea": [
+    "FAES FARMA",
+    "FERQUIM",
+    "GENOMMA LAB",
+    "ELEA",
+    "RECKITT BENCKISER",
+    "TAKEDA",
+    "OMPHARMA",
+    "BIOPAS",
+    "TECNOFARMA",
+    "CLINICA INTERNACIONAL"
+  ],
+
+  "Tipo de despacho": [
+    "LIMA",
+    "PROVINCIA"
+  ],
+
+  "Tipo de Transporte": [
+    "CD SANTA ANITA",
+    "EXCLUSIVO",
+    "EN RUTA",
+    "AEREO",
+    "TERRESTRE",
+    "RECOGE CLIENTE"
+  ],
+
+  "Tipo de Mercaderia": [
+    "SECO",
+    "REFRIGERADO",
+    "CLIMATIZADO"
+  ]
+
+};
+
+
+/* =========================================================
+   EQUIVALENCIAS DE NEGOCIO
+========================================================= */
+
+const EXPLICIT_EQUIVALENCES = {
+
+  "Línea": {
+
+    "ELEA PERU": "ELEA",
+    "ELEA PERÚ": "ELEA",
+
+    "ADIUM": "TECNOFARMA",
+    "ADIUM PERU": "TECNOFARMA",
+    "ADIUM PERÚ": "TECNOFARMA",
+
+    "ELE": "ELEA",
+    "ELEO": "ELEA"
+
+  }
+
+};
+
+
+/* =========================================================
+   ESTADO
+========================================================= */
+
+let rows = [];
+
+let validationResult = {
+  errors: [],
+  warnings: [],
+  corrections: []
+};
+
+
+/* =========================================================
+   UTILIDADES
+========================================================= */
+
+function normalizeText(value) {
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value)
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+
+}
+
+
+function removeAccents(text) {
+
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+}
+
+
+function comparable(value) {
+
+  return removeAccents(
+    normalizeText(value)
+  );
+
+}
+
+
+function isEmpty(value) {
+
+  return (
+    value === null ||
+    value === undefined ||
+    String(value).trim() === ""
+  );
+
+}
+
+
+/* =========================================================
+   LEVENSHTEIN
+========================================================= */
+
+function levenshtein(a, b) {
+
+  a = comparable(a);
+  b = comparable(b);
+
+  const matrix = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+
+    for (let j = 1; j <= a.length; j++) {
+
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+
+        matrix[i][j] =
+          matrix[i - 1][j - 1];
+
+      } else {
+
+        matrix[i][j] = Math.min(
+
+          matrix[i - 1][j - 1] + 1,
+
+          matrix[i][j - 1] + 1,
+
+          matrix[i - 1][j] + 1
+
+        );
+
+      }
+
+    }
+
+  }
+
+  return matrix[b.length][a.length];
+
+}
+
+
+function similarity(a, b) {
+
+  const x = comparable(a);
+  const y = comparable(b);
+
+  if (!x.length && !y.length) {
+    return 1;
+  }
+
+  const maxLength =
+    Math.max(x.length, y.length);
+
+  if (!maxLength) {
+    return 1;
+  }
+
+  return 1 -
+    levenshtein(x, y) / maxLength;
+
+}
+
+
+/* =========================================================
+   HOMOLOGACIÓN
+========================================================= */
+
+function homologate(column, originalValue) {
+
+  let value = normalizeText(originalValue);
+
+  if (!value) {
+
+    return {
+      value: "",
+      corrected: false
+    };
+
+  }
+
+
+  /* -----------------------------
+     EQUIVALENCIA EXPLÍCITA
+  ----------------------------- */
+
+  const equivalents =
+    EXPLICIT_EQUIVALENCES[column];
+
+  if (equivalents) {
+
+    const key = comparable(value);
+
+    for (const [from, to] of
+      Object.entries(equivalents)) {
+
+      if (comparable(from) === key) {
+
+        return {
+
+          value: to,
+          corrected: true,
+          reason: "equivalencia"
+
+        };
+
+      }
+
+    }
+
+  }
+
+
+  /* -----------------------------
+     CATÁLOGO
+  ----------------------------- */
+
+  const catalog =
+    CATALOGS[column];
+
+  if (!catalog) {
+
+    return {
+
+      value,
+      corrected:
+        value !== String(originalValue).trim()
+
+    };
+
+  }
+
+
+  /* -----------------------------
+     COINCIDENCIA EXACTA
+  ----------------------------- */
+
+  const exact =
+    catalog.find(
+      item =>
+        comparable(item) ===
+        comparable(value)
+    );
+
+  if (exact) {
+
+    return {
+
+      value: exact,
+      corrected:
+        exact !== originalValue
+
+    };
+
+  }
+
+
+  /* -----------------------------
+     FUZZY
+  ----------------------------- */
+
+  const candidates =
+    catalog
+      .map(item => ({
+        item,
+        score:
+          similarity(value, item)
+      }))
+      .sort(
+        (a, b) =>
+          b.score - a.score
+      );
+
+
+  const best = candidates[0];
+
+  const second =
+    candidates[1] || {
+      score: 0
+    };
+
+
+  if (
+    best.score >= FUZZY_THRESHOLD &&
+    (
+      best.score -
+      second.score
+    ) >= FUZZY_DIFFERENCE
+  ) {
+
+    return {
+
+      value: best.item,
+
+      corrected: true,
+
+      reason:
+        `fuzzy ${Math.round(
+          best.score * 100
+        )}%`
+
+    };
+
+  }
+
+
+  return {
+
+    value,
+
+    corrected: false,
+
+    invalid: true,
+
+    suggestion:
+      best
+        ? best.item
+        : null,
+
+    similarity:
+      best
+        ? best.score
+        : 0
+
+  };
+
+}
+
+
+/* =========================================================
+   FECHAS
+========================================================= */
+
+const MONTHS = {
+
+  ENE: 1,
+  FEB: 2,
+  MAR: 3,
+  ABR: 4,
+  MAY: 5,
+  JUN: 6,
+  JUL: 7,
+  AGO: 8,
+
+  SET: 9,
+  SEP: 9,
+
+  OCT: 10,
+  NOV: 11,
+  DIC: 12
+
+};
+
+
+function parseDispatchDate(value) {
+
+  if (value instanceof Date) {
+
+    if (!isNaN(value)) {
+
+      return {
+
+        valid: true,
+        value: formatDate(value)
+
+      };
+
+    }
+
+  }
+
+
+  /*
+    Excel puede entregar número serial.
+  */
+
+  if (
+    typeof value === "number" &&
+    window.XLSX
+  ) {
+
+    const parsed =
+      XLSX.SSF.parse_date_code(value);
+
+    if (parsed) {
+
+      const date =
+        new Date(
+          parsed.y,
+          parsed.m - 1,
+          parsed.d
+        );
+
+      return {
+
+        valid: true,
+        value: formatDate(date)
+
+      };
+
+    }
+
+  }
+
+
+  const text =
+    normalizeText(value);
+
+
+  /*
+    Ejemplo:
+    26-Set
+  */
+
+  const shortMatch =
+    text.match(
+      /^(\d{1,2})[-\/](ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SET|SEP|OCT|NOV|DIC)$/
+    );
+
+
+  if (shortMatch) {
+
+    const day =
+      Number(shortMatch[1]);
+
+    const month =
+      MONTHS[shortMatch[2]];
+
+    if (
+      validDate(
+        day,
+        month,
+        DEFAULT_YEAR
+      )
+    ) {
+
+      return {
+
+        valid: true,
+
+        value:
+          `${pad(day)}/${pad(month)}/${DEFAULT_YEAR}`
+
+      };
+
+    }
+
+  }
+
+
+  /*
+    dd/mm/yyyy
+    dd-mm-yyyy
+  */
+
+  const complete =
+    text.match(
+      /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/
+    );
+
+
+  if (complete) {
+
+    const day =
+      Number(complete[1]);
+
+    const month =
+      Number(complete[2]);
+
+    const year =
+      Number(complete[3]);
+
+
+    if (
+      validDate(
+        day,
+        month,
+        year
+      )
+    ) {
+
+      return {
+
+        valid: true,
+
+        value:
+          `${pad(day)}/${pad(month)}/${year}`
+
+      };
+
+    }
+
+  }
+
+
+  return {
+
+    valid: false,
+    value
+
+  };
+
+}
+
+
+function validDate(day, month, year) {
+
+  const date =
+    new Date(
+      year,
+      month - 1,
+      day
+    );
+
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+
+}
+
+
+function pad(value) {
+
+  return String(value)
+    .padStart(2, "0");
+
+}
+
+
+function formatDate(date) {
+
+  return (
+    `${pad(date.getDate())}/` +
+    `${pad(date.getMonth() + 1)}/` +
+    `${date.getFullYear()}`
+  );
+
+}
+
+
+/* =========================================================
+   BUSCAR MERCADERÍA EN OBSERVACIÓN
+========================================================= */
+
+function detectMerchandiseFromObservation(
+  observation
+) {
+
+  const text =
+    comparable(observation);
+
+  if (!text) {
+    return null;
+  }
+
+
+  const matches =
+    CATALOGS["Tipo de Mercaderia"]
+      .filter(
+        item =>
+          text.includes(
+            comparable(item)
+          )
+      );
+
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   LECTURA DEL EXCEL
+========================================================= */
+
+document
+  .getElementById("excelFile")
+  .addEventListener(
+    "change",
+    handleExcel
+  );
+
+
+async function handleExcel(event) {
+
+  const file =
+    event.target.files[0];
+
+  if (!file) {
+    return;
+  }
+
+
+  try {
+
+    const buffer =
+      await file.arrayBuffer();
+
+    const workbook =
+      XLSX.read(
+        buffer,
+        {
+          type: "array",
+          cellDates: true
+        }
+      );
+
+
+    const firstSheet =
+      workbook.SheetNames[0];
+
+    const sheet =
+      workbook.Sheets[firstSheet];
+
+
+    const rawRows =
+      XLSX.utils.sheet_to_json(
+        sheet,
+        {
+          defval: "",
+          raw: true
+        }
+      );
+
+
+    if (!rawRows.length) {
+
+      alert(
+        "El archivo no contiene registros."
+      );
+
+      return;
+
+    }
+
+
+    rows =
+      rawRows.map(
+        normalizeIncomingRow
+      );
+
+
+    document
+      .getElementById(
+        "resultsSection"
+      )
+      .classList
+      .remove("hidden");
+
+
+    validateAll();
+
+  }
+  catch (error) {
+
+    console.error(error);
+
+    alert(
+      "No se pudo leer el archivo Excel."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   NORMALIZAR NOMBRES DE COLUMNAS
+========================================================= */
+
+function normalizeIncomingRow(row) {
+
+  const result = {};
+
+  for (
+    const expectedColumn
+    of COLUMNS
+  ) {
+
+    const foundKey =
+      Object.keys(row)
+        .find(
+          key =>
+            comparable(key) ===
+            comparable(expectedColumn)
+        );
+
+
+    result[expectedColumn] =
+      foundKey
+        ? row[foundKey]
+        : "";
+
+  }
+
+
+  return result;
+
+}
+
+
+/* =========================================================
+   VALIDACIÓN
+========================================================= */
+
+function validateAll() {
+
+  validationResult = {
+
+    errors: [],
+    warnings: [],
+    corrections: []
+
+  };
+
+
+  rows.forEach(
+    (row, index) =>
+      validateRow(row, index)
+  );
+
+
+  render();
+
+}
+
+
+/* =========================================================
+   VALIDAR FILA
+========================================================= */
+
+function validateRow(row, rowIndex) {
+
+  const excelRow =
+    rowIndex + 2;
+
+
+  /* -----------------------------
+     FECHA
+  ----------------------------- */
+
+  if (
+    isEmpty(
+      row["Fec. Despacho"]
+    )
+  ) {
+
+    addError(
+      rowIndex,
+      "Fec. Despacho",
+      `Fila ${excelRow} · Fec. Despacho: campo obligatorio vacío.`
+    );
+
+  }
+  else {
+
+    const dateResult =
+      parseDispatchDate(
+        row["Fec. Despacho"]
+      );
+
+
+    if (!dateResult.valid) {
+
+      addError(
+        rowIndex,
+        "Fec. Despacho",
+        `Fila ${excelRow} · Fec. Despacho: fecha no reconocida.`
+      );
+
+    }
+    else {
+
+      if (
+        String(
+          row["Fec. Despacho"]
+        ) !==
+        dateResult.value
+      ) {
+
+        row["Fec. Despacho"] =
+          dateResult.value;
+
+        addCorrection(
+          rowIndex,
+          "Fec. Despacho"
+        );
+
+      }
+
+    }
+
+  }
+
+
+  /* -----------------------------
+     CAMPOS OBLIGATORIOS
+  ----------------------------- */
+
+  REQUIRED.forEach(column => {
+
+    if (
+      column ===
+      "Fec. Despacho"
+    ) {
+      return;
+    }
+
+
+    if (
+      isEmpty(
+        row[column]
+      )
+    ) {
+
+      /*
+        Intentamos recuperar
+        Tipo Mercadería
+        desde Observación.
+      */
+
+      if (
+        column ===
+        "Tipo de Mercaderia"
+      ) {
+
+        const detected =
+          detectMerchandiseFromObservation(
+            row["Observación"]
+          );
+
+
+        if (detected) {
+
+          row[column] =
+            detected;
+
+          addCorrection(
+            rowIndex,
+            column
+          );
+
+          return;
+
+        }
+
+      }
+
+
+      addError(
+
+        rowIndex,
+
+        column,
+
+        `Fila ${excelRow} · ${column}: campo obligatorio vacío.`
+
+      );
+
+    }
+
+  });
+
+
+  /* -----------------------------
+     GUIONES INVÁLIDOS
+  ----------------------------- */
+
+  [
+    "Entrega",
+    "Factura/B.V.",
+    "GR"
+  ].forEach(column => {
+
+    if (
+      normalizeText(
+        row[column]
+      ) === "-"
+    ) {
+
+      addError(
+
+        rowIndex,
+
+        column,
+
+        `Fila ${excelRow} · ${column}: el valor "-" no es válido.`
+
+      );
+
+    }
+
+  });
+
+
+  /*
+    S/F sí es válido en Factura.
+    No requiere regla adicional porque
+    simplemente no se considera vacío.
+  */
+
+
+  /* -----------------------------
+     CATÁLOGOS + FUZZY
+  ----------------------------- */
+
+  Object
+    .keys(CATALOGS)
+    .forEach(column => {
+
+      if (
+        isEmpty(
+          row[column]
+        )
+      ) {
+        return;
+      }
+
+
+      const original =
+        row[column];
+
+
+      const result =
+        homologate(
+          column,
+          original
+        );
+
+
+      if (result.invalid) {
+
+        const percent =
+          Math.round(
+            result.similarity * 100
+          );
+
+
+        addError(
+
+          rowIndex,
+
+          column,
+
+          `Fila ${excelRow} · ${column}: "${original}" no coincide con un valor permitido.` +
+          (
+            result.suggestion
+              ? ` Posible valor: "${result.suggestion}" (${percent}% de similitud).`
+              : ""
+          )
+
+        );
+
+
+        return;
+
+      }
+
+
+      if (
+        result.corrected &&
+        result.value !== original
+      ) {
+
+        row[column] =
+          result.value;
+
+
+        addCorrection(
+
+          rowIndex,
+          column
+
+        );
+
+      }
+
+    });
+
+
+  /* -----------------------------
+     OPCIONALES CON ADVERTENCIA
+  ----------------------------- */
+
+  WARNING_COLUMNS
+    .forEach(column => {
+
+      if (
+        isEmpty(
+          row[column]
+        )
+      ) {
+
+        addWarning(
+
+          rowIndex,
+
+          column,
+
+          `Fila ${excelRow} · ${column}: celda vacía.`
+
+        );
+
+      }
+
+    });
+
+}
+
+
+/* =========================================================
+   REGISTRO DE RESULTADOS
+========================================================= */
+
+function addError(
+  rowIndex,
+  column,
+  message
+) {
+
+  validationResult.errors.push({
+
+    rowIndex,
+    column,
+    message
+
+  });
+
+}
+
+
+function addWarning(
+  rowIndex,
+  column,
+  message
+) {
+
+  validationResult.warnings.push({
+
+    rowIndex,
+    column,
+    message
+
+  });
+
+}
+
+
+function addCorrection(
+  rowIndex,
+  column
+) {
+
+  validationResult.corrections.push({
+
+    rowIndex,
+    column
+
+  });
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+  renderSummary();
+  renderMessages();
+  renderTable();
+  updateSendButton();
+
+}
+
+
+/* =========================================================
+   RESUMEN
+========================================================= */
+
+function renderSummary() {
+
+  document
+    .getElementById(
+      "errorCount"
+    )
+    .textContent =
+      validationResult.errors.length;
+
+
+  document
+    .getElementById(
+      "warningCount"
+    )
+    .textContent =
+      validationResult.warnings.length;
+
+
+  document
+    .getElementById(
+      "rowCount"
+    )
+    .textContent =
+      rows.length;
+
+}
+
+
+/* =========================================================
+   MENSAJES
+========================================================= */
+
+function renderMessages() {
+
+  const container =
+    document.getElementById(
+      "messages"
+    );
+
+
+  container.innerHTML = "";
+
+
+  if (
+    validationResult.errors.length
+  ) {
+
+    const groupedErrors =
+      groupByColumn(
+        validationResult.errors
+      );
+
+
+    Object
+      .entries(groupedErrors)
+      .forEach(
+        ([column, items]) => {
+
+          const div =
+            document.createElement(
+              "div"
+            );
+
+
+          div.className =
+            "message error";
+
+
+          div.textContent =
+            `${column}: ${items.length} error(es).`;
+
+
+          container.appendChild(
+            div
+          );
+
+        }
+      );
+
+  }
+
+
+  if (
+    validationResult.warnings.length
+  ) {
+
+    const groupedWarnings =
+      groupByColumn(
+        validationResult.warnings
+      );
+
+
+    Object
+      .entries(groupedWarnings)
+      .forEach(
+        ([column, items]) => {
+
+          const div =
+            document.createElement(
+              "div"
+            );
+
+
+          div.className =
+            "message warning";
+
+
+          div.textContent =
+            `${column}: ${items.length} celda(s) vacía(s) de ${rows.length} registros.`;
+
+
+          container.appendChild(
+            div
+          );
+
+        }
+      );
+
+  }
+
+
+  if (
+    !validationResult.errors.length &&
+    !validationResult.warnings.length
+  ) {
+
+    const div =
+      document.createElement(
+        "div"
+      );
+
+
+    div.className =
+      "message success";
+
+
+    div.textContent =
+      "La programación no presenta errores ni advertencias.";
+
+
+    container.appendChild(
+      div
+    );
+
+  }
+
+}
+
+
+function groupByColumn(items) {
+
+  return items.reduce(
+    (result, item) => {
+
+      if (
+        !result[item.column]
+      ) {
+
+        result[item.column] = [];
+
+      }
+
+
+      result[item.column]
+        .push(item);
+
+
+      return result;
+
+    },
+    {}
+  );
+
+}
+
+
+/* =========================================================
+   TABLA EDITABLE
+========================================================= */
+
+function renderTable() {
+
+  const table =
+    document.getElementById(
+      "dataTable"
+    );
+
+
+  const thead =
+    table.querySelector(
+      "thead"
+    );
+
+
+  const tbody =
+    table.querySelector(
+      "tbody"
+    );
+
+
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+
+  const headerRow =
+    document.createElement(
+      "tr"
+    );
+
+
+  const rowNumberHeader =
+    document.createElement(
+      "th"
+    );
+
+
+  rowNumberHeader.textContent =
+    "Fila";
+
+
+  headerRow.appendChild(
+    rowNumberHeader
+  );
+
+
+  COLUMNS.forEach(column => {
+
+    const th =
+      document.createElement(
+        "th"
+      );
+
+
+    th.textContent =
+      column;
+
+
+    if (
+      REQUIRED.has(column)
+    ) {
+
+      th.textContent += " *";
+
+    }
+
+
+    headerRow.appendChild(
+      th
+    );
+
+  });
+
+
+  thead.appendChild(
+    headerRow
+  );
+
+
+  rows.forEach(
+    (row, rowIndex) => {
+
+      const tr =
+        document.createElement(
+          "tr"
+        );
+
+
+      const numberCell =
+        document.createElement(
+          "td"
+        );
+
+
+      numberCell.textContent =
+        rowIndex + 2;
+
+
+      tr.appendChild(
+        numberCell
+      );
+
+
+      COLUMNS.forEach(
+        column => {
+
+          const td =
+            document.createElement(
+              "td"
+            );
+
+
+          const hasError =
+            validationResult.errors
+              .some(
+                error =>
+                  error.rowIndex === rowIndex &&
+                  error.column === column
+              );
+
+
+          const hasWarning =
+            validationResult.warnings
+              .some(
+                warning =>
+                  warning.rowIndex === rowIndex &&
+                  warning.column === column
+              );
+
+
+          const corrected =
+            validationResult.corrections
+              .some(
+                correction =>
+                  correction.rowIndex === rowIndex &&
+                  correction.column === column
+              );
+
+
+          if (hasError) {
+
+            td.classList.add(
+              "error-cell"
+            );
+
+          }
+          else if (hasWarning) {
+
+            td.classList.add(
+              "warning-cell"
+            );
+
+          }
+          else if (corrected) {
+
+            td.classList.add(
+              "corrected-cell"
+            );
+
+          }
+
+
+          const input =
+            document.createElement(
+              "input"
+            );
+
+
+          input.value =
+            row[column] ?? "";
+
+
+          input.addEventListener(
+            "change",
+            event => {
+
+              rows[rowIndex][column] =
+                event.target.value;
+
+
+              validateAll();
+
+            }
+          );
+
+
+          td.appendChild(
+            input
+          );
+
+
+          tr.appendChild(
+            td
+          );
+
+        }
+      );
+
+
+      tbody.appendChild(
+        tr
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   BOTÓN DE ENVÍO
+========================================================= */
+
+function updateSendButton() {
+
+  const button =
+    document.getElementById(
+      "sendButton"
+    );
+
+
+  const status =
+    document.getElementById(
+      "sendStatus"
+    );
+
+
+  const errors =
+    validationResult.errors.length;
+
+
+  const warnings =
+    validationResult.warnings.length;
+
+
+  if (errors > 0) {
+
+    button.disabled = true;
+
+
+    status.textContent =
+      `No se puede enviar. Existen ${errors} error(es) que deben corregirse.`;
+
+
+    return;
+
+  }
+
+
+  button.disabled = false;
+
+
+  if (warnings > 0) {
+
+    status.textContent =
+      `Puedes enviar. Existen ${warnings} advertencia(s) que no bloquean el proceso.`;
+
+  }
+  else {
+
+    status.textContent =
+      "Programación validada correctamente.";
+
+  }
+
+}
+
+
+/* =========================================================
+   ENVÍO
+========================================================= */
+
+document
+  .getElementById(
+    "sendButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      /*
+        IMPORTANTE:
+
+        Aquí conectaremos después
+        Google Sheets / Apps Script
+        para guardar los registros
+        en "Recepción OLT".
+      */
+
+
+      if (
+        validationResult.errors.length
+      ) {
+
+        alert(
+          "Todavía existen errores."
+        );
+
+        return;
+
+      }
+
+
+      console.log(
+        "DATOS LISTOS:",
+        rows
+      );
+
+
+      alert(
+        "La información pasó todas las validaciones obligatorias.\n\n" +
+        "El siguiente paso será conectar este botón con la hoja Recepción OLT."
+      );
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
