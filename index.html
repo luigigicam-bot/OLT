@@ -9,10 +9,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-/* =========================================================
-   BASE
-========================================================= */
-
 *{
   box-sizing:border-box;
 }
@@ -96,16 +92,15 @@ button{
   display:none !important;
 }
 
+
 /* =========================================================
    LOGIN
 ========================================================= */
 
 .login-page{
   min-height:100vh;
-
   display:grid;
   place-items:center;
-
   padding:30px;
 }
 
@@ -118,7 +113,6 @@ button{
   display:flex;
   align-items:center;
   gap:13px;
-
   margin-bottom:24px;
 }
 
@@ -156,9 +150,7 @@ button{
 
 .brand-subtitle{
   margin-top:2px;
-
   color:var(--muted);
-
   font-size:12px;
 }
 
@@ -203,14 +195,12 @@ button{
 
 .login-card h1{
   margin:0;
-
   font-size:25px;
   letter-spacing:-.035em;
 }
 
 .login-card > p{
   margin:9px 0 28px;
-
   color:var(--muted);
   font-size:13px;
   line-height:1.55;
@@ -222,17 +212,10 @@ button{
 
 .form-group label{
   display:block;
-
   margin-bottom:8px;
-
   color:#c9d2df;
-
   font-size:12px;
   font-weight:650;
-}
-
-.input-shell{
-  position:relative;
 }
 
 .input-shell input{
@@ -287,18 +270,7 @@ button{
   color:#071117;
 
   font-weight:800;
-
   cursor:pointer;
-
-  transition:
-    transform .15s ease,
-    filter .15s ease,
-    opacity .15s ease;
-}
-
-.primary-button:hover:not(:disabled){
-  transform:translateY(-1px);
-  filter:brightness(1.05);
 }
 
 .primary-button:disabled{
@@ -319,8 +291,9 @@ button{
   font-size:13px;
 }
 
+
 /* =========================================================
-   APP HEADER
+   HEADER
 ========================================================= */
 
 .app-header{
@@ -333,13 +306,11 @@ button{
   background:
     rgba(9,13,20,.88);
 
-  backdrop-filter:
-    blur(18px);
+  backdrop-filter:blur(18px);
 }
 
 .header-inner{
   width:min(1500px,calc(100% - 38px));
-
   margin:auto;
 
   min-height:72px;
@@ -360,7 +331,6 @@ button{
   width:38px;
   height:38px;
   border-radius:11px;
-
   font-size:14px;
 }
 
@@ -371,9 +341,7 @@ button{
 
 .app-subtitle{
   margin-top:2px;
-
   color:var(--muted);
-
   font-size:11px;
 }
 
@@ -394,9 +362,7 @@ button{
 
 .last-upload{
   margin-top:2px;
-
   color:var(--muted);
-
   font-size:11px;
 }
 
@@ -410,16 +376,8 @@ button{
   color:#cbd5e1;
 
   cursor:pointer;
-
-  transition:
-    background .15s ease,
-    border-color .15s ease;
 }
 
-.secondary-button:hover{
-  background:rgba(255,255,255,.06);
-  border-color:rgba(255,255,255,.19);
-}
 
 /* =========================================================
    MAIN
@@ -427,9 +385,7 @@ button{
 
 main{
   width:min(1500px,calc(100% - 38px));
-
   margin:0 auto;
-
   padding:29px 0 50px;
 }
 
@@ -444,16 +400,12 @@ main{
 
 .hero h1{
   margin:0;
-
-  font-size:
-    clamp(25px,3vw,34px);
-
+  font-size:clamp(25px,3vw,34px);
   letter-spacing:-.045em;
 }
 
 .hero p{
   max-width:680px;
-
   margin:8px 0 0;
 
   color:var(--muted);
@@ -494,6 +446,7 @@ main{
     0 0 0 4px
     rgba(74,222,128,.07);
 }
+
 
 /* =========================================================
    CARDS
@@ -546,6 +499,7 @@ main{
   font-size:11px;
 }
 
+
 /* =========================================================
    UPLOAD
 ========================================================= */
@@ -560,9 +514,7 @@ main{
 
   padding:25px;
 
-  border:1px dashed
-    rgba(255,255,255,.16);
-
+  border:1px dashed rgba(255,255,255,.16);
   border-radius:14px;
 
   background:
@@ -571,11 +523,6 @@ main{
   text-align:center;
 
   cursor:pointer;
-
-  transition:
-    border-color .2s ease,
-    background .2s ease,
-    transform .2s ease;
 }
 
 .dropzone:hover,
@@ -585,11 +532,6 @@ main{
 
   background:
     rgba(85,214,190,.035);
-}
-
-.dropzone.dragging{
-  transform:
-    scale(.998);
 }
 
 .dropzone input{
@@ -644,6 +586,7 @@ main{
   font-weight:650;
 }
 
+
 /* =========================================================
    DASHBOARD
 ========================================================= */
@@ -681,19 +624,7 @@ main{
 
   border-radius:50%;
 
-  background:
-    conic-gradient(
-      var(--quality-color,#4ade80)
-      0deg,
-      var(--quality-color,#4ade80)
-      0deg,
-      #1b2734 0deg,
-      #1b2734 360deg
-    );
-
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(255,255,255,.03);
+  background:#1b2734;
 }
 
 .quality-ring::after{
@@ -832,6 +763,7 @@ main{
   font-size:10px;
 }
 
+
 /* =========================================================
    BARS
 ========================================================= */
@@ -912,8 +844,9 @@ main{
   text-align:right;
 }
 
+
 /* =========================================================
-   ERROR SECTION
+   ERROR TABLE
 ========================================================= */
 
 .error-section{
@@ -1051,17 +984,6 @@ tbody td{
   color:#dbe5ef;
 
   font-size:10px;
-
-  transition:
-    border-color .15s ease,
-    background .15s ease;
-}
-
-.cell-input:focus,
-.cell-select:focus{
-  border-color:rgba(91,168,255,.5);
-
-  background:#131f2b;
 }
 
 .cell-select option{
@@ -1092,6 +1014,7 @@ td.error-cell .cell-select{
   font-size:8px;
   line-height:1.3;
 }
+
 
 /* =========================================================
    SEND
@@ -1154,20 +1077,13 @@ td.error-cell .cell-select{
   font-weight:800;
 
   cursor:pointer;
-
-  transition:
-    opacity .15s ease,
-    transform .15s ease;
-}
-
-.send-button:hover:not(:disabled){
-  transform:translateY(-1px);
 }
 
 .send-button:disabled{
   opacity:.35;
   cursor:not-allowed;
 }
+
 
 /* =========================================================
    SUCCESS
@@ -1277,8 +1193,9 @@ td.error-cell .cell-select{
   letter-spacing:-.04em;
 }
 
+
 /* =========================================================
-   LOADING
+   SPINNER
 ========================================================= */
 
 .spinner{
@@ -1302,6 +1219,7 @@ td.error-cell .cell-select{
     transform:rotate(360deg);
   }
 }
+
 
 /* =========================================================
    RESPONSIVE
@@ -1389,11 +1307,11 @@ td.error-cell .cell-select{
   }
 
 }
-
 </style>
 </head>
 
 <body>
+
 
 <!-- ======================================================
      LOGIN
@@ -1404,101 +1322,101 @@ td.error-cell .cell-select{
   class="login-page"
 >
 
-  <div class="login-shell">
+<div class="login-shell">
 
-    <div class="login-brand">
+  <div class="login-brand">
 
-      <div class="brand-icon">
-        OLT
-      </div>
-
-      <div>
-
-        <div class="brand-name">
-          Recepción OLT
-        </div>
-
-        <div class="brand-subtitle">
-          Validación y recepción de programación
-        </div>
-
-      </div>
-
+    <div class="brand-icon">
+      OLT
     </div>
 
+    <div>
 
-    <div class="login-card">
+      <div class="brand-name">
+        Recepción OLT
+      </div>
 
-      <h1>
-        Iniciar sesión
-      </h1>
-
-      <p>
-        Accede al portal para validar y enviar la programación de Operaciones.
-      </p>
-
-
-      <form id="loginForm">
-
-        <div class="form-group">
-
-          <label for="loginUser">
-            Usuario
-          </label>
-
-          <div class="input-shell">
-
-            <input
-              id="loginUser"
-              type="text"
-              autocomplete="username"
-              required
-            >
-
-          </div>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="loginPassword">
-            Contraseña
-          </label>
-
-          <div class="input-shell">
-
-            <input
-              id="loginPassword"
-              type="password"
-              autocomplete="current-password"
-              required
-            >
-
-          </div>
-
-        </div>
-
-
-        <button
-          id="loginButton"
-          class="primary-button"
-          type="submit"
-        >
-          Ingresar al portal
-        </button>
-
-      </form>
-
-
-      <div
-        id="loginError"
-        class="login-error hidden"
-      ></div>
+      <div class="brand-subtitle">
+        Validación y recepción de programación
+      </div>
 
     </div>
 
   </div>
+
+
+  <div class="login-card">
+
+    <h1>
+      Iniciar sesión
+    </h1>
+
+    <p>
+      Accede al portal para validar y enviar la programación de Operaciones.
+    </p>
+
+
+    <form id="loginForm">
+
+      <div class="form-group">
+
+        <label for="loginUser">
+          Usuario
+        </label>
+
+        <div class="input-shell">
+
+          <input
+            id="loginUser"
+            type="text"
+            autocomplete="username"
+            required
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="loginPassword">
+          Contraseña
+        </label>
+
+        <div class="input-shell">
+
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          >
+
+        </div>
+
+      </div>
+
+
+      <button
+        id="loginButton"
+        class="primary-button"
+        type="submit"
+      >
+        Ingresar al portal
+      </button>
+
+    </form>
+
+
+    <div
+      id="loginError"
+      class="login-error hidden"
+    ></div>
+
+  </div>
+
+</div>
 
 </section>
 
@@ -1514,491 +1432,480 @@ td.error-cell .cell-select{
 
 <header class="app-header">
 
-  <div class="header-inner">
+<div class="header-inner">
 
-    <div class="app-brand">
+  <div class="app-brand">
 
-      <div class="brand-icon">
-        OLT
-      </div>
-
-      <div>
-
-        <div class="app-title">
-          Recepción de programación
-        </div>
-
-        <div class="app-subtitle">
-          Control · Homologación · Recepción
-        </div>
-
-      </div>
-
+    <div class="brand-icon">
+      OLT
     </div>
 
+    <div>
 
-    <div class="user-area">
-
-      <div class="user-info">
-
-        <div class="user-name">
-          <span id="currentUser">—</span>
-        </div>
-
-        <div
-          id="lastUpload"
-          class="last-upload"
-        >
-          Sin cargas registradas
-        </div>
-
+      <div class="app-title">
+        Recepción de programación
       </div>
 
-
-      <button
-        id="logoutButton"
-        class="secondary-button"
-      >
-        Cerrar sesión
-      </button>
+      <div class="app-subtitle">
+        Control · Homologación · Recepción
+      </div>
 
     </div>
 
   </div>
+
+
+  <div class="user-area">
+
+    <div class="user-info">
+
+      <div class="user-name">
+        <span id="currentUser">—</span>
+      </div>
+
+      <div
+        id="lastUpload"
+        class="last-upload"
+      >
+        Sin cargas registradas
+      </div>
+
+    </div>
+
+
+    <button
+      id="logoutButton"
+      class="secondary-button"
+    >
+      Cerrar sesión
+    </button>
+
+  </div>
+
+</div>
 
 </header>
 
 
 <main>
 
-  <!-- ====================================================
-       HERO
-  ===================================================== -->
+<div class="hero">
 
-  <div class="hero">
+  <div>
+
+    <h1>
+      Recepción de programación
+    </h1>
+
+    <p>
+      El archivo se valida y homologa localmente antes de llegar a Google Sheets.
+      Los registros idénticos se detectan automáticamente mediante DNI de fila.
+    </p>
+
+  </div>
+
+
+  <div class="status-pill">
+
+    <span class="status-dot"></span>
+
+    Sistema disponible
+
+  </div>
+
+</div>
+
+
+<!-- ====================================================
+     UPLOAD
+===================================================== -->
+
+<section class="card section-card">
+
+  <div class="section-heading">
 
     <div>
 
-      <h1>
-        Recepción de programación
-      </h1>
+      <h2 class="section-title">
+        Cargar programación
+      </h2>
 
-      <p>
-        El archivo se valida y homologa localmente antes de llegar a Google Sheets.
-        Los registros idénticos se detectan automáticamente mediante DNI de fila.
-      </p>
-
-    </div>
-
-
-    <div class="status-pill">
-
-      <span class="status-dot"></span>
-
-      Sistema disponible
+      <div class="section-description">
+        Formatos admitidos: XLSX, XLS, XLSM y CSV.
+      </div>
 
     </div>
 
   </div>
 
 
-  <!-- ====================================================
-       UPLOAD
-  ===================================================== -->
-
-  <section class="card section-card">
-
-    <div class="section-heading">
-
-      <div>
-
-        <h2 class="section-title">
-          Cargar programación
-        </h2>
-
-        <div class="section-description">
-          Formatos admitidos: XLSX, XLS, XLSM y CSV.
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <label
-      id="dropzone"
-      class="dropzone"
-      for="excelFile"
-    >
-
-      <div>
-
-        <div class="upload-icon">
-          ↑
-        </div>
-
-        <div class="dropzone-title">
-          Selecciona o arrastra el archivo Excel
-        </div>
-
-        <div class="dropzone-subtitle">
-          La validación se ejecutará automáticamente.
-        </div>
-
-        <div
-          id="currentFile"
-          class="current-file hidden"
-        ></div>
-
-      </div>
-
-
-      <input
-        id="excelFile"
-        type="file"
-        accept=".xlsx,.xls,.xlsm,.csv"
-      >
-
-    </label>
-
-  </section>
-
-
-  <!-- ====================================================
-       SUCCESS
-  ===================================================== -->
-
-  <section
-    id="successPanel"
-    class="success-panel hidden"
+  <label
+    id="dropzone"
+    class="dropzone"
+    for="excelFile"
   >
 
-    <div class="success-top">
+    <div>
 
-      <div class="success-mark">
-        ✓
+      <div class="upload-icon">
+        ↑
       </div>
 
-
-      <div class="success-copy">
-
-        <h2>
-          Programación procesada correctamente
-        </h2>
-
-        <p id="successMessage"></p>
-
+      <div class="dropzone-title">
+        Selecciona o arrastra el archivo Excel
       </div>
 
-
-      <button
-        id="newUploadButton"
-        class="secondary-button"
-      >
-        Nueva carga
-      </button>
-
-    </div>
-
-
-    <div class="success-grid">
-
-      <div class="success-metric">
-
-        <span>
-          Recibidos
-        </span>
-
-        <strong id="successReceived">
-          0
-        </strong>
-
-      </div>
-
-
-      <div class="success-metric">
-
-        <span>
-          Insertados
-        </span>
-
-        <strong id="successInserted">
-          0
-        </strong>
-
-      </div>
-
-
-      <div class="success-metric">
-
-        <span>
-          Duplicados omitidos
-        </span>
-
-        <strong id="successDuplicates">
-          0
-        </strong>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- ====================================================
-       DASHBOARD
-  ===================================================== -->
-
-  <section
-    id="dashboardSection"
-    class="dashboard-grid hidden"
-  >
-
-    <!-- QUALITY -->
-
-    <div class="card quality-card">
-
-      <div
-        id="qualityRing"
-        class="quality-ring"
-      >
-
-        <div class="quality-center">
-
-          <div
-            id="qualityNumber"
-            class="quality-number"
-          >
-            0%
-          </div>
-
-          <div class="quality-label">
-            Calidad
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="quality-copy">
-
-        <h2>
-          Calidad del envío
-        </h2>
-
-        <p>
-          Porcentaje calculado únicamente sobre los campos que intervienen
-          en el control de calidad.
-        </p>
-
-        <div
-          id="qualityDetail"
-          class="quality-detail"
-        ></div>
-
-      </div>
-
-    </div>
-
-
-    <!-- METRICS -->
-
-    <div class="metric-stack">
-
-      <div class="card metric-card">
-
-        <div class="metric-label">
-          Registros detectados
-        </div>
-
-        <div
-          id="recordsMetric"
-          class="metric-value"
-        >
-          0
-        </div>
-
-        <div class="metric-note">
-          Filas reales encontradas en el archivo
-        </div>
-
-      </div>
-
-
-      <div class="card metric-card">
-
-        <div class="metric-label">
-          Filas con error
-        </div>
-
-        <div
-          id="errorRowsMetric"
-          class="metric-value error"
-        >
-          0
-        </div>
-
-        <div
-          id="errorRowsNote"
-          class="metric-note"
-        >
-          Sin errores obligatorios
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- DISPATCH -->
-
-    <div class="card distribution-card">
-
-      <div
-        id="dispatchTitle"
-        class="distribution-title"
-      >
-        Tipo de despacho
+      <div class="dropzone-subtitle">
+        La validación se ejecutará automáticamente.
       </div>
 
       <div
-        id="dispatchSubtitle"
-        class="distribution-subtitle"
-      >
-        Distribución del archivo
-      </div>
-
-      <div
-        id="dispatchBars"
-        class="bar-list"
+        id="currentFile"
+        class="current-file hidden"
       ></div>
 
     </div>
 
-  </section>
+
+    <input
+      id="excelFile"
+      type="file"
+      accept=".xlsx,.xls,.xlsm,.csv"
+    >
+
+  </label>
+
+</section>
 
 
-  <!-- ====================================================
-       LINE DISTRIBUTION
-  ===================================================== -->
+<!-- ====================================================
+     SUCCESS
+===================================================== -->
 
-  <section
-    id="lineSection"
-    class="card section-card hidden"
+<section
+  id="successPanel"
+  class="success-panel hidden"
+>
+
+<div class="success-top">
+
+  <div class="success-mark">
+    ✓
+  </div>
+
+
+  <div class="success-copy">
+
+    <h2>
+      Programación procesada correctamente
+    </h2>
+
+    <p id="successMessage"></p>
+
+  </div>
+
+
+  <button
+    id="newUploadButton"
+    class="secondary-button"
+  >
+    Nueva carga
+  </button>
+
+</div>
+
+
+<div class="success-grid">
+
+  <div class="success-metric">
+
+    <span>
+      Recibidos
+    </span>
+
+    <strong id="successReceived">
+      0
+    </strong>
+
+  </div>
+
+
+  <div class="success-metric">
+
+    <span>
+      Insertados
+    </span>
+
+    <strong id="successInserted">
+      0
+    </strong>
+
+  </div>
+
+
+  <div class="success-metric">
+
+    <span>
+      Duplicados omitidos
+    </span>
+
+    <strong id="successDuplicates">
+      0
+    </strong>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- ====================================================
+     DASHBOARD
+===================================================== -->
+
+<section
+  id="dashboardSection"
+  class="dashboard-grid hidden"
+>
+
+<div class="card quality-card">
+
+  <div
+    id="qualityRing"
+    class="quality-ring"
   >
 
-    <div class="section-heading">
+    <div class="quality-center">
 
-      <div>
+      <div
+        id="qualityNumber"
+        class="quality-number"
+      >
+        0%
+      </div>
 
-        <h2
-          id="lineTitle"
-          class="section-title"
-        >
-          Distribución por línea
-        </h2>
-
-        <div
-          id="lineSubtitle"
-          class="section-description"
-        >
-          Cantidad de registros del archivo por línea.
-        </div>
-
+      <div class="quality-label">
+        Calidad
       </div>
 
     </div>
 
+  </div>
+
+
+  <div class="quality-copy">
+
+    <h2>
+      Calidad del envío
+    </h2>
+
+    <p>
+      Porcentaje calculado sobre los campos que intervienen en el control de calidad.
+    </p>
 
     <div
-      id="lineBars"
-      class="bar-list"
+      id="qualityDetail"
+      class="quality-detail"
     ></div>
 
-  </section>
+  </div>
+
+</div>
 
 
-  <!-- ====================================================
-       ONLY ERRORS
-  ===================================================== -->
+<div class="metric-stack">
 
-  <section
-    id="errorSection"
-    class="card section-card error-section hidden"
+  <div class="card metric-card">
+
+    <div class="metric-label">
+      Registros detectados
+    </div>
+
+    <div
+      id="recordsMetric"
+      class="metric-value"
+    >
+      0
+    </div>
+
+    <div class="metric-note">
+      Filas reales encontradas
+    </div>
+
+  </div>
+
+
+  <div class="card metric-card">
+
+    <div class="metric-label">
+      Filas con error
+    </div>
+
+    <div
+      id="errorRowsMetric"
+      class="metric-value error"
+    >
+      0
+    </div>
+
+    <div
+      id="errorRowsNote"
+      class="metric-note"
+    >
+      Sin errores obligatorios
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="card distribution-card">
+
+  <div
+    id="dispatchTitle"
+    class="distribution-title"
   >
+    Tipo de despacho
+  </div>
 
-    <div class="error-header">
+  <div
+    id="dispatchSubtitle"
+    class="distribution-subtitle"
+  >
+    Distribución del archivo
+  </div>
 
-      <div class="error-title-wrap">
+  <div
+    id="dispatchBars"
+    class="bar-list"
+  ></div>
 
-        <div
-          id="errorBadge"
-          class="error-badge"
-        >
-          0
-        </div>
+</div>
+
+</section>
 
 
-        <div>
+<!-- ====================================================
+     LINEAS
+===================================================== -->
 
-          <h2 class="error-title">
-            Registros que requieren corrección
-          </h2>
+<section
+  id="lineSection"
+  class="card section-card hidden"
+>
 
-          <div class="error-description">
-            Solo se muestran las filas que contienen errores que bloquean el envío.
-          </div>
+<div class="section-heading">
 
-        </div>
+  <div>
 
+    <h2
+      id="lineTitle"
+      class="section-title"
+    >
+      Distribución por línea
+    </h2>
+
+    <div
+      id="lineSubtitle"
+      class="section-description"
+    >
+      Cantidad de registros por línea.
+    </div>
+
+  </div>
+
+</div>
+
+
+<div
+  id="lineBars"
+  class="bar-list"
+></div>
+
+</section>
+
+
+<!-- ====================================================
+     SOLO FILAS CON ERROR
+===================================================== -->
+
+<section
+  id="errorSection"
+  class="card section-card error-section hidden"
+>
+
+<div class="error-header">
+
+  <div class="error-title-wrap">
+
+    <div
+      id="errorBadge"
+      class="error-badge"
+    >
+      0
+    </div>
+
+
+    <div>
+
+      <h2 class="error-title">
+        Registros que requieren corrección
+      </h2>
+
+      <div class="error-description">
+        Solo se muestran las filas que contienen errores que bloquean el envío.
       </div>
 
     </div>
 
+  </div>
 
-    <div class="table-shell">
-
-      <table id="errorTable">
-
-        <thead></thead>
-
-        <tbody></tbody>
-
-      </table>
-
-    </div>
-
-  </section>
+</div>
 
 
-  <!-- ====================================================
-       SEND
-  ===================================================== -->
+<div class="table-shell">
 
-  <section
-    id="sendSection"
-    class="card send-card hidden"
-  >
+  <table id="errorTable">
 
-    <div
-      id="sendStatus"
-      class="send-status"
-    >
-      Esperando archivo.
-    </div>
+    <thead></thead>
+
+    <tbody></tbody>
+
+  </table>
+
+</div>
+
+</section>
 
 
-    <button
-      id="sendButton"
-      class="send-button"
-      disabled
-    >
-      Enviar programación
-    </button>
+<!-- ====================================================
+     ENVIAR
+===================================================== -->
 
-  </section>
+<section
+  id="sendSection"
+  class="card send-card hidden"
+>
+
+<div
+  id="sendStatus"
+  class="send-status"
+>
+  Esperando archivo.
+</div>
+
+
+<button
+  id="sendButton"
+  class="send-button"
+  disabled
+>
+  Enviar programación
+</button>
+
+</section>
 
 </main>
 
@@ -2006,28 +1913,24 @@ td.error-cell .cell-select{
 
 
 <script>
+
 /* =========================================================
-   CONFIG
+   NUEVA URL APPS SCRIPT
 ========================================================= */
 
 const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyuyWBxlW8AXS819XsBEvyeX1gD2aUx9tfaWvP3MIG8tFx_kBrpMsWDI4P08wFWmA/exec";
+  "https://script.google.com/macros/s/AKfycbzVBhCdjdhmH3_NuJviPBctM2EHDf9E84VWnGKunfr50L8PWMoWrXdcPQjz901oE3QP/exec";
 
 
-const DEFAULT_YEAR =
-  2026;
+const DEFAULT_YEAR = 2026;
 
+const FUZZY_THRESHOLD = .85;
 
-const FUZZY_THRESHOLD =
-  .85;
-
-
-const FUZZY_DIFFERENCE =
-  .10;
+const FUZZY_DIFFERENCE = .10;
 
 
 /* =========================================================
-   COLUMNS
+   COLUMNAS
 ========================================================= */
 
 const COLUMNS = [
@@ -2055,10 +1958,6 @@ const COLUMNS = [
 ];
 
 
-/* =========================================================
-   REQUIRED
-========================================================= */
-
 const REQUIRED =
   new Set([
 
@@ -2075,19 +1974,6 @@ const REQUIRED =
 
   ]);
 
-
-/* =========================================================
-   QUALITY
-
-   NO participan:
-
-   Am - Pm
-   Cita
-   Bultos
-   Volumen
-   Peso
-   Observación
-========================================================= */
 
 const QUALITY_EXCLUDED =
   new Set([
@@ -2112,22 +1998,18 @@ const QUALITY_COLUMNS =
 
 
 /* =========================================================
-   CATALOGS
+   CATÁLOGOS
 ========================================================= */
 
 const CATALOGS = {
 
   "Área de OLT": [
-
     "AREAS CLAVE",
     "OLT CONSUMO",
     "OLT SALUD"
-
   ],
 
-
   "Línea": [
-
     "FAES FARMA",
     "FERQUIM",
     "GENOMMA LAB",
@@ -2138,94 +2020,58 @@ const CATALOGS = {
     "BIOPAS",
     "TECNOFARMA",
     "CLINICA INTERNACIONAL"
-
   ],
-
 
   "Tipo de despacho": [
-
     "LIMA",
     "PROVINCIA"
-
   ],
 
-
   "Tipo de Transporte": [
-
     "CD SANTA ANITA",
     "EXCLUSIVO",
     "EN RUTA",
     "AEREO",
     "TERRESTRE",
     "RECOGE CLIENTE"
-
   ],
 
-
   "Tipo de Mercaderia": [
-
     "SECO",
     "REFRIGERADO",
     "CLIMATIZADO"
-
   ]
 
 };
 
 
-/* =========================================================
-   EXPLICIT EQUIVALENCES
-========================================================= */
-
 const EXPLICIT_EQUIVALENCES = {
 
   "Área de OLT": {
 
-    "AREAS CLAVES":
-      "AREAS CLAVE",
-
-    "ÁREAS CLAVES":
-      "AREAS CLAVE",
-
-    "AREA CLAVE":
-      "AREAS CLAVE",
-
-    "ÁREA CLAVE":
-      "AREAS CLAVE"
+    "AREAS CLAVES":"AREAS CLAVE",
+    "ÁREAS CLAVES":"AREAS CLAVE",
+    "AREA CLAVE":"AREAS CLAVE",
+    "ÁREA CLAVE":"AREAS CLAVE"
 
   },
-
 
   "Línea": {
 
-    "ELEA PERU":
-      "ELEA",
+    "ELEA PERU":"ELEA",
+    "ELEA PERÚ":"ELEA",
+    "ELE":"ELEA",
+    "ELEO":"ELEA",
 
-    "ELEA PERÚ":
-      "ELEA",
-
-    "ELE":
-      "ELEA",
-
-    "ELEO":
-      "ELEA",
-
-    "ADIUM":
-      "TECNOFARMA",
-
-    "ADIUM PERU":
-      "TECNOFARMA",
-
-    "ADIUM PERÚ":
-      "TECNOFARMA"
+    "ADIUM":"TECNOFARMA",
+    "ADIUM PERU":"TECNOFARMA",
+    "ADIUM PERÚ":"TECNOFARMA"
 
   },
 
-
   "Tipo de Transporte": {
 
-    "AÉREO":
-      "AEREO"
+    "AÉREO":"AEREO"
 
   }
 
@@ -2233,182 +2079,126 @@ const EXPLICIT_EQUIVALENCES = {
 
 
 /* =========================================================
-   HEADER ALIASES
+   ALIAS DE ENCABEZADOS
 ========================================================= */
 
 const HEADER_ALIASES = {
 
-  "Fec. Despacho": [
-
+  "Fec. Despacho":[
     "FEC DESPACHO",
     "FEC. DESPACHO",
     "FECHA DE DESPACHO",
     "FECHA DESPACHO"
-
   ],
 
-
-  "Área de OLT": [
-
+  "Área de OLT":[
     "AREA DE OLT",
     "ÁREA DE OLT",
     "AREA OLT",
     "ÁREA OLT"
-
   ],
 
-
-  "Entrega": [
-
+  "Entrega":[
     "ENTREGA"
-
   ],
 
-
-  "Factura/B.V.": [
-
+  "Factura/B.V.":[
     "FACTURA/B.V.",
     "FACTURA B.V.",
     "FACTURA BV",
     "FACTURA",
     "BOLETA"
-
   ],
 
-
-  "GR": [
-
+  "GR":[
     "GR",
     "GUIA",
     "GUÍA",
     "GUIA DE REMISION",
     "GUÍA DE REMISIÓN"
-
   ],
 
-
-  "Am - Pm": [
-
+  "Am - Pm":[
     "AM PM",
     "AM - PM",
     "AM-PM",
     "TURNO"
-
   ],
 
-
-  "Cita": [
-
+  "Cita":[
     "CITA",
     "HORA CITA",
     "HORARIO CITA"
-
   ],
 
-
-  "Razón Social del Cliente": [
-
+  "Razón Social del Cliente":[
     "RAZON SOCIAL DEL CLIENTE",
     "RAZÓN SOCIAL DEL CLIENTE",
     "RAZON SOCIAL CLIENTE"
-
   ],
 
-
-  "Distrito": [
-
+  "Distrito":[
     "DISTRITO"
-
   ],
 
-
-  "Provincia": [
-
+  "Provincia":[
     "PROVINCIA",
     "PROVINCIA (*)",
     "PROVINCIA *"
-
   ],
 
-
-  "Departamento": [
-
+  "Departamento":[
     "DEPARTAMENTO"
-
   ],
 
-
-  "Línea": [
-
+  "Línea":[
     "LINEA",
     "LÍNEA"
-
   ],
 
-
-  "Bultos": [
-
+  "Bultos":[
     "BULTOS",
     "BULTO"
-
   ],
 
-
-  "Volumen": [
-
+  "Volumen":[
     "VOLUMEN"
-
   ],
 
-
-  "Peso": [
-
+  "Peso":[
     "PESO",
     "PESO (*)",
     "PESO *"
-
   ],
 
-
-  "Tipo de despacho": [
-
+  "Tipo de despacho":[
     "TIPO DE DESPACHO",
     "TIPO DESPACHO"
-
   ],
 
-
-  "Tipo de Transporte": [
-
+  "Tipo de Transporte":[
     "TIPO DE TRANSPORTE",
     "TIPO TRANSPORTE"
-
   ],
 
-
-  "Tipo de Mercaderia": [
-
+  "Tipo de Mercaderia":[
     "TIPO DE MERCADERIA",
     "TIPO DE MERCADERÍA",
     "TIPO MERCADERIA",
     "TIPO MERCADERÍA"
-
   ],
 
-
-  "Observación": [
-
+  "Observación":[
     "OBSERVACION",
     "OBSERVACIÓN",
     "OBSERVACIONES"
-
   ]
 
 };
 
 
 /* =========================================================
-   STATE
+   ESTADO
 ========================================================= */
 
 let authToken =
@@ -2417,234 +2207,141 @@ let authToken =
   ) || "";
 
 
-let loggedUser =
-  "";
+let loggedUser = "";
 
+let rows = [];
 
-let rows =
-  [];
+let validationErrors = [];
 
+let errorKeySet = new Set();
 
-let currentFileName =
-  "";
+let lastQualityPercent = 0;
 
-
-let validationErrors =
-  [];
-
-
-let errorKeySet =
-  new Set();
-
-
-let lastQualityPercent =
-  0;
-
-
-let distributionMode =
-  "FILE";
+let distributionMode = "FILE";
 
 
 /* =========================================================
-   ELEMENTS
+   ELEMENTOS
 ========================================================= */
 
 const el = {
 
   loginPage:
-    document.getElementById(
-      "loginPage"
-    ),
+    document.getElementById("loginPage"),
 
   appPage:
-    document.getElementById(
-      "appPage"
-    ),
+    document.getElementById("appPage"),
 
   loginForm:
-    document.getElementById(
-      "loginForm"
-    ),
+    document.getElementById("loginForm"),
 
   loginUser:
-    document.getElementById(
-      "loginUser"
-    ),
+    document.getElementById("loginUser"),
 
   loginPassword:
-    document.getElementById(
-      "loginPassword"
-    ),
+    document.getElementById("loginPassword"),
 
   loginButton:
-    document.getElementById(
-      "loginButton"
-    ),
+    document.getElementById("loginButton"),
 
   loginError:
-    document.getElementById(
-      "loginError"
-    ),
+    document.getElementById("loginError"),
 
   currentUser:
-    document.getElementById(
-      "currentUser"
-    ),
+    document.getElementById("currentUser"),
 
   lastUpload:
-    document.getElementById(
-      "lastUpload"
-    ),
+    document.getElementById("lastUpload"),
 
   logoutButton:
-    document.getElementById(
-      "logoutButton"
-    ),
+    document.getElementById("logoutButton"),
 
   excelFile:
-    document.getElementById(
-      "excelFile"
-    ),
+    document.getElementById("excelFile"),
 
   dropzone:
-    document.getElementById(
-      "dropzone"
-    ),
+    document.getElementById("dropzone"),
 
   currentFile:
-    document.getElementById(
-      "currentFile"
-    ),
+    document.getElementById("currentFile"),
 
   dashboardSection:
-    document.getElementById(
-      "dashboardSection"
-    ),
+    document.getElementById("dashboardSection"),
 
   lineSection:
-    document.getElementById(
-      "lineSection"
-    ),
+    document.getElementById("lineSection"),
 
   qualityRing:
-    document.getElementById(
-      "qualityRing"
-    ),
+    document.getElementById("qualityRing"),
 
   qualityNumber:
-    document.getElementById(
-      "qualityNumber"
-    ),
+    document.getElementById("qualityNumber"),
 
   qualityDetail:
-    document.getElementById(
-      "qualityDetail"
-    ),
+    document.getElementById("qualityDetail"),
 
   recordsMetric:
-    document.getElementById(
-      "recordsMetric"
-    ),
+    document.getElementById("recordsMetric"),
 
   errorRowsMetric:
-    document.getElementById(
-      "errorRowsMetric"
-    ),
+    document.getElementById("errorRowsMetric"),
 
   errorRowsNote:
-    document.getElementById(
-      "errorRowsNote"
-    ),
+    document.getElementById("errorRowsNote"),
 
   lineTitle:
-    document.getElementById(
-      "lineTitle"
-    ),
+    document.getElementById("lineTitle"),
 
   lineSubtitle:
-    document.getElementById(
-      "lineSubtitle"
-    ),
+    document.getElementById("lineSubtitle"),
 
   lineBars:
-    document.getElementById(
-      "lineBars"
-    ),
+    document.getElementById("lineBars"),
 
   dispatchTitle:
-    document.getElementById(
-      "dispatchTitle"
-    ),
+    document.getElementById("dispatchTitle"),
 
   dispatchSubtitle:
-    document.getElementById(
-      "dispatchSubtitle"
-    ),
+    document.getElementById("dispatchSubtitle"),
 
   dispatchBars:
-    document.getElementById(
-      "dispatchBars"
-    ),
+    document.getElementById("dispatchBars"),
 
   errorSection:
-    document.getElementById(
-      "errorSection"
-    ),
+    document.getElementById("errorSection"),
 
   errorBadge:
-    document.getElementById(
-      "errorBadge"
-    ),
+    document.getElementById("errorBadge"),
 
   errorTable:
-    document.getElementById(
-      "errorTable"
-    ),
+    document.getElementById("errorTable"),
 
   sendSection:
-    document.getElementById(
-      "sendSection"
-    ),
+    document.getElementById("sendSection"),
 
   sendStatus:
-    document.getElementById(
-      "sendStatus"
-    ),
+    document.getElementById("sendStatus"),
 
   sendButton:
-    document.getElementById(
-      "sendButton"
-    ),
+    document.getElementById("sendButton"),
 
   successPanel:
-    document.getElementById(
-      "successPanel"
-    ),
+    document.getElementById("successPanel"),
 
   successMessage:
-    document.getElementById(
-      "successMessage"
-    ),
+    document.getElementById("successMessage"),
 
   successReceived:
-    document.getElementById(
-      "successReceived"
-    ),
+    document.getElementById("successReceived"),
 
   successInserted:
-    document.getElementById(
-      "successInserted"
-    ),
+    document.getElementById("successInserted"),
 
   successDuplicates:
-    document.getElementById(
-      "successDuplicates"
-    ),
+    document.getElementById("successDuplicates"),
 
   newUploadButton:
-    document.getElementById(
-      "newUploadButton"
-    )
+    document.getElementById("newUploadButton")
 
 };
 
@@ -2677,14 +2374,11 @@ async function apiRequest(
         APPS_SCRIPT_URL,
         {
 
-          method:
-            "POST",
+          method:"POST",
 
-          headers: {
-
+          headers:{
             "Content-Type":
               "text/plain;charset=utf-8"
-
           },
 
           body:
@@ -2692,8 +2386,7 @@ async function apiRequest(
               payload
             ),
 
-          redirect:
-            "follow",
+          redirect:"follow",
 
           signal:
             controller.signal
@@ -2773,19 +2466,15 @@ el.loginForm
 
       event.preventDefault();
 
-
       hideLoginError();
 
 
       const usuario =
-        el.loginUser
-          .value
-          .trim();
+        el.loginUser.value.trim();
 
 
       const password =
-        el.loginPassword
-          .value;
+        el.loginPassword.value;
 
 
       if (
@@ -2812,8 +2501,7 @@ el.loginForm
         const result =
           await apiRequest({
 
-            action:
-              "login",
+            action:"login",
 
             usuario:
               usuario,
@@ -2845,11 +2533,8 @@ el.loginForm
 
 
         sessionStorage.setItem(
-
           "olt_token",
-
           authToken
-
         );
 
 
@@ -2928,7 +2613,7 @@ function hideLoginError() {
 
 
 /* =========================================================
-   RESTORE SESSION
+   RESTAURAR SESIÓN
 ========================================================= */
 
 async function restoreSession() {
@@ -2947,8 +2632,7 @@ async function restoreSession() {
     const result =
       await apiRequest({
 
-        action:
-          "status",
+        action:"status",
 
         token:
           authToken
@@ -3054,12 +2738,9 @@ async function logout() {
     authToken;
 
 
-  authToken =
-    "";
+  authToken = "";
 
-
-  loggedUser =
-    "";
+  loggedUser = "";
 
 
   sessionStorage.removeItem(
@@ -3092,8 +2773,7 @@ async function logout() {
 
       await apiRequest({
 
-        action:
-          "logout",
+        action:"logout",
 
         token:
           oldToken
@@ -3109,7 +2789,7 @@ async function logout() {
 
 
 /* =========================================================
-   NORMALIZATION
+   NORMALIZACIÓN
 ========================================================= */
 
 function removeAccents(
@@ -3119,9 +2799,7 @@ function removeAccents(
   return String(
     value ?? ""
   )
-  .normalize(
-    "NFD"
-  )
+  .normalize("NFD")
   .replace(
     /[\u0300-\u036f]/g,
     ""
@@ -3215,7 +2893,7 @@ function isEmpty(
 
 
 /* =========================================================
-   HEADER LOOKUP
+   HEADERS
 ========================================================= */
 
 const HEADER_LOOKUP =
@@ -3234,13 +2912,10 @@ Object.entries(
   ) => {
 
     HEADER_LOOKUP.set(
-
       normalizeHeader(
         canonical
       ),
-
       canonical
-
     );
 
 
@@ -3248,13 +2923,10 @@ Object.entries(
       alias => {
 
         HEADER_LOOKUP.set(
-
           normalizeHeader(
             alias
           ),
-
           canonical
-
         );
 
       }
@@ -3278,7 +2950,7 @@ function getCanonicalHeader(
 
 
 /* =========================================================
-   EXCEL HEADER DETECTION
+   DETECTAR CABECERA
 ========================================================= */
 
 function scoreHeaderRow(
@@ -3324,7 +2996,6 @@ function detectHeaderRow(
   let bestIndex =
     -1;
 
-
   let bestScore =
     0;
 
@@ -3355,7 +3026,6 @@ function detectHeaderRow(
 
       bestScore =
         score;
-
 
       bestIndex =
         i;
@@ -3404,28 +3074,16 @@ function findBestWorksheet(
         const matrix =
           XLSX.utils
             .sheet_to_json(
-
               workbook
                 .Sheets[
                   sheetName
                 ],
-
               {
-
-                header:
-                  1,
-
-                defval:
-                  "",
-
-                raw:
-                  true,
-
-                blankrows:
-                  true
-
+                header:1,
+                defval:"",
+                raw:true,
+                blankrows:true
               }
-
             );
 
 
@@ -3453,9 +3111,7 @@ function findBestWorksheet(
           best = {
 
             sheetName,
-
             matrix,
-
             header
 
           };
@@ -3678,7 +3334,7 @@ function similarity(
 
 
 /* =========================================================
-   HOMOLOGATE
+   HOMOLOGACIÓN
 ========================================================= */
 
 function homologate(
@@ -3697,10 +3353,7 @@ function homologate(
   ) {
 
     return {
-
-      value:
-        ""
-
+      value:""
     };
 
   }
@@ -3738,10 +3391,7 @@ function homologate(
       ) {
 
         return {
-
-          value:
-            to
-
+          value:to
         };
 
       }
@@ -3762,10 +3412,7 @@ function homologate(
   ) {
 
     return {
-
-      value:
-        original
-
+      value:original
     };
 
   }
@@ -3789,10 +3436,7 @@ function homologate(
   ) {
 
     return {
-
-      value:
-        exact
-
+      value:exact
     };
 
   }
@@ -3845,10 +3489,7 @@ function homologate(
   ) {
 
     return {
-
-      value:
-        first.option
-
+      value:first.option
     };
 
   }
@@ -3856,11 +3497,9 @@ function homologate(
 
   return {
 
-    value:
-      original,
+    value:original,
 
-    invalid:
-      true
+    invalid:true
 
   };
 
@@ -3868,7 +3507,7 @@ function homologate(
 
 
 /* =========================================================
-   DATE
+   FECHAS
 ========================================================= */
 
 const MONTHS = {
@@ -3935,12 +3574,9 @@ function validDate(
 
 
   return (
-    date.getFullYear() ===
-      year &&
-    date.getMonth() ===
-      month - 1 &&
-    date.getDate() ===
-      day
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
   );
 
 }
@@ -3998,8 +3634,7 @@ function parseDispatchDate(
 
       return {
 
-        valid:
-          true,
+        valid:true,
 
         value:
           `${pad(parsed.d)}/${pad(parsed.m)}/${parsed.y}`
@@ -4050,8 +3685,7 @@ function parseDispatchDate(
 
       return {
 
-        valid:
-          true,
+        valid:true,
 
         value:
           `${pad(day)}/${pad(month)}/${DEFAULT_YEAR}`
@@ -4102,8 +3736,7 @@ function parseDispatchDate(
 
       return {
 
-        valid:
-          true,
+        valid:true,
 
         value:
           `${pad(day)}/${pad(month)}/${year}`
@@ -4153,8 +3786,7 @@ function parseDispatchDate(
 
       return {
 
-        valid:
-          true,
+        valid:true,
 
         value:
           `${pad(day)}/${pad(month)}/${year}`
@@ -4226,8 +3858,7 @@ function parseDispatchDate(
 
       return {
 
-        valid:
-          true,
+        valid:true,
 
         value:
           `${pad(day)}/${pad(month)}/${year}`
@@ -4240,10 +3871,7 @@ function parseDispatchDate(
 
 
   return {
-
-    valid:
-      false
-
+    valid:false
   };
 
 }
@@ -4353,7 +3981,7 @@ function prepareImportedValue(
 
 
 /* =========================================================
-   MERCHANDISE
+   MERCADERÍA
 ========================================================= */
 
 function detectMerchandiseFromObservation(
@@ -4426,7 +4054,7 @@ function detectMultipleMerchandise(
 
 
 /* =========================================================
-   FILE INPUT + DRAG DROP
+   ARCHIVO
 ========================================================= */
 
 el.excelFile
@@ -4533,7 +4161,7 @@ el.dropzone
 
 
 /* =========================================================
-   PROCESS EXCEL
+   PROCESAR EXCEL
 ========================================================= */
 
 async function processExcelFile(
@@ -4543,10 +4171,6 @@ async function processExcelFile(
   try {
 
     resetDataOnly();
-
-
-    currentFileName =
-      file.name;
 
 
     el.currentFile.textContent =
@@ -4569,13 +4193,8 @@ async function processExcelFile(
       XLSX.read(
         buffer,
         {
-
-          type:
-            "array",
-
-          cellDates:
-            false
-
+          type:"array",
+          cellDates:false
         }
       );
 
@@ -4710,7 +4329,8 @@ async function processExcelFile(
 
 
     if (
-      imported.length === 0
+      imported.length ===
+      0
     ) {
 
       throw new Error(
@@ -4747,7 +4367,7 @@ async function processExcelFile(
 
 
 /* =========================================================
-   ERRORS
+   VALIDACIÓN
 ========================================================= */
 
 function errorKey(
@@ -4785,13 +4405,9 @@ function addError(
     errorMap.set(
       key,
       {
-
         rowIndex,
-
         column,
-
         message
-
       }
     );
 
@@ -4799,10 +4415,6 @@ function addError(
 
 }
 
-
-/* =========================================================
-   VALIDATE
-========================================================= */
 
 function validateAll() {
 
@@ -4817,13 +4429,9 @@ function validateAll() {
     ) => {
 
       validateRow(
-
         row,
-
         rowIndex,
-
         errorMap
-
       );
 
     }
@@ -4848,7 +4456,7 @@ function validateAll() {
 
 
 /* =========================================================
-   ROW VALIDATION
+   VALIDAR FILA
 ========================================================= */
 
 function validateRow(
@@ -4861,10 +4469,6 @@ function validateRow(
     row.__sourceRow ||
     rowIndex + 2;
 
-
-  /* -------------------------------------------------------
-     DATE
-  ------------------------------------------------------- */
 
   if (
     isEmpty(
@@ -4925,10 +4529,6 @@ function validateRow(
 
   }
 
-
-  /* -------------------------------------------------------
-     REQUIRED
-  ------------------------------------------------------- */
 
   REQUIRED.forEach(
     column => {
@@ -4999,10 +4599,6 @@ function validateRow(
   );
 
 
-  /* -------------------------------------------------------
-     INVALID "-"
-  ------------------------------------------------------- */
-
   [
     "Entrega",
     "Factura/B.V.",
@@ -5037,10 +4633,6 @@ function validateRow(
   );
 
 
-  /* -------------------------------------------------------
-     MULTIPLE MERCHANDISE
-  ------------------------------------------------------- */
-
   const merchandiseMatches =
     detectMultipleMerchandise(
       row[
@@ -5068,10 +4660,6 @@ function validateRow(
 
   }
 
-
-  /* -------------------------------------------------------
-     CATALOGS
-  ------------------------------------------------------- */
 
   Object.keys(
     CATALOGS
@@ -5150,7 +4738,7 @@ function validateRow(
 
 
 /* =========================================================
-   QUALITY
+   CALIDAD
 ========================================================= */
 
 function calculateQuality() {
@@ -5161,20 +4749,14 @@ function calculateQuality() {
 
 
   if (
-    total === 0
+    total ===
+    0
   ) {
 
     return {
-
-      valid:
-        0,
-
-      total:
-        0,
-
-      percent:
-        0
-
+      valid:0,
+      total:0,
+      percent:0
     };
 
   }
@@ -5250,7 +4832,7 @@ function calculateQuality() {
 
 
 /* =========================================================
-   DISTRIBUTIONS
+   DISTRIBUCIONES
 ========================================================= */
 
 function getDistribution(
@@ -5343,7 +4925,7 @@ function getDistribution(
 
 
 /* =========================================================
-   RENDER ALL
+   RENDER
 ========================================================= */
 
 function renderAll() {
@@ -5383,7 +4965,7 @@ function renderAll() {
 
 
 /* =========================================================
-   QUALITY RENDER
+   QUALITY
 ========================================================= */
 
 function renderQuality() {
@@ -5471,14 +5053,6 @@ function animateQuality(
   const color =
     qualityColor(
       to
-    );
-
-
-  el.qualityRing
-    .style
-    .setProperty(
-      "--quality-color",
-      color
     );
 
 
@@ -5637,7 +5211,7 @@ function renderMetrics() {
 
 
 /* =========================================================
-   BARS
+   BARRAS
 ========================================================= */
 
 function renderBars(
@@ -5861,13 +5435,9 @@ function renderBars(
 
 
       row.append(
-
         label,
-
         track,
-
         value
-
       );
 
 
@@ -5900,7 +5470,7 @@ function renderBars(
 
 
 /* =========================================================
-   FILE DISTRIBUTIONS
+   DISTRIBUCIÓN ARCHIVO
 ========================================================= */
 
 function renderFileDistributions() {
@@ -5989,7 +5559,7 @@ function renderFileDistributions() {
 
 
 /* =========================================================
-   INSERTED DISTRIBUTIONS
+   DISTRIBUCIÓN INSERTADOS
 ========================================================= */
 
 function renderInsertedDistributions(
@@ -6005,7 +5575,7 @@ function renderInsertedDistributions(
 
 
   el.lineSubtitle.textContent =
-    "Solo se muestran registros nuevos realmente insertados en Recepción OLT.";
+    "Solo registros nuevos realmente insertados en Recepción OLT.";
 
 
   el.dispatchTitle.textContent =
@@ -6046,7 +5616,7 @@ function renderInsertedDistributions(
 
 
 /* =========================================================
-   ERROR ROWS ONLY
+   SOLO FILAS CON ERROR
 ========================================================= */
 
 function renderErrorRows() {
@@ -6097,12 +5667,9 @@ function renderErrorRows() {
       );
 
 
-  thead.innerHTML =
-    "";
+  thead.innerHTML = "";
 
-
-  tbody.innerHTML =
-    "";
+  tbody.innerHTML = "";
 
 
   const trHead =
@@ -6319,7 +5886,7 @@ function renderErrorRows() {
 
 
 /* =========================================================
-   CELL EDITOR
+   EDITOR
 ========================================================= */
 
 function createCellEditor(
@@ -6375,9 +5942,7 @@ function createCellEditor(
       );
 
 
-    blank.value =
-      "";
-
+    blank.value = "";
 
     blank.textContent =
       "Seleccionar...";
@@ -6488,7 +6053,7 @@ function createCellEditor(
 
 
 /* =========================================================
-   SEND STATE
+   BOTÓN ENVIAR
 ========================================================= */
 
 function updateSendState() {
@@ -6526,7 +6091,7 @@ function updateSendState() {
 
 
 /* =========================================================
-   SEND
+   ENVIAR
 ========================================================= */
 
 el.sendButton
@@ -6573,8 +6138,7 @@ async function sendProgramming() {
     const result =
       await apiRequest({
 
-        action:
-          "upload",
+        action:"upload",
 
         token:
           authToken,
@@ -6655,13 +6219,8 @@ async function sendProgramming() {
 
 
     window.scrollTo({
-
-      top:
-        0,
-
-      behavior:
-        "smooth"
-
+      top:0,
+      behavior:"smooth"
     });
 
   }
@@ -6707,7 +6266,7 @@ function setSendLoading(
   ) {
 
     el.sendStatus.textContent =
-      "Verificando DNI de filas e insertando registros nuevos...";
+      "Verificando DNI e insertando únicamente registros nuevos...";
 
   }
   else {
@@ -6720,7 +6279,7 @@ function setSendLoading(
 
 
 /* =========================================================
-   SEND ROWS
+   DATA PARA SERVIDOR
 ========================================================= */
 
 function getRowsForSending() {
@@ -6755,7 +6314,7 @@ function getRowsForSending() {
 
 
 /* =========================================================
-   SUCCESS
+   RESULTADO
 ========================================================= */
 
 function showUploadResult(
@@ -6788,7 +6347,7 @@ function showUploadResult(
 
 
 /* =========================================================
-   NEW UPLOAD
+   NUEVA CARGA
 ========================================================= */
 
 el.newUploadButton
@@ -6800,13 +6359,8 @@ el.newUploadButton
 
 
       window.scrollTo({
-
-        top:
-          0,
-
-        behavior:
-          "smooth"
-
+        top:0,
+        behavior:"smooth"
       });
 
     }
@@ -6819,13 +6373,9 @@ el.newUploadButton
 
 function resetDataOnly() {
 
-  rows =
-    [];
+  rows = [];
 
-
-  validationErrors =
-    [];
-
+  validationErrors = [];
 
   errorKeySet =
     new Set();
@@ -6853,16 +6403,9 @@ function resetUpload() {
   resetDataOnly();
 
 
-  currentFileName =
-    "";
+  el.excelFile.value = "";
 
-
-  el.excelFile.value =
-    "";
-
-
-  el.currentFile.textContent =
-    "";
+  el.currentFile.textContent = "";
 
 
   el.currentFile
@@ -6900,18 +6443,15 @@ function resetUpload() {
     );
 
 
-  el.lineBars.innerHTML =
-    "";
+  el.lineBars.innerHTML = "";
 
-
-  el.dispatchBars.innerHTML =
-    "";
+  el.dispatchBars.innerHTML = "";
 
 }
 
 
 /* =========================================================
-   START
+   INICIO
 ========================================================= */
 
 restoreSession();
