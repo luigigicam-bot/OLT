@@ -10,11 +10,10 @@
 
   <title>OLT · Recepción de programación</title>
 
-  <!-- Librería para leer Excel -->
+  <!-- Lectura de Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-
     * {
       box-sizing: border-box;
     }
@@ -25,6 +24,8 @@
       --text: #18212f;
       --muted: #667085;
       --border: #d0d5dd;
+
+      --dark: #111827;
 
       --blue: #2563eb;
       --blue-soft: #dbeafe;
@@ -56,39 +57,297 @@
       color: var(--text);
     }
 
-    header {
+    .hidden {
+      display: none !important;
+    }
+
+    /* ======================================================
+       LOGIN
+    ====================================================== */
+
+    .login-page {
+      min-height: 100vh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 25px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #111827,
+          #1e3a8a
+        );
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+
+      background: white;
+
+      border-radius: 18px;
+
+      padding: 34px;
+
+      box-shadow:
+        0 20px 60px
+        rgba(0, 0, 0, .25);
+    }
+
+    .login-logo {
+      width: 58px;
+      height: 58px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-bottom: 18px;
+
+      border-radius: 14px;
+
       background: #111827;
-      color: #ffffff;
-      padding: 24px 32px;
+      color: white;
+
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .login-card h1 {
+      margin: 0 0 5px;
+      font-size: 25px;
+    }
+
+    .login-card > p {
+      margin:
+        0 0 28px;
+
+      color:
+        var(--muted);
+    }
+
+    .field {
+      margin-bottom:
+        18px;
+    }
+
+    .field label {
+      display: block;
+
+      margin-bottom:
+        7px;
+
+      font-size:
+        13px;
+
+      font-weight:
+        700;
+    }
+
+    .field input {
+      width: 100%;
+
+      padding:
+        12px 13px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius:
+        8px;
+
+      font-size:
+        15px;
+    }
+
+    .field input:focus {
+      outline:
+        2px solid
+        #93c5fd;
+
+      border-color:
+        #93c5fd;
+    }
+
+    .login-button {
+      width: 100%;
+
+      padding:
+        13px 18px;
+
+      border: 0;
+
+      border-radius:
+        8px;
+
+      background:
+        #2563eb;
+
+      color: white;
+
+      font-weight:
+        700;
+
+      font-size:
+        15px;
+
+      cursor:
+        pointer;
+    }
+
+    .login-button:disabled {
+      opacity:
+        .55;
+
+      cursor:
+        not-allowed;
+    }
+
+    .login-error {
+      margin-top:
+        16px;
+
+      padding:
+        11px 13px;
+
+      background:
+        var(--red-bg);
+
+      color:
+        var(--red);
+
+      border-radius:
+        8px;
+
+      font-size:
+        13px;
+    }
+
+    /* ======================================================
+       CABECERA APP
+    ====================================================== */
+
+    header {
+      background:
+        var(--dark);
+
+      color: white;
+
+      padding:
+        19px 30px;
+    }
+
+    .header-inner {
+      max-width:
+        1550px;
+
+      margin: auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
     }
 
     header h1 {
       margin: 0;
-      font-size: 24px;
+
+      font-size:
+        22px;
     }
 
     header p {
-      margin: 6px 0 0;
-      color: #cbd5e1;
+      margin:
+        4px 0 0;
+
+      color:
+        #cbd5e1;
+
+      font-size:
+        13px;
     }
 
+    .user-zone {
+      display: flex;
+      align-items: center;
+
+      gap: 14px;
+
+      text-align:
+        right;
+    }
+
+    .user-name {
+      font-weight:
+        700;
+    }
+
+    .last-upload {
+      color:
+        #cbd5e1;
+
+      font-size:
+        12px;
+
+      margin-top:
+        3px;
+    }
+
+    .logout-button {
+      border:
+        1px solid
+        #475569;
+
+      background:
+        transparent;
+
+      color: white;
+
+      padding:
+        8px 12px;
+
+      border-radius:
+        7px;
+
+      cursor:
+        pointer;
+    }
+
+    /* ======================================================
+       GENERAL
+    ====================================================== */
+
     main {
-      max-width: 1550px;
+      max-width:
+        1550px;
+
       margin: auto;
-      padding: 30px;
+
+      padding:
+        28px;
     }
 
     .card {
-      background: var(--card);
+      background:
+        var(--card);
 
       border:
         1px solid
         #e4e7ec;
 
-      border-radius: 12px;
+      border-radius:
+        12px;
 
-      padding: 24px;
-      margin-bottom: 20px;
+      padding:
+        23px;
+
+      margin-bottom:
+        20px;
 
       box-shadow:
         0 2px 6px
@@ -99,18 +358,26 @@
       margin-top: 0;
     }
 
+    /* ======================================================
+       CARGA
+    ====================================================== */
+
     .upload-area {
       border:
         2px dashed
         var(--border);
 
-      border-radius: 12px;
+      border-radius:
+        12px;
 
-      padding: 40px;
+      padding:
+        36px;
 
-      text-align: center;
+      text-align:
+        center;
 
-      transition: .2s;
+      transition:
+        .2s;
     }
 
     .upload-area:hover {
@@ -121,38 +388,14 @@
         #f8fbff;
     }
 
-    input[type="file"] {
-      margin-top: 15px;
+    .upload-area input {
+      margin-top:
+        14px;
     }
 
-    button {
-      border: none;
-
-      border-radius: 8px;
-
-      padding:
-        11px 18px;
-
-      font-size: 14px;
-
-      font-weight: 600;
-
-      cursor: pointer;
-    }
-
-    .btn-success {
-      background: #16a34a;
-      color: white;
-    }
-
-    .btn-success:hover:not(:disabled) {
-      background: #15803d;
-    }
-
-    .btn-success:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
+    /* ======================================================
+       RESUMEN
+    ====================================================== */
 
     .summary {
       display: grid;
@@ -163,20 +406,34 @@
           1fr
         );
 
-      gap: 15px;
+      gap:
+        15px;
     }
 
     .summary-box {
-      padding: 18px;
-      border-radius: 10px;
+      padding:
+        18px;
+
+      border-radius:
+        10px;
     }
 
     .summary-box strong {
       display: block;
 
-      font-size: 28px;
+      font-size:
+        28px;
 
-      margin-top: 4px;
+      margin-top:
+        4px;
+    }
+
+    .summary-quality {
+      background:
+        #e0f2fe;
+
+      color:
+        #075985;
     }
 
     .summary-errors {
@@ -203,13 +460,33 @@
         var(--green);
     }
 
-    .summary-corrections {
+    .quality-detail {
+      margin-top:
+        16px;
+
+      padding:
+        12px 14px;
+
       background:
-        var(--blue-soft);
+        #f8fafc;
+
+      border:
+        1px solid
+        #e2e8f0;
+
+      border-radius:
+        8px;
+
+      font-size:
+        13px;
 
       color:
-        #1d4ed8;
+        var(--muted);
     }
+
+    /* ======================================================
+       MENSAJES
+    ====================================================== */
 
     .message {
       padding:
@@ -225,7 +502,7 @@
         14px;
 
       line-height:
-        1.45;
+        1.4;
     }
 
     .message.error {
@@ -257,37 +534,44 @@
         var(--blue-soft);
 
       color:
-        #1e40af;
+        #1d4ed8;
     }
+
+    /* ======================================================
+       LEYENDA
+    ====================================================== */
 
     .legend {
       display: flex;
-
       flex-wrap: wrap;
 
-      gap: 15px;
+      gap:
+        15px;
 
       margin:
-        12px 0 18px;
+        12px 0 17px;
     }
 
     .legend-item {
       display: flex;
-
       align-items: center;
 
-      gap: 7px;
-
-      font-size:
-        13px;
+      gap:
+        7px;
 
       color:
         var(--muted);
+
+      font-size:
+        13px;
     }
 
     .legend-color {
-      width: 16px;
-      height: 16px;
+      width:
+        16px;
+
+      height:
+        16px;
 
       border-radius:
         4px;
@@ -296,29 +580,25 @@
     .legend-red {
       background:
         var(--red-bg);
-
-      border:
-        1px solid #fecaca;
     }
 
     .legend-yellow {
       background:
         var(--yellow-bg);
-
-      border:
-        1px solid #fde68a;
     }
 
     .legend-blue {
       background:
         var(--blue-soft);
-
-      border:
-        1px solid #bfdbfe;
     }
 
+    /* ======================================================
+       TABLA
+    ====================================================== */
+
     .table-container {
-      overflow: auto;
+      overflow:
+        auto;
 
       max-height:
         650px;
@@ -332,7 +612,8 @@
     }
 
     table {
-      width: 100%;
+      width:
+        100%;
 
       border-collapse:
         collapse;
@@ -345,7 +626,9 @@
     }
 
     th {
-      position: sticky;
+      position:
+        sticky;
+
       top: 0;
 
       z-index: 5;
@@ -357,11 +640,14 @@
         1px solid
         var(--border);
 
-      padding: 10px;
+      padding:
+        10px;
 
-      text-align: left;
+      text-align:
+        left;
 
-      white-space: nowrap;
+      white-space:
+        nowrap;
     }
 
     td {
@@ -373,27 +659,29 @@
         1px solid
         #eaecf0;
 
-      padding: 4px;
-
-      vertical-align: top;
+      padding:
+        4px;
     }
 
     td input {
-      width: 100%;
+      width:
+        100%;
 
-      min-width: 115px;
+      min-width:
+        115px;
 
-      padding: 8px;
+      padding:
+        8px;
 
       border:
         1px solid
         transparent;
 
-      background:
-        transparent;
-
       border-radius:
         5px;
+
+      background:
+        transparent;
 
       font-size:
         13px;
@@ -408,6 +696,20 @@
         white;
     }
 
+    .row-number {
+      min-width:
+        65px;
+
+      text-align:
+        center;
+
+      background:
+        #f9fafb;
+
+      font-weight:
+        700;
+    }
+
     td.error-cell {
       background:
         var(--red-bg);
@@ -417,7 +719,8 @@
       color:
         var(--red);
 
-      font-weight: 600;
+      font-weight:
+        700;
     }
 
     td.warning-cell {
@@ -430,29 +733,17 @@
         var(--blue-soft);
     }
 
-    .row-number {
-      min-width: 65px;
-
-      text-align:
-        center;
-
-      background:
-        #f9fafb;
-
-      font-weight:
-        600;
-    }
+    /* ======================================================
+       ENVÍO
+    ====================================================== */
 
     .actions {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-      justify-content:
-        space-between;
-
-      align-items:
-        center;
-
-      gap: 15px;
+      gap:
+        15px;
     }
 
     .status {
@@ -463,538 +754,810 @@
         14px;
     }
 
-    .hidden {
-      display: none;
-    }
+    .send-button {
+      border: 0;
 
-    .success-screen {
-      text-align: center;
+      border-radius:
+        8px;
 
       padding:
-        35px 20px;
+        11px 18px;
+
+      background:
+        #16a34a;
+
+      color: white;
+
+      font-weight:
+        700;
+
+      cursor:
+        pointer;
+    }
+
+    .send-button:disabled {
+      opacity:
+        .45;
+
+      cursor:
+        not-allowed;
+    }
+
+    /* ======================================================
+       RESULTADO ENVÍO
+    ====================================================== */
+
+    .success-screen {
+      text-align:
+        center;
+
+      padding:
+        40px 25px;
     }
 
     .success-icon {
-      font-size: 54px;
+      font-size:
+        55px;
     }
 
     .success-screen h2 {
       color:
         var(--green);
-
-      margin-bottom:
-        10px;
     }
 
-    .success-details {
-      display: inline-block;
+    .result-grid {
+      max-width:
+        630px;
 
-      text-align: left;
+      margin:
+        25px auto;
 
-      margin-top: 15px;
+      display: grid;
 
-      padding: 15px 25px;
+      grid-template-columns:
+        repeat(
+          3,
+          1fr
+        );
+
+      gap:
+        12px;
+    }
+
+    .result-item {
+      background:
+        #f8fafc;
+
+      border:
+        1px solid
+        #e2e8f0;
+
+      border-radius:
+        9px;
+
+      padding:
+        15px;
+    }
+
+    .result-item strong {
+      display: block;
+
+      font-size:
+        24px;
+
+      margin-bottom:
+        3px;
+    }
+
+    .result-message {
+      max-width:
+        700px;
+
+      margin:
+        20px auto;
+
+      padding:
+        15px;
+
+      border-radius:
+        9px;
 
       background:
         var(--green-bg);
-
-      border-radius:
-        10px;
 
       color:
         var(--green);
     }
 
     @media (
-      max-width: 900px
+      max-width: 850px
     ) {
-
-      main {
-        padding: 15px;
-      }
-
       .summary {
         grid-template-columns:
           1fr 1fr;
       }
 
-      .actions {
+      .header-inner {
         flex-direction:
           column;
 
         align-items:
-          stretch;
+          flex-start;
       }
 
-    }
+      .user-zone {
+        text-align:
+          left;
+      }
 
+      main {
+        padding:
+          15px;
+      }
+
+      .result-grid {
+        grid-template-columns:
+          1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-<header>
+<!-- =========================================================
+     LOGIN
+========================================================= -->
 
-  <h1>
-    OLT · Recepción de programación
-  </h1>
+<section
+  id="loginPage"
+  class="login-page"
+>
 
-  <p>
-    Validación, homologación y envío de programación OLT
-  </p>
-
-</header>
-
-<main>
-
-  <!-- =====================================================
-       CARGA
-  ====================================================== -->
-
-  <section
-    class="card"
-    id="uploadCard"
-  >
-
-    <h2>
-      1. Cargar programación
-    </h2>
-
-    <div
-      class="upload-area"
-    >
-
-      <strong>
-        Selecciona el Excel enviado por Operaciones
-      </strong>
-
-      <p>
-        El sistema detectará automáticamente la plantilla,
-        encabezados y registros.
-      </p>
-
-      <input
-        type="file"
-        id="excelFile"
-        accept=".xlsx,.xls,.xlsm,.csv"
-      >
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       RESULTADOS
-  ====================================================== -->
-
-  <section
-    id="resultsSection"
-    class="hidden"
+  <div
+    class="login-card"
   >
 
     <div
-      class="card"
+      class="login-logo"
     >
-
-      <h2>
-        2. Resultado de validación
-      </h2>
-
-      <div
-        class="summary"
-      >
-
-        <div
-          class="summary-box summary-errors"
-        >
-
-          <span>
-            Errores
-          </span>
-
-          <strong
-            id="errorCount"
-          >
-            0
-          </strong>
-
-          <small>
-            Bloquean el envío
-          </small>
-
-        </div>
-
-
-        <div
-          class="summary-box summary-warnings"
-        >
-
-          <span>
-            Advertencias
-          </span>
-
-          <strong
-            id="warningCount"
-          >
-            0
-          </strong>
-
-          <small>
-            No bloquean
-          </small>
-
-        </div>
-
-
-        <div
-          class="summary-box summary-records"
-        >
-
-          <span>
-            Registros
-          </span>
-
-          <strong
-            id="rowCount"
-          >
-            0
-          </strong>
-
-          <small>
-            Registros encontrados
-          </small>
-
-        </div>
-
-
-        <div
-          class="summary-box summary-corrections"
-        >
-
-          <span>
-            Homologaciones
-          </span>
-
-          <strong
-            id="correctionCount"
-          >
-            0
-          </strong>
-
-          <small>
-            Correcciones automáticas
-          </small>
-
-        </div>
-
-      </div>
-
+      OLT
     </div>
 
+    <h1>
+      Recepción de programación
+    </h1>
 
-    <!-- ===================================================
-         DIAGNÓSTICO
-    ==================================================== -->
+    <p>
+      Ingresa tus credenciales para continuar.
+    </p>
 
-    <div
-      class="card"
+    <form
+      id="loginForm"
     >
 
-      <h2>
-        Diagnóstico
-      </h2>
-
       <div
-        id="messages"
-      ></div>
-
-    </div>
-
-
-    <!-- ===================================================
-         TABLA
-    ==================================================== -->
-
-    <div
-      class="card"
-    >
-
-      <h2>
-        3. Revisar información
-      </h2>
-
-      <p
-        class="status"
-      >
-        Puedes modificar directamente cualquier celda.
-        La información se volverá a validar automáticamente.
-      </p>
-
-
-      <div
-        class="legend"
+        class="field"
       >
 
-        <div
-          class="legend-item"
+        <label
+          for="loginUser"
         >
+          Usuario
+        </label>
 
-          <span
-            class="legend-color legend-red"
-          ></span>
-
-          Rojo = error obligatorio
-
-        </div>
-
-
-        <div
-          class="legend-item"
+        <input
+          id="loginUser"
+          type="text"
+          autocomplete="username"
+          required
         >
-
-          <span
-            class="legend-color legend-yellow"
-          ></span>
-
-          Amarillo = advertencia
-
-        </div>
-
-
-        <div
-          class="legend-item"
-        >
-
-          <span
-            class="legend-color legend-blue"
-          ></span>
-
-          Azul = corregido automáticamente
-
-        </div>
 
       </div>
 
 
       <div
-        class="table-container"
+        class="field"
       >
 
-        <table
-          id="dataTable"
+        <label
+          for="loginPassword"
         >
+          Contraseña
+        </label>
 
-          <thead></thead>
-
-          <tbody></tbody>
-
-        </table>
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
 
       </div>
 
-    </div>
 
+      <button
+        id="loginButton"
+        class="login-button"
+        type="submit"
+      >
+        Ingresar
+      </button>
 
-    <!-- ===================================================
-         ENVÍO
-    ==================================================== -->
+    </form>
 
     <div
-      class="card"
+      id="loginError"
+      class="login-error hidden"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================================
+     APLICACIÓN
+========================================================= -->
+
+<div
+  id="appPage"
+  class="hidden"
+>
+
+  <header>
+
+    <div
+      class="header-inner"
     >
 
+      <div>
+
+        <h1>
+          OLT · Recepción de programación
+        </h1>
+
+        <p>
+          Validación, homologación y recepción de programación
+        </p>
+
+      </div>
+
+
       <div
-        class="actions"
+        class="user-zone"
       >
 
-        <span
-          id="sendStatus"
-          class="status"
-        >
-          Esperando validación.
-        </span>
+        <div>
+
+          <div>
+            Usuario:
+            <span
+              id="currentUser"
+              class="user-name"
+            >
+              -
+            </span>
+          </div>
+
+          <div
+            id="lastUpload"
+            class="last-upload"
+          >
+            Última carga: sin registros
+          </div>
+
+        </div>
 
 
         <button
-          id="sendButton"
-          class="btn-success"
-          disabled
+          id="logoutButton"
+          class="logout-button"
         >
-          Enviar programación
+          Cerrar sesión
         </button>
 
       </div>
 
     </div>
 
-  </section>
+  </header>
 
 
-  <!-- =====================================================
-       CONFIRMACIÓN
-  ====================================================== -->
+  <main>
 
-  <section
-    id="successSection"
-    class="card hidden success-screen"
-  >
+    <!-- =====================================================
+         CARGA
+    ====================================================== -->
 
-    <div
-      class="success-icon"
+    <section
+      class="card"
     >
-      ✓
-    </div>
 
-    <h2>
-      Programación registrada correctamente
-    </h2>
+      <h2>
+        1. Cargar programación
+      </h2>
 
-    <p>
-      La información fue enviada a
-      <strong>Recepción OLT</strong>.
-    </p>
+      <div
+        class="upload-area"
+      >
 
-    <div
-      id="successDetails"
-      class="success-details"
-    ></div>
+        <strong>
+          Selecciona el archivo Excel enviado por Operaciones
+        </strong>
 
-    <br><br>
+        <p>
+          La información será validada antes de enviarse a Recepción OLT.
+        </p>
 
-    <button
-      class="btn-success"
-      onclick="resetPage()"
+        <input
+          id="excelFile"
+          type="file"
+          accept=".xlsx,.xls,.xlsm,.csv"
+        >
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         RESULTADOS
+    ====================================================== -->
+
+    <section
+      id="resultsSection"
+      class="hidden"
     >
-      Cargar otra programación
-    </button>
 
-  </section>
+      <div
+        class="card"
+      >
 
-</main>
+        <h2>
+          2. Resultado
+        </h2>
+
+        <div
+          class="summary"
+        >
+
+          <div
+            class="summary-box summary-quality"
+          >
+
+            <span>
+              Calidad del envío
+            </span>
+
+            <strong
+              id="qualityPercent"
+            >
+              0%
+            </strong>
+
+            <small>
+              Campos evaluables válidos
+            </small>
+
+          </div>
+
+
+          <div
+            class="summary-box summary-errors"
+          >
+
+            <span>
+              Errores
+            </span>
+
+            <strong
+              id="errorCount"
+            >
+              0
+            </strong>
+
+            <small>
+              Bloquean el envío
+            </small>
+
+          </div>
+
+
+          <div
+            class="summary-box summary-warnings"
+          >
+
+            <span>
+              Advertencias
+            </span>
+
+            <strong
+              id="warningCount"
+            >
+              0
+            </strong>
+
+            <small>
+              No bloquean
+            </small>
+
+          </div>
+
+
+          <div
+            class="summary-box summary-records"
+          >
+
+            <span>
+              Registros
+            </span>
+
+            <strong
+              id="rowCount"
+            >
+              0
+            </strong>
+
+            <small>
+              Filas detectadas
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="qualityDetail"
+          class="quality-detail"
+        ></div>
+
+      </div>
+
+
+      <!-- ===================================================
+           RESUMEN ERRORES
+      ==================================================== -->
+
+      <div
+        class="card"
+      >
+
+        <h2>
+          Resumen de validación
+        </h2>
+
+        <div
+          id="messages"
+        ></div>
+
+      </div>
+
+
+      <!-- ===================================================
+           TABLA
+      ==================================================== -->
+
+      <div
+        class="card"
+      >
+
+        <h2>
+          3. Revisar información
+        </h2>
+
+        <div
+          class="legend"
+        >
+
+          <div
+            class="legend-item"
+          >
+
+            <span
+              class="legend-color legend-red"
+            ></span>
+
+            Rojo: debe corregirse
+
+          </div>
+
+
+          <div
+            class="legend-item"
+          >
+
+            <span
+              class="legend-color legend-yellow"
+            ></span>
+
+            Amarillo: advertencia
+
+          </div>
+
+
+          <div
+            class="legend-item"
+          >
+
+            <span
+              class="legend-color legend-blue"
+            ></span>
+
+            Azul: homologado automáticamente
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="table-container"
+        >
+
+          <table
+            id="dataTable"
+          >
+
+            <thead></thead>
+
+            <tbody></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+
+      <!-- ===================================================
+           ENVÍO
+      ==================================================== -->
+
+      <div
+        class="card"
+      >
+
+        <div
+          class="actions"
+        >
+
+          <span
+            id="sendStatus"
+            class="status"
+          >
+            Esperando validación.
+          </span>
+
+          <button
+            id="sendButton"
+            class="send-button"
+            disabled
+          >
+            Enviar programación
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         RESULTADO FINAL
+    ====================================================== -->
+
+    <section
+      id="successSection"
+      class="card success-screen hidden"
+    >
+
+      <div
+        class="success-icon"
+      >
+        ✓
+      </div>
+
+      <h2>
+        Envío procesado correctamente
+      </h2>
+
+      <div
+        class="result-grid"
+      >
+
+        <div
+          class="result-item"
+        >
+
+          <strong
+            id="resultReceived"
+          >
+            0
+          </strong>
+
+          Recibidos
+
+        </div>
+
+
+        <div
+          class="result-item"
+        >
+
+          <strong
+            id="resultInserted"
+          >
+            0
+          </strong>
+
+          Nuevos
+
+        </div>
+
+
+        <div
+          class="result-item"
+        >
+
+          <strong
+            id="resultDuplicates"
+          >
+            0
+          </strong>
+
+          Duplicados omitidos
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="resultMessage"
+        class="result-message"
+      ></div>
+
+
+      <p
+        id="resultDate"
+        class="status"
+      ></p>
+
+
+      <button
+        class="send-button"
+        onclick="resetUpload()"
+      >
+        Cargar otra programación
+      </button>
+
+    </section>
+
+  </main>
+
+</div>
 
 
 <script>
 
 /* =========================================================
-   CONFIGURACIÓN GENERAL
+   CONFIGURACIÓN
 ========================================================= */
+
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyKhdRFlG3jzY_Nc3n_Voe7os-_n_YxLXs5twADe20OVmD3kUVihGelzIc1Dz8KvAI/exec";
+
 
 const DEFAULT_YEAR =
   2026;
 
+
 const FUZZY_THRESHOLD =
   0.85;
+
 
 const FUZZY_DIFFERENCE =
   0.10;
 
 
-const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbzSoIs58p5NxuQjjpIamKHzIWnXqkNjPvHbdTRDu_BjvFttjzOHN66NAEPD8juwT1oS/exec";
-
-
 /* =========================================================
-   ESTRUCTURA OFICIAL
+   COLUMNAS
 ========================================================= */
 
 const COLUMNS = [
 
   "Fec. Despacho",
-
   "Área de OLT",
-
   "Entrega",
-
   "Factura/B.V.",
-
   "GR",
-
   "Am - Pm",
-
   "Cita",
-
   "Razón Social del Cliente",
-
   "Distrito",
-
   "Provincia",
-
   "Departamento",
-
   "Línea",
-
   "Bultos",
-
   "Volumen",
-
   "Peso",
-
   "Tipo de despacho",
-
   "Tipo de Transporte",
-
   "Tipo de Mercaderia",
-
   "Observación"
 
 ];
 
 
 /* =========================================================
-   CAMPOS OBLIGATORIOS
+   OBLIGATORIOS
 ========================================================= */
 
 const REQUIRED =
   new Set([
 
     "Fec. Despacho",
-
     "Área de OLT",
-
     "Entrega",
-
     "Factura/B.V.",
-
     "GR",
-
     "Razón Social del Cliente",
-
     "Línea",
-
     "Tipo de despacho",
-
     "Tipo de Transporte",
-
     "Tipo de Mercaderia"
 
   ]);
 
 
 /* =========================================================
-   CAMPOS OPCIONALES CON ADVERTENCIA
+   OPCIONALES CON ADVERTENCIA
+
+   Bultos, Volumen y Peso YA NO generan advertencia.
 ========================================================= */
 
 const WARNING_COLUMNS =
   new Set([
 
     "Am - Pm",
-
     "Cita",
-
     "Distrito",
-
     "Provincia",
-
-    "Departamento",
-
-    "Bultos",
-
-    "Volumen",
-
-    "Peso"
+    "Departamento"
 
   ]);
+
+
+/* =========================================================
+   COLUMNAS QUE MIDEN CALIDAD
+
+   Excluidas:
+   Am-Pm
+   Cita
+   Bultos
+   Volumen
+   Peso
+   Observación
+========================================================= */
+
+const QUALITY_COLUMNS =
+  COLUMNS.filter(
+    column =>
+      ![
+        "Am - Pm",
+        "Cita",
+        "Bultos",
+        "Volumen",
+        "Peso",
+        "Observación"
+      ]
+      .includes(
+        column
+      )
+  );
 
 
 /* =========================================================
@@ -1004,82 +1567,49 @@ const WARNING_COLUMNS =
 const CATALOGS = {
 
   "Área de OLT": [
-
     "AREAS CLAVE",
-
     "OLT CONSUMO",
-
     "OLT SALUD"
-
   ],
-
 
   "Línea": [
-
     "FAES FARMA",
-
     "FERQUIM",
-
     "GENOMMA LAB",
-
     "ELEA",
-
     "RECKITT BENCKISER",
-
     "TAKEDA",
-
     "OMPHARMA",
-
     "BIOPAS",
-
     "TECNOFARMA",
-
     "CLINICA INTERNACIONAL"
-
   ],
-
 
   "Tipo de despacho": [
-
     "LIMA",
-
     "PROVINCIA"
-
   ],
-
 
   "Tipo de Transporte": [
-
     "CD SANTA ANITA",
-
     "EXCLUSIVO",
-
     "EN RUTA",
-
     "AEREO",
-
     "TERRESTRE",
-
     "RECOGE CLIENTE"
-
   ],
 
-
   "Tipo de Mercaderia": [
-
     "SECO",
-
     "REFRIGERADO",
-
     "CLIMATIZADO"
-
   ]
 
 };
 
 
 /* =========================================================
-   EQUIVALENCIAS FIJAS DE NEGOCIO
+   EQUIVALENCIAS
 ========================================================= */
 
 const EXPLICIT_EQUIVALENCES = {
@@ -1138,227 +1668,147 @@ const EXPLICIT_EQUIVALENCES = {
 
 
 /* =========================================================
-   NOMBRES ALTERNATIVOS DE COLUMNAS
-
-   Aquí solucionamos las DOS plantillas reales.
+   ALIAS DE ENCABEZADOS
 ========================================================= */
 
 const HEADER_ALIASES = {
 
   "Fec. Despacho": [
-
     "FEC DESPACHO",
-
     "FEC. DESPACHO",
-
     "FECHA DE DESPACHO",
-
     "FECHA DESPACHO"
-
   ],
-
 
   "Área de OLT": [
-
     "AREA DE OLT",
-
     "ÁREA DE OLT",
-
     "AREA OLT",
-
     "ÁREA OLT"
-
   ],
-
 
   "Entrega": [
-
     "ENTREGA"
-
   ],
-
 
   "Factura/B.V.": [
-
     "FACTURA/B.V.",
-
     "FACTURA B.V.",
-
     "FACTURA BV",
-
     "FACTURA B V",
-
     "FACTURA",
-
     "BOLETA",
-
     "FACTURA BOLETA"
-
   ],
-
 
   "GR": [
-
     "GR",
-
     "GUIA",
-
     "GUÍA",
-
     "GUIA DE REMISION",
-
     "GUÍA DE REMISIÓN",
-
     "GUIA REMISION"
-
   ],
-
 
   "Am - Pm": [
-
     "AM PM",
-
     "AM - PM",
-
     "AM-PM",
-
     "TURNO"
-
   ],
-
 
   "Cita": [
-
     "CITA",
-
     "HORA CITA",
-
     "HORARIO CITA"
-
   ],
-
 
   "Razón Social del Cliente": [
-
     "RAZON SOCIAL DEL CLIENTE",
-
     "RAZÓN SOCIAL DEL CLIENTE",
-
     "RAZON SOCIAL CLIENTE"
-
   ],
-
 
   "Distrito": [
-
     "DISTRITO"
-
   ],
-
 
   "Provincia": [
-
     "PROVINCIA",
-
     "PROVINCIA (*)",
-
     "PROVINCIA *"
-
   ],
-
 
   "Departamento": [
-
     "DEPARTAMENTO"
-
   ],
-
 
   "Línea": [
-
     "LINEA",
-
     "LÍNEA"
-
   ],
-
 
   "Bultos": [
-
     "BULTOS",
-
     "BULTO"
-
   ],
-
 
   "Volumen": [
-
     "VOLUMEN"
-
   ],
-
 
   "Peso": [
-
     "PESO",
-
     "PESO (*)",
-
     "PESO *"
-
   ],
-
 
   "Tipo de despacho": [
-
     "TIPO DE DESPACHO",
-
     "TIPO DESPACHO"
-
   ],
-
 
   "Tipo de Transporte": [
-
     "TIPO DE TRANSPORTE",
-
     "TIPO TRANSPORTE"
-
   ],
-
 
   "Tipo de Mercaderia": [
-
     "TIPO DE MERCADERIA",
-
     "TIPO DE MERCADERÍA",
-
     "TIPO MERCADERIA",
-
     "TIPO MERCADERÍA"
-
   ],
 
-
   "Observación": [
-
     "OBSERVACION",
-
     "OBSERVACIÓN",
-
     "OBSERVACIONES"
-
   ]
 
 };
 
 
 /* =========================================================
-   ESTADO DE LA APLICACIÓN
+   ESTADO
 ========================================================= */
 
-let rows = [];
+let authToken =
+  sessionStorage.getItem(
+    "olt_token"
+  ) || "";
+
+
+let loggedUser =
+  "";
+
+
+let rows =
+  [];
+
+
+let correctionMemory =
+  new Map();
 
 
 let validationResult = {
@@ -1380,15 +1830,466 @@ let importDiagnostics = {
 
   headerRow: null,
 
-  recognizedColumns: [],
-
-  ignoredColumns: [],
-
-  missingColumns: [],
-
   records: 0
 
 };
+
+
+/* =========================================================
+   API
+========================================================= */
+
+async function apiRequest(
+  payload
+) {
+
+  const response =
+    await fetch(
+      APPS_SCRIPT_URL,
+      {
+
+        method:
+          "POST",
+
+        headers: {
+
+          "Content-Type":
+            "text/plain;charset=utf-8"
+
+        },
+
+        body:
+          JSON.stringify(
+            payload
+          ),
+
+        redirect:
+          "follow"
+
+      }
+    );
+
+
+  const text =
+    await response.text();
+
+
+  let result;
+
+
+  try {
+
+    result =
+      JSON.parse(
+        text
+      );
+
+  }
+  catch (error) {
+
+    console.error(
+      text
+    );
+
+
+    throw new Error(
+      "El servidor respondió con un formato no reconocido."
+    );
+
+  }
+
+
+  return result;
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+document
+  .getElementById(
+    "loginForm"
+  )
+  .addEventListener(
+    "submit",
+    login
+  );
+
+
+async function login(
+  event
+) {
+
+  event.preventDefault();
+
+
+  const user =
+    document
+      .getElementById(
+        "loginUser"
+      )
+      .value
+      .trim();
+
+
+  const password =
+    document
+      .getElementById(
+        "loginPassword"
+      )
+      .value;
+
+
+  const button =
+    document
+      .getElementById(
+        "loginButton"
+      );
+
+
+  hideLoginError();
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Ingresando...";
+
+
+  try {
+
+    const result =
+      await apiRequest({
+
+        action:
+          "login",
+
+        usuario:
+          user,
+
+        password:
+          password
+
+      });
+
+
+    if (
+      !result.ok
+    ) {
+
+      throw new Error(
+        result.error ||
+        "No se pudo iniciar sesión."
+      );
+
+    }
+
+
+    authToken =
+      result.token;
+
+
+    loggedUser =
+      result.usuario;
+
+
+    sessionStorage.setItem(
+      "olt_token",
+      authToken
+    );
+
+
+    showApplication({
+
+      usuario:
+        result.usuario,
+
+      ultimoEnvio:
+        result.ultimoEnvio
+
+    });
+
+
+    document
+      .getElementById(
+        "loginPassword"
+      )
+      .value =
+        "";
+
+  }
+  catch (error) {
+
+    showLoginError(
+      error.message
+    );
+
+  }
+  finally {
+
+    button.disabled =
+      false;
+
+
+    button.textContent =
+      "Ingresar";
+
+  }
+
+}
+
+
+/* =========================================================
+   RESTAURAR SESIÓN
+========================================================= */
+
+async function restoreSession() {
+
+  if (
+    !authToken
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const result =
+      await apiRequest({
+
+        action:
+          "status",
+
+        token:
+          authToken
+
+      });
+
+
+    if (
+      !result.ok
+    ) {
+
+      throw new Error();
+
+    }
+
+
+    loggedUser =
+      result.usuario;
+
+
+    showApplication(
+      result
+    );
+
+  }
+  catch (error) {
+
+    sessionStorage.removeItem(
+      "olt_token"
+    );
+
+
+    authToken =
+      "";
+
+  }
+
+}
+
+
+/* =========================================================
+   MOSTRAR APP
+========================================================= */
+
+function showApplication(
+  data
+) {
+
+  document
+    .getElementById(
+      "loginPage"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "appPage"
+    )
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "currentUser"
+    )
+    .textContent =
+      data.usuario ||
+      loggedUser;
+
+
+  setLastUpload(
+    data.ultimoEnvio
+  );
+
+}
+
+
+/* =========================================================
+   ÚLTIMA CARGA
+========================================================= */
+
+function setLastUpload(
+  value
+) {
+
+  document
+    .getElementById(
+      "lastUpload"
+    )
+    .textContent =
+      value
+      ?
+      `Última carga: ${value}`
+      :
+      "Última carga: todavía no registra cargas";
+
+}
+
+
+/* =========================================================
+   ERROR LOGIN
+========================================================= */
+
+function showLoginError(
+  message
+) {
+
+  const box =
+    document
+      .getElementById(
+        "loginError"
+      );
+
+
+  box.textContent =
+    message;
+
+
+  box.classList
+    .remove(
+      "hidden"
+    );
+
+}
+
+
+function hideLoginError() {
+
+  document
+    .getElementById(
+      "loginError"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+document
+  .getElementById(
+    "logoutButton"
+  )
+  .addEventListener(
+    "click",
+    logout
+  );
+
+
+async function logout() {
+
+  const token =
+    authToken;
+
+
+  sessionStorage.removeItem(
+    "olt_token"
+  );
+
+
+  authToken =
+    "";
+
+
+  loggedUser =
+    "";
+
+
+  resetUpload();
+
+
+  document
+    .getElementById(
+      "appPage"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "loginPage"
+    )
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  if (
+    token
+  ) {
+
+    try {
+
+      await apiRequest({
+
+        action:
+          "logout",
+
+        token:
+          token
+
+      });
+
+    }
+    catch (error) {}
+
+  }
+
+}
 
 
 /* =========================================================
@@ -1402,15 +2303,13 @@ function removeAccents(
   return String(
     value ?? ""
   )
-
-    .normalize(
-      "NFD"
-    )
-
-    .replace(
-      /[\u0300-\u036f]/g,
-      ""
-    );
+  .normalize(
+    "NFD"
+  )
+  .replace(
+    /[\u0300-\u036f]/g,
+    ""
+  );
 
 }
 
@@ -1429,16 +2328,15 @@ function normalizeText(
   }
 
 
-  return String(value)
-
-    .trim()
-
-    .replace(
-      /\s+/g,
-      " "
-    )
-
-    .toUpperCase();
+  return String(
+    value
+  )
+  .trim()
+  .replace(
+    /\s+/g,
+    " "
+  )
+  .toUpperCase();
 
 }
 
@@ -1463,30 +2361,24 @@ function normalizeHeader(
   return removeAccents(
     value
   )
-
-    .toUpperCase()
-
-    .replace(
-      /\(\s*\*\s*\)/g,
-      " "
-    )
-
-    .replace(
-      /\*/g,
-      " "
-    )
-
-    .replace(
-      /[^A-Z0-9]+/g,
-      " "
-    )
-
-    .replace(
-      /\s+/g,
-      " "
-    )
-
-    .trim();
+  .toUpperCase()
+  .replace(
+    /\(\s*\*\s*\)/g,
+    " "
+  )
+  .replace(
+    /\*/g,
+    " "
+  )
+  .replace(
+    /[^A-Z0-9]+/g,
+    " "
+  )
+  .replace(
+    /\s+/g,
+    " "
+  )
+  .trim();
 
 }
 
@@ -1496,14 +2388,11 @@ function isEmpty(
 ) {
 
   return (
-
     value === null ||
-
     value === undefined ||
-
-    String(value)
-      .trim() === ""
-
+    String(
+      value
+    ).trim() === ""
   );
 
 }
@@ -1514,7 +2403,9 @@ function isMissingOptional(
 ) {
 
   if (
-    isEmpty(value)
+    isEmpty(
+      value
+    )
   ) {
 
     return true;
@@ -1522,27 +2413,23 @@ function isMissingOptional(
   }
 
 
-  const normalized =
+  const text =
     normalizeText(
       value
     );
 
 
   return (
-
-    normalized === "-" ||
-
-    normalized === "S/D" ||
-
-    normalized === "SD"
-
+    text === "-" ||
+    text === "S/D" ||
+    text === "SD"
   );
 
 }
 
 
 /* =========================================================
-   MAPA DE ALIAS
+   ALIAS
 ========================================================= */
 
 const HEADER_LOOKUP =
@@ -1561,13 +2448,10 @@ Object.entries(
   ) => {
 
     HEADER_LOOKUP.set(
-
       normalizeHeader(
         canonical
       ),
-
       canonical
-
     );
 
 
@@ -1575,13 +2459,10 @@ Object.entries(
       alias => {
 
         HEADER_LOOKUP.set(
-
           normalizeHeader(
             alias
           ),
-
           canonical
-
         );
 
       }
@@ -1595,25 +2476,17 @@ function getCanonicalHeader(
   value
 ) {
 
-  return (
-
-    HEADER_LOOKUP.get(
-      normalizeHeader(
-        value
-      )
+  return HEADER_LOOKUP.get(
+    normalizeHeader(
+      value
     )
-
-    ||
-
-    null
-
-  );
+  ) || null;
 
 }
 
 
 /* =========================================================
-   DETECTAR FILA REAL DE CABECERA
+   DETECTAR ENCABEZADOS
 ========================================================= */
 
 function scoreHeaderRow(
@@ -1647,17 +2520,7 @@ function scoreHeaderRow(
   );
 
 
-  return {
-
-    score:
-      recognized.size,
-
-    columns:
-      [
-        ...recognized
-      ]
-
-  };
+  return recognized.size;
 
 }
 
@@ -1666,18 +2529,15 @@ function detectHeaderRow(
   matrix
 ) {
 
-  let best = {
-
-    index: -1,
-
-    score: 0,
-
-    columns: []
-
-  };
+  let bestIndex =
+    -1;
 
 
-  const maximumRows =
+  let bestScore =
+    0;
+
+
+  const limit =
     Math.min(
       matrix.length,
       30
@@ -1685,55 +2545,38 @@ function detectHeaderRow(
 
 
   for (
-    let rowIndex = 0;
-
-    rowIndex <
-      maximumRows;
-
-    rowIndex++
+    let index = 0;
+    index < limit;
+    index++
   ) {
 
-    const result =
+    const score =
       scoreHeaderRow(
         matrix[
-          rowIndex
+          index
         ] || []
       );
 
 
     if (
-      result.score >
-      best.score
+      score >
+      bestScore
     ) {
 
-      best = {
+      bestScore =
+        score;
 
-        index:
-          rowIndex,
 
-        score:
-          result.score,
-
-        columns:
-          result.columns
-
-      };
+      bestIndex =
+        index;
 
     }
 
   }
 
 
-  /*
-    Las plantillas reales tienen
-    bastantes columnas.
-
-    Con 6 coincidencias ya podemos
-    reconocer una plantilla razonablemente.
-  */
-
   if (
-    best.score < 6
+    bestScore < 6
   ) {
 
     return null;
@@ -1741,13 +2584,21 @@ function detectHeaderRow(
   }
 
 
-  return best;
+  return {
+
+    index:
+      bestIndex,
+
+    score:
+      bestScore
+
+  };
 
 }
 
 
 /* =========================================================
-   ENCONTRAR LA HOJA CORRECTA
+   DETECTAR HOJA
 ========================================================= */
 
 function findBestWorksheet(
@@ -1769,16 +2620,6 @@ function findBestWorksheet(
               sheetName
             ];
 
-
-        /*
-          IMPORTANTE:
-
-          raw:true
-          cellDates:false
-
-          Así evitamos problemas de zona horaria
-          con las fechas de Excel.
-        */
 
         const matrix =
           XLSX.utils
@@ -1814,19 +2655,14 @@ function findBestWorksheet(
 
 
         if (
-
           !best ||
-
           header.score >
-            best.header.score
-
+          best.header.score
         ) {
 
           best = {
 
             sheetName,
-
-            sheet,
 
             matrix,
 
@@ -1846,18 +2682,15 @@ function findBestWorksheet(
 
 
 /* =========================================================
-   MAPEAR COLUMNAS
+   MAPEO DE COLUMNAS
 ========================================================= */
 
 function buildColumnMap(
   headerRow
 ) {
 
-  const map = {};
-
-  const recognized = [];
-
-  const ignored = [];
+  const map =
+    {};
 
 
   headerRow.forEach(
@@ -1873,41 +2706,16 @@ function buildColumnMap(
 
 
       if (
-        canonical
+        canonical &&
+        map[
+          canonical
+        ] === undefined
       ) {
 
-        if (
-          map[
-            canonical
-          ] === undefined
-        ) {
-
-          map[
-            canonical
-          ] =
-            index;
-
-
-          recognized.push(
-            String(
-              header
-            ).trim()
-          );
-
-        }
-
-      }
-      else if (
-        !isEmpty(
-          header
-        )
-      ) {
-
-        ignored.push(
-          String(
-            header
-          ).trim()
-        );
+        map[
+          canonical
+        ] =
+          index;
 
       }
 
@@ -1915,21 +2723,13 @@ function buildColumnMap(
   );
 
 
-  return {
-
-    map,
-
-    recognized,
-
-    ignored
-
-  };
+  return map;
 
 }
 
 
 /* =========================================================
-   FUZZY · LEVENSHTEIN
+   FUZZY
 ========================================================= */
 
 function levenshtein(
@@ -1938,10 +2738,15 @@ function levenshtein(
 ) {
 
   a =
-    comparable(a);
+    comparable(
+      a
+    );
+
 
   b =
-    comparable(b);
+    comparable(
+      b
+    );
 
 
   const matrix =
@@ -1987,8 +2792,7 @@ function levenshtein(
       if (
         b.charAt(
           i - 1
-        )
-        ===
+        ) ===
         a.charAt(
           j - 1
         )
@@ -2049,34 +2853,26 @@ function similarity(
 ) {
 
   const first =
-    comparable(a);
+    comparable(
+      a
+    );
+
 
   const second =
-    comparable(b);
+    comparable(
+      b
+    );
 
 
-  if (
-    !first.length &&
-    !second.length
-  ) {
-
-    return 1;
-
-  }
-
-
-  const maxLength =
+  const max =
     Math.max(
-
       first.length,
-
       second.length
-
     );
 
 
   if (
-    maxLength === 0
+    max === 0
   ) {
 
     return 1;
@@ -2085,20 +2881,15 @@ function similarity(
 
 
   return (
-
     1 -
-
     (
       levenshtein(
         first,
         second
       )
-
       /
-
-      maxLength
+      max
     )
-
   );
 
 }
@@ -2127,16 +2918,13 @@ function homologate(
 
       value: "",
 
-      corrected: false
+      corrected:
+        false
 
     };
 
   }
 
-
-  /*
-    1. EQUIVALENCIAS EXPLÍCITAS
-  */
 
   const equivalents =
     EXPLICIT_EQUIVALENCES[
@@ -2150,8 +2938,8 @@ function homologate(
 
     for (
       const [
-        original,
-        destination
+        from,
+        to
       ]
       of
       Object.entries(
@@ -2160,35 +2948,27 @@ function homologate(
     ) {
 
       if (
-
         comparable(
-          original
-        )
-
-        ===
-
+          from
+        ) ===
         comparable(
           value
         )
-
       ) {
 
         return {
 
           value:
-            destination,
+            to,
 
           corrected:
-            comparable(
+            String(
               originalValue
-            )
-            !==
-            comparable(
-              destination
-            ),
+            ) !==
+            to,
 
           reason:
-            "equivalencia de negocio"
+            "equivalencia"
 
         };
 
@@ -2198,10 +2978,6 @@ function homologate(
 
   }
 
-
-  /*
-    2. CATÁLOGO
-  */
 
   const catalog =
     CATALOGS[
@@ -2218,30 +2994,20 @@ function homologate(
       value,
 
       corrected:
-        value !==
-        String(
-          originalValue
-        ).trim()
+        false
 
     };
 
   }
 
 
-  /*
-    3. COINCIDENCIA EXACTA
-  */
-
   const exact =
     catalog.find(
       option =>
-
         comparable(
           option
         )
-
         ===
-
         comparable(
           value
         )
@@ -2260,8 +3026,7 @@ function homologate(
       corrected:
         String(
           originalValue
-        ).trim()
-        !==
+        ) !==
         exact
 
     };
@@ -2269,13 +3034,8 @@ function homologate(
   }
 
 
-  /*
-    4. FUZZY
-  */
-
   const candidates =
     catalog
-
       .map(
         option => ({
 
@@ -2289,13 +3049,11 @@ function homologate(
 
         })
       )
-
       .sort(
         (
           a,
           b
         ) =>
-
           b.score -
           a.score
       );
@@ -2306,27 +3064,20 @@ function homologate(
 
 
   const second =
-    candidates[1]
-    ||
-    {
+    candidates[1] || {
       score: 0
     };
 
 
   if (
-
     first &&
-
     first.score >=
       FUZZY_THRESHOLD &&
-
     (
       first.score -
       second.score
-    )
-    >=
-    FUZZY_DIFFERENCE
-
+    ) >=
+      FUZZY_DIFFERENCE
   ) {
 
     return {
@@ -2338,10 +3089,7 @@ function homologate(
         true,
 
       reason:
-        `fuzzy ${Math.round(
-          first.score *
-          100
-        )}%`
+        "fuzzy"
 
     };
 
@@ -2352,25 +3100,25 @@ function homologate(
 
     value,
 
-    corrected:
-      false,
-
     invalid:
       true,
 
+    corrected:
+      false,
+
     suggestion:
       first
-        ?
-        first.option
-        :
-        null,
+      ?
+      first.option
+      :
+      null,
 
     similarity:
       first
-        ?
-        first.score
-        :
-        0
+      ?
+      first.score
+      :
+      0
 
   };
 
@@ -2416,43 +3164,16 @@ const MONTHS = {
 
 
 function pad(
-  number
+  value
 ) {
 
   return String(
-    number
+    value
   )
   .padStart(
     2,
     "0"
   );
-
-}
-
-
-function normalizeYear(
-  year
-) {
-
-  year =
-    Number(
-      year
-    );
-
-
-  if (
-    year < 100
-  ) {
-
-    return (
-      2000 +
-      year
-    );
-
-  }
-
-
-  return year;
 
 }
 
@@ -2472,21 +3193,38 @@ function validDate(
 
 
   return (
-
     date.getFullYear() ===
-      year
-
-    &&
-
+      year &&
     date.getMonth() ===
-      month - 1
-
-    &&
-
+      month - 1 &&
     date.getDate() ===
       day
-
   );
+
+}
+
+
+function normalizeYear(
+  value
+) {
+
+  let year =
+    Number(
+      value
+    );
+
+
+  if (
+    year < 100
+  ) {
+
+    year +=
+      2000;
+
+  }
+
+
+  return year;
 
 }
 
@@ -2495,19 +3233,9 @@ function parseDispatchDate(
   value
 ) {
 
-  /*
-    SERIAL NUMÉRICO DE EXCEL
-  */
-
   if (
-
     typeof value ===
       "number"
-
-    &&
-
-    window.XLSX
-
   ) {
 
     const parsed =
@@ -2518,17 +3246,12 @@ function parseDispatchDate(
 
 
     if (
-
-      parsed
-
-      &&
-
+      parsed &&
       validDate(
         parsed.d,
         parsed.m,
         parsed.y
       )
-
     ) {
 
       return {
@@ -2556,27 +3279,6 @@ function parseDispatchDate(
     );
 
 
-  if (
-    !text
-  ) {
-
-    return {
-
-      valid:
-        false,
-
-      value:
-        ""
-
-    };
-
-  }
-
-
-  /*
-    26-SET
-  */
-
   let match =
     text.match(
       /^(\d{1,2})[-\/ ]([A-Z]{3})$/
@@ -2600,17 +3302,12 @@ function parseDispatchDate(
 
 
     if (
-
-      month
-
-      &&
-
+      month &&
       validDate(
         day,
         month,
         DEFAULT_YEAR
       )
-
     ) {
 
       return {
@@ -2631,10 +3328,6 @@ function parseDispatchDate(
 
   }
 
-
-  /*
-    26-SET-2026
-  */
 
   match =
     text.match(
@@ -2665,17 +3358,12 @@ function parseDispatchDate(
 
 
     if (
-
-      month
-
-      &&
-
+      month &&
       validDate(
         day,
         month,
         year
       )
-
     ) {
 
       return {
@@ -2696,10 +3384,6 @@ function parseDispatchDate(
 
   }
 
-
-  /*
-    YYYY-MM-DD
-  */
 
   match =
     text.match(
@@ -2756,13 +3440,6 @@ function parseDispatchDate(
   }
 
 
-  /*
-    DD/MM/YYYY
-
-    Si el segundo número es > 12,
-    entendemos que vino como MM/DD/YYYY.
-  */
-
   match =
     text.match(
       /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/
@@ -2792,18 +3469,12 @@ function parseDispatchDate(
 
 
     let day;
-
     let month;
 
 
     if (
-
-      second > 12
-
-      &&
-
+      second > 12 &&
       first <= 12
-
     ) {
 
       month =
@@ -2854,10 +3525,7 @@ function parseDispatchDate(
   return {
 
     valid:
-      false,
-
-    value:
-      value
+      false
 
   };
 
@@ -2865,10 +3533,7 @@ function parseDispatchDate(
 
 
 /* =========================================================
-   HORAS EXCEL
-
-   Ejemplo:
-   0.333333333 = 08:00
+   CITA EXCEL
 ========================================================= */
 
 function excelTimeToString(
@@ -2876,61 +3541,43 @@ function excelTimeToString(
 ) {
 
   if (
-
     typeof value ===
-      "number"
-
-    &&
-
-    value >= 0
-
-    &&
-
+      "number" &&
+    value >= 0 &&
     value < 1
-
   ) {
 
-    let totalMinutes =
+    let minutes =
       Math.round(
-
         value *
-
         24 *
-
         60
-
       );
 
 
-    totalMinutes =
-      totalMinutes %
+    minutes =
+      minutes %
       1440;
 
 
-    const hours =
+    const hour =
       Math.floor(
-        totalMinutes /
+        minutes /
         60
       );
 
 
-    const minutes =
-      totalMinutes %
+    const minute =
+      minutes %
       60;
 
 
     return (
-
       `${pad(
-        hours
-      )}:`
-
-      +
-
-      `${pad(
-        minutes
+        hour
+      )}:${pad(
+        minute
       )}`
-
     );
 
   }
@@ -2942,7 +3589,7 @@ function excelTimeToString(
 
 
 /* =========================================================
-   PREPARAR DATOS EXTRAÍDOS
+   IMPORTAR VALOR
 ========================================================= */
 
 function prepareImportedValue(
@@ -2951,23 +3598,14 @@ function prepareImportedValue(
 ) {
 
   if (
-
-    value === null
-
-    ||
-
+    value === null ||
     value === undefined
-
   ) {
 
     return "";
 
   }
 
-
-  /*
-    CITA
-  */
 
   if (
     column ===
@@ -2990,98 +3628,36 @@ function prepareImportedValue(
 
     }
 
-
-    return String(
-      value
-    ).trim();
-
   }
 
-
-  /*
-    AM - PM
-  */
 
   if (
     column ===
-      "Am - Pm"
+      "Am - Pm" &&
+    normalizeText(
+      value
+    ) === "-"
   ) {
 
-    if (
-      normalizeText(
-        value
-      ) === "-"
-    ) {
-
-      return "";
-
-    }
-
-
-    return String(
-      value
-    ).trim();
+    return "";
 
   }
 
 
-  /*
-    CAMPOS QUE NO QUEREMOS
-    QUE JS CONVIERTA RARO
-  */
-
-  const textColumns =
-    new Set([
-
-      "Área de OLT",
-
-      "Entrega",
-
-      "Factura/B.V.",
-
-      "GR",
-
-      "Razón Social del Cliente",
-
-      "Distrito",
-
-      "Provincia",
-
-      "Departamento",
-
-      "Línea",
-
-      "Tipo de despacho",
-
-      "Tipo de Transporte",
-
-      "Tipo de Mercaderia",
-
-      "Observación"
-
-    ]);
-
-
-  if (
-    textColumns.has(
-      column
-    )
-  ) {
-
-    return String(
-      value
-    ).trim();
-
-  }
-
-
-  return value;
+  return (
+    typeof value ===
+      "string"
+    ?
+    value.trim()
+    :
+    value
+  );
 
 }
 
 
 /* =========================================================
-   DETECTAR MERCADERÍA EN OBSERVACIÓN
+   MERCADERÍA DESDE OBSERVACIÓN
 ========================================================= */
 
 function detectMerchandiseFromObservation(
@@ -3094,22 +3670,12 @@ function detectMerchandiseFromObservation(
     );
 
 
-  if (
-    !text
-  ) {
-
-    return null;
-
-  }
-
-
   const matches =
     CATALOGS[
       "Tipo de Mercaderia"
     ]
     .filter(
       option =>
-
         text.includes(
           comparable(
             option
@@ -3118,28 +3684,16 @@ function detectMerchandiseFromObservation(
     );
 
 
-  /*
-    SOLO completamos cuando
-    encontramos exactamente un tipo.
-  */
-
-  if (
+  return (
     matches.length === 1
-  ) {
-
-    return matches[0];
-
-  }
-
-
-  return null;
+    ?
+    matches[0]
+    :
+    null
+  );
 
 }
 
-
-/* =========================================================
-   MERCADERÍA MÚLTIPLE
-========================================================= */
 
 function detectMultipleMerchandise(
   value
@@ -3151,21 +3705,11 @@ function detectMultipleMerchandise(
     );
 
 
-  if (
-    !text
-  ) {
-
-    return [];
-
-  }
-
-
   return CATALOGS[
     "Tipo de Mercaderia"
   ]
   .filter(
     option =>
-
       text.includes(
         comparable(
           option
@@ -3177,7 +3721,7 @@ function detectMultipleMerchandise(
 
 
 /* =========================================================
-   ABRIR EXCEL
+   CARGAR EXCEL
 ========================================================= */
 
 document
@@ -3195,8 +3739,7 @@ async function handleExcel(
 ) {
 
   const file =
-    event.target
-      .files[0];
+    event.target.files[0];
 
 
   if (
@@ -3210,34 +3753,18 @@ async function handleExcel(
 
   try {
 
-    rows = [];
+    rows =
+      [];
 
 
-    validationResult = {
-
-      errors: [],
-
-      warnings: [],
-
-      corrections: []
-
-    };
+    correctionMemory =
+      new Map();
 
 
     const buffer =
       await file
         .arrayBuffer();
 
-
-    /*
-      IMPORTANTE:
-
-      cellDates:false
-
-      Esto deja las fechas en su valor
-      serial original de Excel y evita
-      errores por zona horaria.
-    */
 
     const workbook =
       XLSX.read(
@@ -3254,10 +3781,6 @@ async function handleExcel(
       );
 
 
-    /*
-      BUSCAR HOJA Y ENCABEZADOS
-    */
-
     const detected =
       findBestWorksheet(
         workbook
@@ -3269,108 +3792,45 @@ async function handleExcel(
     ) {
 
       throw new Error(
-
-        "No pude encontrar automáticamente los encabezados de la programación."
-
-        +
-
-        "\n\nVerifica que el archivo corresponda al formato OLT."
-
+        "No pude reconocer la plantilla OLT."
       );
 
     }
 
 
-    const {
-      sheetName,
-      matrix,
-      header
-    } =
-      detected;
-
-
-    const headerValues =
-      matrix[
-        header.index
+    const headerRow =
+      detected.matrix[
+        detected.header.index
       ] || [];
 
 
-    const mapping =
+    const columnMap =
       buildColumnMap(
-        headerValues
+        headerRow
       );
 
 
-    /*
-      COLUMNAS NO PRESENTES
-    */
-
-    const missing =
-      COLUMNS.filter(
-        column =>
-
-          mapping.map[
-            column
-          ]
-          ===
-          undefined
-      );
-
-
-    importDiagnostics = {
-
-      fileName:
-        file.name,
-
-      sheet:
-        sheetName,
-
-      headerRow:
-        header.index + 1,
-
-      recognizedColumns:
-        mapping.recognized,
-
-      ignoredColumns:
-        mapping.ignored,
-
-      missingColumns:
-        missing,
-
-      records:
-        0
-
-    };
-
-
-    /*
-      EXTRAER REGISTROS DESDE
-      LA FILA POSTERIOR AL ENCABEZADO
-    */
-
-    const importedRows =
+    const imported =
       [];
 
 
     for (
-
       let sourceIndex =
-        header.index + 1;
+        detected.header.index + 1;
 
       sourceIndex <
-        matrix.length;
+        detected.matrix.length;
 
       sourceIndex++
-
     ) {
 
-      const sourceRow =
-        matrix[
+      const source =
+        detected.matrix[
           sourceIndex
         ] || [];
 
 
-      const result =
+      const object =
         {};
 
 
@@ -3382,7 +3842,7 @@ async function handleExcel(
         column => {
 
           const sourceColumn =
-            mapping.map[
+            columnMap[
               column
             ];
 
@@ -3393,11 +3853,11 @@ async function handleExcel(
 
           if (
             sourceColumn !==
-              undefined
+            undefined
           ) {
 
             value =
-              sourceRow[
+              source[
                 sourceColumn
               ];
 
@@ -3411,7 +3871,7 @@ async function handleExcel(
             );
 
 
-          result[
+          object[
             column
           ] =
             value;
@@ -3432,20 +3892,16 @@ async function handleExcel(
       );
 
 
-      /*
-        IGNORAR FILAS TOTALMENTE VACÍAS
-      */
-
       if (
         hasData
       ) {
 
-        result.__sourceRow =
+        object.__sourceRow =
           sourceIndex + 1;
 
 
-        importedRows.push(
-          result
+        imported.push(
+          object
         );
 
       }
@@ -3454,35 +3910,36 @@ async function handleExcel(
 
 
     if (
-      importedRows.length ===
+      imported.length ===
       0
     ) {
 
       throw new Error(
-
-        "Encontré los encabezados, pero no encontré registros debajo."
-
+        "No encontré registros debajo de los encabezados."
       );
 
     }
 
 
     rows =
-      importedRows;
+      imported;
 
 
-    importDiagnostics.records =
-      rows.length;
+    importDiagnostics = {
 
+      fileName:
+        file.name,
 
-    document
-      .getElementById(
-        "resultsSection"
-      )
-      .classList
-      .remove(
-        "hidden"
-      );
+      sheet:
+        detected.sheetName,
+
+      headerRow:
+        detected.header.index + 1,
+
+      records:
+        rows.length
+
+    };
 
 
     document
@@ -3495,44 +3952,24 @@ async function handleExcel(
       );
 
 
+    document
+      .getElementById(
+        "resultsSection"
+      )
+      .classList
+      .remove(
+        "hidden"
+      );
+
+
     validateAll();
 
-
-    console.log(
-      "ARCHIVO:",
-      file.name
-    );
-
-
-    console.log(
-      "DIAGNÓSTICO:",
-      importDiagnostics
-    );
-
-
-    console.log(
-      "DATOS IMPORTADOS:",
-      rows
-    );
-
   }
-  catch (
-    error
-  ) {
-
-    console.error(
-      error
-    );
-
+  catch (error) {
 
     alert(
-
-      "NO SE PUDO LEER EL ARCHIVO\n\n"
-
-      +
-
+      "NO SE PUDO LEER EL ARCHIVO\n\n" +
       error.message
-
     );
 
   }
@@ -3541,7 +3978,7 @@ async function handleExcel(
 
 
 /* =========================================================
-   VALIDAR TODO
+   VALIDAR
 ========================================================= */
 
 function validateAll() {
@@ -3561,15 +3998,18 @@ function validateAll() {
     (
       row,
       index
-    ) => {
-
+    ) =>
       validateRow(
         row,
         index
-      );
-
-    }
+      )
   );
+
+
+  validationResult.corrections =
+    [
+      ...correctionMemory.values()
+    ];
 
 
   render();
@@ -3578,7 +4018,7 @@ function validateAll() {
 
 
 /* =========================================================
-   VALIDAR FILA
+   FILA
 ========================================================= */
 
 function validateRow(
@@ -3586,19 +4026,14 @@ function validateRow(
   rowIndex
 ) {
 
-  /*
-    FILA ORIGINAL DEL EXCEL
-  */
-
   const excelRow =
-    row.__sourceRow
-    ||
+    row.__sourceRow ||
     rowIndex + 2;
 
 
-  /* =======================================================
+  /* ======================================================
      FECHA
-  ======================================================= */
+  ====================================================== */
 
   if (
     isEmpty(
@@ -3609,13 +4044,9 @@ function validateRow(
   ) {
 
     addError(
-
       rowIndex,
-
       "Fec. Despacho",
-
-      `Fila ${excelRow} · Fec. Despacho: campo obligatorio vacío.`
-
+      `Fila ${excelRow}: fecha obligatoria vacía.`
     );
 
   }
@@ -3634,61 +4065,48 @@ function validateRow(
     ) {
 
       addError(
-
         rowIndex,
-
         "Fec. Despacho",
-
-        `Fila ${excelRow} · Fec. Despacho: fecha no reconocida "${row["Fec. Despacho"]}".`
-
+        `Fila ${excelRow}: fecha no reconocida.`
       );
 
     }
-    else {
-
-      const original =
-        String(
-          row[
-            "Fec. Despacho"
-          ]
-        );
-
-
-      if (
-        original !==
-        result.value
-      ) {
-
+    else if (
+      String(
         row[
           "Fec. Despacho"
-        ] =
-          result.value;
+        ]
+      ) !==
+      result.value
+    ) {
+
+      const old =
+        row[
+          "Fec. Despacho"
+        ];
 
 
-        addCorrection(
+      row[
+        "Fec. Despacho"
+      ] =
+        result.value;
 
-          rowIndex,
 
-          "Fec. Despacho",
-
-          original,
-
-          result.value,
-
-          "fecha normalizada"
-
-        );
-
-      }
+      rememberCorrection(
+        rowIndex,
+        "Fec. Despacho",
+        old,
+        result.value
+      );
 
     }
 
   }
 
 
-  /* =======================================================
+  /* ======================================================
      OBLIGATORIOS
-  ======================================================= */
+  ====================================================== */
 
   REQUIRED.forEach(
     column => {
@@ -3711,13 +4129,6 @@ function validateRow(
         )
       ) {
 
-        /*
-          TIPO DE MERCADERÍA:
-
-          intentar recuperarlo desde
-          Observación.
-        */
-
         if (
           column ===
           "Tipo de Mercaderia"
@@ -3725,11 +4136,9 @@ function validateRow(
 
           const detected =
             detectMerchandiseFromObservation(
-
               row[
                 "Observación"
               ]
-
             );
 
 
@@ -3743,18 +4152,11 @@ function validateRow(
               detected;
 
 
-            addCorrection(
-
+            rememberCorrection(
               rowIndex,
-
               column,
-
               "",
-
-              detected,
-
-              "detectado desde Observación"
-
+              detected
             );
 
 
@@ -3766,13 +4168,9 @@ function validateRow(
 
 
         addError(
-
           rowIndex,
-
           column,
-
-          `Fila ${excelRow} · ${column}: campo obligatorio vacío.`
-
+          `Fila ${excelRow}: campo obligatorio vacío.`
         );
 
       }
@@ -3781,22 +4179,14 @@ function validateRow(
   );
 
 
-  /* =======================================================
-     "-" INVÁLIDO
-
-     ENTREGA
-     FACTURA
-     GR
-  ======================================================= */
+  /* ======================================================
+     GUIONES
+  ====================================================== */
 
   [
-
     "Entrega",
-
     "Factura/B.V.",
-
     "GR"
-
   ]
   .forEach(
     column => {
@@ -3806,19 +4196,13 @@ function validateRow(
           row[
             column
           ]
-        )
-        ===
-        "-"
+        ) === "-"
       ) {
 
         addError(
-
           rowIndex,
-
           column,
-
-          `Fila ${excelRow} · ${column}: el valor "-" no es válido.`
-
+          `Fila ${excelRow}: el valor "-" no es válido.`
         );
 
       }
@@ -3827,56 +4211,39 @@ function validateRow(
   );
 
 
-  /*
-    S/F ES VÁLIDO EN FACTURA/B.V.
-  */
+  /* ======================================================
+     MERCADERÍA MÚLTIPLE
+  ====================================================== */
 
-
-  /* =======================================================
-     TIPO MERCADERÍA MÚLTIPLE
-  ======================================================= */
-
-  if (
-    !isEmpty(
+  const merchandise =
+    detectMultipleMerchandise(
       row[
         "Tipo de Mercaderia"
       ]
-    )
+    );
+
+
+  if (
+    merchandise.length >
+    1
   ) {
 
-    const multiple =
-      detectMultipleMerchandise(
+    addError(
 
-        row[
-          "Tipo de Mercaderia"
-        ]
+      rowIndex,
 
-      );
+      "Tipo de Mercaderia",
 
+      `Fila ${excelRow}: contiene más de un tipo (${merchandise.join(" + ")}).`
 
-    if (
-      multiple.length >
-      1
-    ) {
-
-      addError(
-
-        rowIndex,
-
-        "Tipo de Mercaderia",
-
-        `Fila ${excelRow} · Tipo de Mercaderia: contiene más de un tipo (${multiple.join(" + ")}). Debe quedar solo SECO, REFRIGERADO o CLIMATIZADO.`
-
-      );
-
-    }
+    );
 
   }
 
 
-  /* =======================================================
-     CATÁLOGOS + HOMOLOGACIÓN
-  ======================================================= */
+  /* ======================================================
+     CATÁLOGOS
+  ====================================================== */
 
   Object.keys(
     CATALOGS
@@ -3897,25 +4264,11 @@ function validateRow(
       }
 
 
-      /*
-        Evitamos duplicar error
-        de mercadería múltiple.
-      */
-
       if (
-
         column ===
-          "Tipo de Mercaderia"
-
-        &&
-
-        detectMultipleMerchandise(
-          row[
-            column
-          ]
-        ).length >
-        1
-
+          "Tipo de Mercaderia" &&
+        merchandise.length >
+          1
       ) {
 
         return;
@@ -3931,11 +4284,8 @@ function validateRow(
 
       const result =
         homologate(
-
           column,
-
           original
-
         );
 
 
@@ -3943,39 +4293,13 @@ function validateRow(
         result.invalid
       ) {
 
-        const percent =
-          Math.round(
-
-            result.similarity *
-
-            100
-
-          );
-
-
-        let message =
-
-          `Fila ${excelRow} · ${column}: "${original}" no es un valor permitido.`;
-
-
-        if (
-          result.suggestion
-        ) {
-
-          message +=
-
-            ` Posible coincidencia: "${result.suggestion}" (${percent}%).`;
-
-        }
-
-
         addError(
 
           rowIndex,
 
           column,
 
-          message
+          `Fila ${excelRow}: "${original}" no es un valor permitido.`
 
         );
 
@@ -3986,21 +4310,13 @@ function validateRow(
 
 
       if (
-
-        result.corrected
-
-        &&
-
+        result.corrected &&
+        String(
+          original
+        ) !==
         String(
           result.value
         )
-
-        !==
-
-        String(
-          original
-        )
-
       ) {
 
         row[
@@ -4009,20 +4325,11 @@ function validateRow(
           result.value;
 
 
-        addCorrection(
-
+        rememberCorrection(
           rowIndex,
-
           column,
-
           original,
-
-          result.value,
-
-          result.reason
-          ||
-          "homologación"
-
+          result.value
         );
 
       }
@@ -4031,9 +4338,16 @@ function validateRow(
   );
 
 
-  /* =======================================================
-     OPCIONALES CON ADVERTENCIA
-  ======================================================= */
+  /* ======================================================
+     ADVERTENCIAS
+
+     Solo:
+     Am-Pm
+     Cita
+     Distrito
+     Provincia
+     Departamento
+  ====================================================== */
 
   WARNING_COLUMNS.forEach(
     column => {
@@ -4046,19 +4360,12 @@ function validateRow(
         )
       ) {
 
-        /*
-          "-" en campos opcionales
-          lo convertimos en vacío.
-        */
-
         if (
           normalizeText(
             row[
               column
             ]
-          )
-          ===
-          "-"
+          ) === "-"
         ) {
 
           row[
@@ -4070,13 +4377,9 @@ function validateRow(
 
 
         addWarning(
-
           rowIndex,
-
           column,
-
-          `Fila ${excelRow} · ${column}: celda vacía.`
-
+          `Fila ${excelRow}: celda vacía.`
         );
 
       }
@@ -4088,7 +4391,7 @@ function validateRow(
 
 
 /* =========================================================
-   REGISTRAR ERRORES
+   RESULTADOS
 ========================================================= */
 
 function addError(
@@ -4101,20 +4404,11 @@ function addError(
     validationResult
       .errors
       .some(
-        error =>
-
-          error.rowIndex ===
-            rowIndex
-
-          &&
-
-          error.column ===
+        item =>
+          item.rowIndex ===
+            rowIndex &&
+          item.column ===
             column
-
-          &&
-
-          error.message ===
-            message
       );
 
 
@@ -4139,10 +4433,6 @@ function addError(
 }
 
 
-/* =========================================================
-   REGISTRAR ADVERTENCIAS
-========================================================= */
-
 function addWarning(
   rowIndex,
   column,
@@ -4164,21 +4454,18 @@ function addWarning(
 }
 
 
-/* =========================================================
-   REGISTRAR CORRECCIONES
-========================================================= */
-
-function addCorrection(
+function rememberCorrection(
   rowIndex,
   column,
   from,
-  to,
-  reason
+  to
 ) {
 
-  validationResult
-    .corrections
-    .push({
+  correctionMemory.set(
+
+    `${rowIndex}|${column}`,
+
+    {
 
       rowIndex,
 
@@ -4186,11 +4473,109 @@ function addCorrection(
 
       from,
 
-      to,
+      to
 
-      reason
+    }
 
-    });
+  );
+
+}
+
+
+/* =========================================================
+   CALIDAD
+========================================================= */
+
+function calculateQuality() {
+
+  const total =
+    rows.length *
+    QUALITY_COLUMNS.length;
+
+
+  if (
+    total === 0
+  ) {
+
+    return {
+
+      percent: 0,
+
+      valid: 0,
+
+      total: 0
+
+    };
+
+  }
+
+
+  let valid =
+    0;
+
+
+  rows.forEach(
+    (
+      row,
+      rowIndex
+    ) => {
+
+      QUALITY_COLUMNS.forEach(
+        column => {
+
+          const hasError =
+            validationResult
+              .errors
+              .some(
+                item =>
+                  item.rowIndex ===
+                    rowIndex &&
+                  item.column ===
+                    column
+              );
+
+
+          const value =
+            row[
+              column
+            ];
+
+
+          if (
+            !hasError &&
+            !isEmpty(
+              value
+            ) &&
+            normalizeText(
+              value
+            ) !== "-"
+          ) {
+
+            valid++;
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+
+  return {
+
+    valid,
+
+    total,
+
+    percent:
+      (
+        valid /
+        total *
+        100
+      )
+
+  };
 
 }
 
@@ -4217,6 +4602,27 @@ function render() {
 ========================================================= */
 
 function renderSummary() {
+
+  const quality =
+    calculateQuality();
+
+
+  document
+    .getElementById(
+      "qualityPercent"
+    )
+    .textContent =
+      `${quality.percent.toFixed(2)}%`;
+
+
+  document
+    .getElementById(
+      "qualityDetail"
+    )
+    .textContent =
+      `${quality.valid} de ${quality.total} campos evaluables están completos y válidos. ` +
+      `No participan en este porcentaje: Am - Pm, Cita, Bultos, Volumen, Peso y Observación.`;
+
 
   document
     .getElementById(
@@ -4245,21 +4651,11 @@ function renderSummary() {
     .textContent =
       rows.length;
 
-
-  document
-    .getElementById(
-      "correctionCount"
-    )
-    .textContent =
-      validationResult
-        .corrections
-        .length;
-
 }
 
 
 /* =========================================================
-   AGRUPACIÓN
+   AGRUPAR
 ========================================================= */
 
 function groupByColumn(
@@ -4288,8 +4684,7 @@ function groupByColumn(
 
       result[
         item.column
-      ]
-      .push(
+      ].push(
         item
       );
 
@@ -4304,47 +4699,7 @@ function groupByColumn(
 
 
 /* =========================================================
-   SEGURIDAD HTML
-========================================================= */
-
-function escapeHtml(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =========================================================
-   MENSAJES
+   MENSAJES SIMPLIFICADOS
 ========================================================= */
 
 function renderMessages() {
@@ -4360,324 +4715,28 @@ function renderMessages() {
     "";
 
 
-  /* =======================================================
-     ARCHIVO RECONOCIDO
-  ======================================================= */
-
-  const fileInfo =
+  const file =
     document.createElement(
       "div"
     );
 
 
-  fileInfo.className =
+  file.className =
     "message success";
 
 
-  fileInfo.innerHTML =
-
-    `<strong>✓ Archivo reconocido correctamente</strong><br>`
-
-    +
-
-    `Archivo: ${escapeHtml(
-      importDiagnostics.fileName
-    )}<br>`
-
-    +
-
-    `Hoja detectada: ${escapeHtml(
-      importDiagnostics.sheet
-    )}<br>`
-
-    +
-
-    `Encabezados encontrados en la fila: ${importDiagnostics.headerRow}<br>`
-
-    +
-
-    `Registros encontrados: ${rows.length}`;
+  file.textContent =
+    `${importDiagnostics.fileName} · ${rows.length} registro(s) detectados.`;
 
 
   container.appendChild(
-    fileInfo
+    file
   );
 
 
-  /* =======================================================
-     COLUMNAS RECONOCIDAS
-  ======================================================= */
-
-  const recognized =
-    document.createElement(
-      "div"
-    );
-
-
-  recognized.className =
-    "message info";
-
-
-  recognized.innerHTML =
-
-    `<strong>Columnas reconocidas:</strong> `
-
-    +
-
-    importDiagnostics
-      .recognizedColumns
-
-      .map(
-        escapeHtml
-      )
-
-      .join(
-        ", "
-      );
-
-
-  container.appendChild(
-    recognized
-  );
-
-
-  /* =======================================================
-     COLUMNAS IGNORADAS
-  ======================================================= */
-
-  if (
-    importDiagnostics
-      .ignoredColumns
-      .length
-  ) {
-
-    const ignored =
-      document.createElement(
-        "div"
-      );
-
-
-    ignored.className =
-      "message warning";
-
-
-    ignored.innerHTML =
-
-      `<strong>Columnas del Excel no utilizadas por esta recepción:</strong> `
-
-      +
-
-      importDiagnostics
-        .ignoredColumns
-
-        .map(
-          escapeHtml
-        )
-
-        .join(
-          ", "
-        );
-
-
-    container.appendChild(
-      ignored
-    );
-
-  }
-
-
-  /* =======================================================
-     COLUMNAS FALTANTES
-  ======================================================= */
-
-  const missingRequired =
-    importDiagnostics
-      .missingColumns
-      .filter(
-        column =>
-          REQUIRED.has(
-            column
-          )
-      );
-
-
-  const missingOptional =
-    importDiagnostics
-      .missingColumns
-      .filter(
-        column =>
-          !REQUIRED.has(
-            column
-          )
-      );
-
-
-  if (
-    missingRequired.length
-  ) {
-
-    const div =
-      document.createElement(
-        "div"
-      );
-
-
-    div.className =
-      "message error";
-
-
-    div.innerHTML =
-
-      `<strong>Columnas obligatorias no encontradas en la plantilla:</strong> `
-
-      +
-
-      missingRequired
-        .map(
-          escapeHtml
-        )
-
-        .join(
-          ", "
-        );
-
-
-    container.appendChild(
-      div
-    );
-
-  }
-
-
-  if (
-    missingOptional.length
-  ) {
-
-    const div =
-      document.createElement(
-        "div"
-      );
-
-
-    div.className =
-      "message warning";
-
-
-    div.innerHTML =
-
-      `<strong>Columnas opcionales no encontradas en esta plantilla:</strong> `
-
-      +
-
-      missingOptional
-        .map(
-          escapeHtml
-        )
-
-        .join(
-          ", "
-        );
-
-
-    container.appendChild(
-      div
-    );
-
-  }
-
-
-  /* =======================================================
-     CORRECCIONES AUTOMÁTICAS
-  ======================================================= */
-
-  if (
-    validationResult
-      .corrections
-      .length
-  ) {
-
-    const grouped =
-      groupByColumn(
-        validationResult
-          .corrections
-      );
-
-
-    Object.entries(
-      grouped
-    )
-    .forEach(
-      (
-        [
-          column,
-          items
-        ]
-      ) => {
-
-        const div =
-          document.createElement(
-            "div"
-          );
-
-
-        div.className =
-          "message info";
-
-
-        const examples =
-          items
-
-            .slice(
-              0,
-              4
-            )
-
-            .map(
-              item =>
-
-                `${escapeHtml(
-                  item.from
-                )} → ${escapeHtml(
-                  item.to
-                )}`
-
-            )
-
-            .join(
-              " | "
-            );
-
-
-        div.innerHTML =
-
-          `<strong>${escapeHtml(
-            column
-          )}: ${items.length} corrección(es) automática(s).</strong>`
-
-          +
-
-          (
-            examples
-            ?
-            `<br>${examples}`
-            :
-            ""
-          );
-
-
-        container.appendChild(
-          div
-        );
-
-      }
-    );
-
-  }
-
-
-  /* =======================================================
+  /* ======================================================
      ERRORES
-  ======================================================= */
+  ====================================================== */
 
   if (
     validationResult
@@ -4703,59 +4762,29 @@ function renderMessages() {
         ]
       ) => {
 
-        const div =
+        const message =
           document.createElement(
             "div"
           );
 
 
-        div.className =
+        message.className =
           "message error";
 
 
-        const details =
-          items
-
-            .slice(
-              0,
-              5
-            )
-
-            .map(
-              item =>
-                escapeHtml(
-                  item.message
-                )
-            )
-
-            .join(
-              "<br>"
-            );
-
-
-        div.innerHTML =
+        message.innerHTML =
 
           `<strong>${escapeHtml(
             column
-          )}: ${items.length} error(es).</strong>`
+          )}: ${items.length} error(es).</strong> `
 
           +
 
-          `<br>${details}`
-
-          +
-
-          (
-            items.length > 5
-            ?
-            `<br>... y ${items.length - 5} error(es) más.`
-            :
-            ""
-          );
+          `Debe corregirse antes de enviar.`;
 
 
         container.appendChild(
-          div
+          message
         );
 
       }
@@ -4764,9 +4793,9 @@ function renderMessages() {
   }
 
 
-  /* =======================================================
+  /* ======================================================
      ADVERTENCIAS
-  ======================================================= */
+  ====================================================== */
 
   if (
     validationResult
@@ -4792,23 +4821,74 @@ function renderMessages() {
         ]
       ) => {
 
-        const div =
+        const message =
           document.createElement(
             "div"
           );
 
 
-        div.className =
+        message.className =
           "message warning";
 
 
-        div.textContent =
-
-          `${column}: ${items.length} celda(s) vacía(s) de ${rows.length} registro(s).`;
+        message.textContent =
+          `${column}: ${items.length} celda(s) vacía(s). No bloquea el envío.`;
 
 
         container.appendChild(
-          div
+          message
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ======================================================
+     HOMOLOGACIONES
+  ====================================================== */
+
+  if (
+    validationResult
+      .corrections
+      .length
+  ) {
+
+    const grouped =
+      groupByColumn(
+        validationResult
+          .corrections
+      );
+
+
+    Object.entries(
+      grouped
+    )
+    .forEach(
+      (
+        [
+          column,
+          items
+        ]
+      ) => {
+
+        const message =
+          document.createElement(
+            "div"
+          );
+
+
+        message.className =
+          "message info";
+
+
+        message.textContent =
+          `${column}: ${items.length} corrección(es) automática(s).`;
+
+
+        container.appendChild(
+          message
         );
 
       }
@@ -4818,36 +4898,30 @@ function renderMessages() {
 
 
   if (
-
     validationResult
       .errors
-      .length === 0
-
-    &&
-
+      .length === 0 &&
     validationResult
       .warnings
       .length === 0
-
   ) {
 
-    const div =
+    const ok =
       document.createElement(
         "div"
       );
 
 
-    div.className =
+    ok.className =
       "message success";
 
 
-    div.textContent =
-
-      "✓ La programación no presenta errores ni advertencias.";
+    ok.textContent =
+      "✓ No se encontraron errores ni advertencias.";
 
 
     container.appendChild(
-      div
+      ok
     );
 
   }
@@ -4856,7 +4930,7 @@ function renderMessages() {
 
 
 /* =========================================================
-   TABLA EDITABLE
+   TABLA
 ========================================================= */
 
 function renderTable() {
@@ -4888,28 +4962,24 @@ function renderTable() {
     "";
 
 
-  /*
-    ENCABEZADOS
-  */
-
-  const headerRow =
+  const header =
     document.createElement(
       "tr"
     );
 
 
-  const rowNumberHeader =
+  const rowHeader =
     document.createElement(
       "th"
     );
 
 
-  rowNumberHeader.textContent =
+  rowHeader.textContent =
     "Fila Excel";
 
 
-  headerRow.appendChild(
-    rowNumberHeader
+  header.appendChild(
+    rowHeader
   );
 
 
@@ -4938,7 +5008,7 @@ function renderTable() {
       }
 
 
-      headerRow.appendChild(
+      header.appendChild(
         th
       );
 
@@ -4947,13 +5017,9 @@ function renderTable() {
 
 
   thead.appendChild(
-    headerRow
+    header
   );
 
-
-  /*
-    FILAS
-  */
 
   rows.forEach(
     (
@@ -4967,24 +5033,23 @@ function renderTable() {
         );
 
 
-      const sourceCell =
+      const number =
         document.createElement(
           "td"
         );
 
 
-      sourceCell.className =
+      number.className =
         "row-number";
 
 
-      sourceCell.textContent =
-        row.__sourceRow
-        ||
+      number.textContent =
+        row.__sourceRow ||
         rowIndex + 2;
 
 
       tr.appendChild(
-        sourceCell
+        number
       );
 
 
@@ -5002,12 +5067,8 @@ function renderTable() {
               .errors
               .find(
                 item =>
-
                   item.rowIndex ===
-                    rowIndex
-
-                  &&
-
+                    rowIndex &&
                   item.column ===
                     column
               );
@@ -5018,31 +5079,17 @@ function renderTable() {
               .warnings
               .find(
                 item =>
-
                   item.rowIndex ===
-                    rowIndex
-
-                  &&
-
+                    rowIndex &&
                   item.column ===
                     column
               );
 
 
           const corrected =
-            validationResult
-              .corrections
-              .find(
-                item =>
-
-                  item.rowIndex ===
-                    rowIndex
-
-                  &&
-
-                  item.column ===
-                    column
-              );
+            correctionMemory.get(
+              `${rowIndex}|${column}`
+            );
 
 
           if (
@@ -5083,41 +5130,33 @@ function renderTable() {
           input.value =
             row[
               column
-            ]
-            ??
-            "";
+            ] ?? "";
 
 
-          if (
+          input.title =
             error
-          ) {
-
-            input.title =
-              error.message;
-
-          }
-          else if (
+            ?
+            error.message
+            :
             warning
-          ) {
-
-            input.title =
-              warning.message;
-
-          }
-          else if (
+            ?
+            warning.message
+            :
             corrected
-          ) {
-
-            input.title =
-
-              `Corregido automáticamente: ${corrected.from} → ${corrected.to}`;
-
-          }
+            ?
+            `${corrected.from} → ${corrected.to}`
+            :
+            "";
 
 
           input.addEventListener(
             "change",
             event => {
+
+              correctionMemory.delete(
+                `${rowIndex}|${column}`
+              );
+
 
               rows[
                 rowIndex
@@ -5159,7 +5198,7 @@ function renderTable() {
 
 
 /* =========================================================
-   BOTÓN DE ENVÍO
+   BOTÓN
 ========================================================= */
 
 function updateSendButton() {
@@ -5191,7 +5230,8 @@ function updateSendButton() {
 
 
   if (
-    errors > 0
+    errors >
+    0
   ) {
 
     button.disabled =
@@ -5199,8 +5239,7 @@ function updateSendButton() {
 
 
     status.textContent =
-
-      `No se puede enviar. Existen ${errors} error(es) que deben corregirse.`;
+      `No se puede enviar: ${errors} error(es) obligatorio(s).`;
 
 
     return;
@@ -5212,28 +5251,19 @@ function updateSendButton() {
     false;
 
 
-  if (
-    warnings > 0
-  ) {
-
-    status.textContent =
-
-      `Puedes enviar. Existen ${warnings} advertencia(s) que no bloquean el envío.`;
-
-  }
-  else {
-
-    status.textContent =
-
-      "✓ Programación validada correctamente.";
-
-  }
+  status.textContent =
+    warnings >
+    0
+    ?
+    `Listo para enviar con ${warnings} advertencia(s).`
+    :
+    "✓ Programación lista para enviar.";
 
 }
 
 
 /* =========================================================
-   PREPARAR FILAS PARA APPS SCRIPT
+   FILAS PARA SERVIDOR
 ========================================================= */
 
 function getRowsForSending() {
@@ -5253,9 +5283,7 @@ function getRowsForSending() {
           ] =
             row[
               column
-            ]
-            ??
-            "";
+            ] ?? "";
 
         }
       );
@@ -5270,7 +5298,7 @@ function getRowsForSending() {
 
 
 /* =========================================================
-   ENVÍO
+   ENVIAR
 ========================================================= */
 
 document
@@ -5288,77 +5316,28 @@ async function sendProgramming() {
   if (
     validationResult
       .errors
-      .length >
-    0
+      .length
   ) {
-
-    alert(
-
-      "Todavía existen errores obligatorios."
-
-      +
-
-      "\n\nCorrige las celdas rojas antes de enviar."
-
-    );
-
 
     return;
 
   }
 
 
-  if (
-    rows.length === 0
-  ) {
+  const confirmation =
+    confirm(
 
-    alert(
+      `Se procesarán ${rows.length} registro(s).\n\n` +
 
-      "No existen registros para enviar."
+      `Si alguna fila ya existe 100 % igual, no se volverá a insertar.\n\n` +
+
+      `¿Continuar?`
 
     );
 
 
-    return;
-
-  }
-
-
-  const warnings =
-    validationResult
-      .warnings
-      .length;
-
-
-  let confirmation =
-
-    `Se enviarán ${rows.length} registro(s) a Recepción OLT.`;
-
-
   if (
-    warnings > 0
-  ) {
-
-    confirmation +=
-
-      `\n\nExisten ${warnings} advertencia(s) amarilla(s).`
-
-      +
-
-      "\nEstas advertencias NO bloquean el envío.";
-
-  }
-
-
-  confirmation +=
-
-    "\n\n¿Deseas continuar?";
-
-
-  if (
-    !confirm(
-      confirmation
-    )
+    !confirmation
   ) {
 
     return;
@@ -5389,125 +5368,57 @@ async function sendProgramming() {
 
 
   status.textContent =
-
-    `Enviando ${rows.length} registro(s) a Recepción OLT...`;
+    "Procesando registros y verificando duplicados...";
 
 
   try {
 
-    const rowsToSend =
-      getRowsForSending();
+    const result =
+      await apiRequest({
 
+        action:
+          "upload",
 
-    const payload = {
+        token:
+          authToken,
 
-      rows:
-        rowsToSend,
+        rows:
+          getRowsForSending()
 
-      origen:
-        "OLT GitHub Pages",
-
-      archivo:
-        importDiagnostics
-          .fileName,
-
-      hoja:
-        importDiagnostics
-          .sheet,
-
-      total:
-        rowsToSend
-          .length
-
-    };
-
-
-    const response =
-      await fetch(
-        APPS_SCRIPT_URL,
-        {
-
-          method:
-            "POST",
-
-          headers: {
-
-            "Content-Type":
-              "text/plain;charset=utf-8"
-
-          },
-
-          body:
-            JSON.stringify(
-              payload
-            )
-
-        }
-      );
-
-
-    const responseText =
-      await response.text();
-
-
-    let result;
-
-
-    try {
-
-      result =
-        JSON.parse(
-          responseText
-        );
-
-    }
-    catch (
-      error
-    ) {
-
-      console.error(
-        "Respuesta Apps Script:",
-        responseText
-      );
-
-
-      throw new Error(
-
-        "Apps Script respondió, pero la respuesta no pudo interpretarse."
-
-      );
-
-    }
+      });
 
 
     if (
       !result.ok
     ) {
 
+      if (
+        String(
+          result.error || ""
+        )
+        .toLowerCase()
+        .includes(
+          "sesión"
+        )
+      ) {
+
+        await logout();
+
+      }
+
+
       let message =
-
-        result.error
-
-        ||
-
-        "Google Sheets rechazó la información.";
+        result.error ||
+        "No se pudo enviar la información.";
 
 
       if (
-
-        result.errores
-
-        &&
-
+        result.errores &&
         result.errores.length
-
       ) {
 
         message +=
-
-          "\n\n"
-
-          +
+          "\n\n" +
 
           result.errores
 
@@ -5518,9 +5429,7 @@ async function sendProgramming() {
 
             .map(
               error =>
-
                 `Fila ${error.fila} · ${error.columna}: ${error.mensaje}`
-
             )
 
             .join(
@@ -5537,9 +5446,10 @@ async function sendProgramming() {
     }
 
 
-    /*
-      ÉXITO
-    */
+    setLastUpload(
+      result.fechaRecepcion
+    );
+
 
     document
       .getElementById(
@@ -5563,59 +5473,55 @@ async function sendProgramming() {
 
     document
       .getElementById(
-        "successDetails"
+        "resultReceived"
       )
-      .innerHTML =
+      .textContent =
+        result.recibidos ?? 0;
 
-        `<strong>ID de envío:</strong> ${escapeHtml(
-          result.idEnvio
-        )}<br>`
 
-        +
+    document
+      .getElementById(
+        "resultInserted"
+      )
+      .textContent =
+        result.insertados ?? 0;
 
-        `<strong>Registros:</strong> ${escapeHtml(
-          result.registros
-        )}<br>`
 
-        +
+    document
+      .getElementById(
+        "resultDuplicates"
+      )
+      .textContent =
+        result.duplicados ?? 0;
 
-        `<strong>Fecha/Hora:</strong> ${escapeHtml(
-          result.fechaRecepcion
-        )}<br>`
 
-        +
+    document
+      .getElementById(
+        "resultMessage"
+      )
+      .textContent =
+        result.mensaje ||
+        "Programación procesada correctamente.";
 
-        `<strong>Destino:</strong> Recepción OLT`;
 
+    document
+      .getElementById(
+        "resultDate"
+      )
+      .textContent =
+        `Usuario: ${result.usuario} · Fecha/Hora: ${result.fechaRecepcion}`;
 
   }
-  catch (
-    error
-  ) {
+  catch (error) {
 
-    console.error(
-      error
+    alert(
+      "ERROR AL ENVIAR\n\n" +
+      error.message
     );
 
 
     status.textContent =
-
       "No se pudo completar el envío.";
-
-
-    alert(
-
-      "ERROR AL ENVIAR"
-
-      +
-
-      "\n\n"
-
-      +
-
-      error.message
-
-    );
 
   }
   finally {
@@ -5632,13 +5538,17 @@ async function sendProgramming() {
 
 
 /* =========================================================
-   REINICIAR
+   REINICIAR CARGA
 ========================================================= */
 
-function resetPage() {
+function resetUpload() {
 
   rows =
     [];
+
+
+  correctionMemory =
+    new Map();
 
 
   validationResult = {
@@ -5648,25 +5558,6 @@ function resetPage() {
     warnings: [],
 
     corrections: []
-
-  };
-
-
-  importDiagnostics = {
-
-    fileName: "",
-
-    sheet: "",
-
-    headerRow: null,
-
-    recognizedColumns: [],
-
-    ignoredColumns: [],
-
-    missingColumns: [],
-
-    records: 0
 
   };
 
@@ -5709,6 +5600,48 @@ function resetPage() {
   });
 
 }
+
+
+/* =========================================================
+   ESCAPE
+========================================================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =========================================================
+   INICIO
+========================================================= */
+
+restoreSession();
 
 </script>
 
