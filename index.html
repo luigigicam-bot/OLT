@@ -6,11 +6,7 @@
 
   <title>OLT · Recepción de programación</title>
 
-  <!-- Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Fuzzy matching -->
-  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
 
   <style>
     * {
@@ -35,6 +31,8 @@
 
       --green-bg: #dcfce7;
       --green: #166534;
+
+      --corrected-bg: #dbeafe;
     }
 
     body {
@@ -107,18 +105,13 @@
       cursor: pointer;
     }
 
-    .btn-primary {
-      background: var(--blue);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--blue-hover);
-    }
-
     .btn-success {
       background: #16a34a;
       color: white;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #15803d;
     }
 
     .btn-success:disabled {
@@ -181,7 +174,7 @@
 
     .table-container {
       overflow: auto;
-      max-height: 600px;
+      max-height: 620px;
       border: 1px solid var(--border);
       border-radius: 10px;
     }
@@ -240,7 +233,7 @@
     }
 
     td.corrected-cell {
-      background: #dbeafe;
+      background: var(--corrected-bg);
     }
 
     .hidden {
@@ -267,6 +260,11 @@
       .summary {
         grid-template-columns: 1fr;
       }
+
+      .actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
@@ -275,22 +273,19 @@
 
 <header>
   <h1>OLT · Recepción de programación</h1>
-  <p>Validación, homologación y revisión de programación OLT</p>
+  <p>Validación, homologación y envío de programación OLT</p>
 </header>
 
 <main>
 
-  <!-- CARGA -->
   <section class="card">
-
     <h2>1. Cargar programación</h2>
 
     <div class="upload-area">
-
       <strong>Selecciona el archivo Excel enviado por Operaciones</strong>
 
       <p>
-        El archivo será procesado y validado antes de permitir el envío.
+        El archivo será validado y homologado antes de permitir el envío.
       </p>
 
       <input
@@ -298,16 +293,12 @@
         id="excelFile"
         accept=".xlsx,.xls,.xlsm,.csv"
       >
-
     </div>
-
   </section>
 
-  <!-- RESUMEN -->
   <section id="resultsSection" class="hidden">
 
     <div class="card">
-
       <h2>2. Resultado de validación</h2>
 
       <div class="summary">
@@ -331,41 +322,29 @@
         </div>
 
       </div>
-
     </div>
 
-    <!-- MENSAJES -->
     <div class="card">
-
       <h2>Detalle</h2>
-
       <div id="messages"></div>
-
     </div>
 
-    <!-- TABLA -->
     <div class="card">
-
       <h2>3. Revisar información</h2>
 
       <p class="status">
-        Puedes modificar directamente las celdas. La validación se actualizará.
+        Puedes modificar directamente las celdas. La validación se recalculará.
       </p>
 
       <div class="table-container">
-
         <table id="dataTable">
           <thead></thead>
           <tbody></tbody>
         </table>
-
       </div>
-
     </div>
 
-    <!-- ENVÍO -->
     <div class="card">
-
       <div class="actions">
 
         <span id="sendStatus" class="status">
@@ -381,7 +360,6 @@
         </button>
 
       </div>
-
     </div>
 
   </section>
@@ -396,21 +374,17 @@
 
 const FUZZY_THRESHOLD = 0.85;
 const FUZZY_DIFFERENCE = 0.10;
-
-/*
-  Año que se utilizará cuando Operaciones envíe:
-  26-Set
-  en lugar de una fecha completa.
-*/
 const DEFAULT_YEAR = 2026;
+
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbzSoIs58p5NxuQjjpIamKHzIWnXqkNjPvHbdTRDu_BjvFttjzOHN66NAEPD8juwT1oS/exec";
 
 
 /* =========================================================
-   COLUMNAS ESPERADAS
+   COLUMNAS
 ========================================================= */
 
 const COLUMNS = [
-
   "Fec. Despacho",
   "Área de OLT",
   "Entrega",
@@ -430,7 +404,6 @@ const COLUMNS = [
   "Tipo de Transporte",
   "Tipo de Mercaderia",
   "Observación"
-
 ];
 
 
@@ -439,7 +412,6 @@ const COLUMNS = [
 ========================================================= */
 
 const REQUIRED = new Set([
-
   "Fec. Despacho",
   "Área de OLT",
   "Entrega",
@@ -450,7 +422,6 @@ const REQUIRED = new Set([
   "Tipo de despacho",
   "Tipo de Transporte",
   "Tipo de Mercaderia"
-
 ]);
 
 
@@ -459,7 +430,6 @@ const REQUIRED = new Set([
 ========================================================= */
 
 const WARNING_COLUMNS = new Set([
-
   "Am - Pm",
   "Cita",
   "Distrito",
@@ -468,7 +438,6 @@ const WARNING_COLUMNS = new Set([
   "Bultos",
   "Volumen",
   "Peso"
-
 ]);
 
 
@@ -516,18 +485,16 @@ const CATALOGS = {
     "REFRIGERADO",
     "CLIMATIZADO"
   ]
-
 };
 
 
 /* =========================================================
-   EQUIVALENCIAS DE NEGOCIO
+   EQUIVALENCIAS ESPECIALES
 ========================================================= */
 
 const EXPLICIT_EQUIVALENCES = {
 
   "Línea": {
-
     "ELEA PERU": "ELEA",
     "ELEA PERÚ": "ELEA",
 
@@ -537,7 +504,6 @@ const EXPLICIT_EQUIVALENCES = {
 
     "ELE": "ELEA",
     "ELEO": "ELEA"
-
   }
 
 };
@@ -570,7 +536,6 @@ function normalizeText(value) {
     .trim()
     .replace(/\s+/g, " ")
     .toUpperCase();
-
 }
 
 
@@ -579,7 +544,6 @@ function removeAccents(text) {
   return text
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-
 }
 
 
@@ -588,7 +552,6 @@ function comparable(value) {
   return removeAccents(
     normalizeText(value)
   );
-
 }
 
 
@@ -599,7 +562,6 @@ function isEmpty(value) {
     value === undefined ||
     String(value).trim() === ""
   );
-
 }
 
 
@@ -634,13 +596,9 @@ function levenshtein(a, b) {
       } else {
 
         matrix[i][j] = Math.min(
-
           matrix[i - 1][j - 1] + 1,
-
           matrix[i][j - 1] + 1,
-
           matrix[i - 1][j] + 1
-
         );
 
       }
@@ -650,7 +608,6 @@ function levenshtein(a, b) {
   }
 
   return matrix[b.length][a.length];
-
 }
 
 
@@ -672,7 +629,6 @@ function similarity(a, b) {
 
   return 1 -
     levenshtein(x, y) / maxLength;
-
 }
 
 
@@ -685,18 +641,12 @@ function homologate(column, originalValue) {
   let value = normalizeText(originalValue);
 
   if (!value) {
-
     return {
       value: "",
       corrected: false
     };
-
   }
 
-
-  /* -----------------------------
-     EQUIVALENCIA EXPLÍCITA
-  ----------------------------- */
 
   const equivalents =
     EXPLICIT_EQUIVALENCES[column];
@@ -705,17 +655,14 @@ function homologate(column, originalValue) {
 
     const key = comparable(value);
 
-    for (const [from, to] of
-      Object.entries(equivalents)) {
+    for (const [from, to] of Object.entries(equivalents)) {
 
       if (comparable(from) === key) {
 
         return {
-
           value: to,
           corrected: true,
           reason: "equivalencia"
-
         };
 
       }
@@ -725,29 +672,19 @@ function homologate(column, originalValue) {
   }
 
 
-  /* -----------------------------
-     CATÁLOGO
-  ----------------------------- */
-
   const catalog =
     CATALOGS[column];
 
   if (!catalog) {
 
     return {
-
       value,
       corrected:
         value !== String(originalValue).trim()
-
     };
 
   }
 
-
-  /* -----------------------------
-     COINCIDENCIA EXACTA
-  ----------------------------- */
 
   const exact =
     catalog.find(
@@ -759,19 +696,13 @@ function homologate(column, originalValue) {
   if (exact) {
 
     return {
-
       value: exact,
       corrected:
         exact !== originalValue
-
     };
 
   }
 
-
-  /* -----------------------------
-     FUZZY
-  ----------------------------- */
 
   const candidates =
     catalog
@@ -795,6 +726,7 @@ function homologate(column, originalValue) {
 
 
   if (
+    best &&
     best.score >= FUZZY_THRESHOLD &&
     (
       best.score -
@@ -803,41 +735,26 @@ function homologate(column, originalValue) {
   ) {
 
     return {
-
       value: best.item,
-
       corrected: true,
-
       reason:
         `fuzzy ${Math.round(
           best.score * 100
         )}%`
-
     };
 
   }
 
 
   return {
-
     value,
-
     corrected: false,
-
     invalid: true,
-
     suggestion:
-      best
-        ? best.item
-        : null,
-
+      best ? best.item : null,
     similarity:
-      best
-        ? best.score
-        : 0
-
+      best ? best.score : 0
   };
-
 }
 
 
@@ -846,7 +763,6 @@ function homologate(column, originalValue) {
 ========================================================= */
 
 const MONTHS = {
-
   ENE: 1,
   FEB: 2,
   MAR: 3,
@@ -855,14 +771,11 @@ const MONTHS = {
   JUN: 6,
   JUL: 7,
   AGO: 8,
-
   SET: 9,
   SEP: 9,
-
   OCT: 10,
   NOV: 11,
   DIC: 12
-
 };
 
 
@@ -873,20 +786,14 @@ function parseDispatchDate(value) {
     if (!isNaN(value)) {
 
       return {
-
         valid: true,
         value: formatDate(value)
-
       };
 
     }
 
   }
 
-
-  /*
-    Excel puede entregar número serial.
-  */
 
   if (
     typeof value === "number" &&
@@ -906,10 +813,8 @@ function parseDispatchDate(value) {
         );
 
       return {
-
         valid: true,
         value: formatDate(date)
-
       };
 
     }
@@ -920,11 +825,6 @@ function parseDispatchDate(value) {
   const text =
     normalizeText(value);
 
-
-  /*
-    Ejemplo:
-    26-Set
-  */
 
   const shortMatch =
     text.match(
@@ -949,23 +849,15 @@ function parseDispatchDate(value) {
     ) {
 
       return {
-
         valid: true,
-
         value:
           `${pad(day)}/${pad(month)}/${DEFAULT_YEAR}`
-
       };
 
     }
 
   }
 
-
-  /*
-    dd/mm/yyyy
-    dd-mm-yyyy
-  */
 
   const complete =
     text.match(
@@ -994,12 +886,9 @@ function parseDispatchDate(value) {
     ) {
 
       return {
-
         valid: true,
-
         value:
           `${pad(day)}/${pad(month)}/${year}`
-
       };
 
     }
@@ -1008,12 +897,9 @@ function parseDispatchDate(value) {
 
 
   return {
-
     valid: false,
     value
-
   };
-
 }
 
 
@@ -1031,7 +917,6 @@ function validDate(day, month, year) {
     date.getMonth() === month - 1 &&
     date.getDate() === day
   );
-
 }
 
 
@@ -1039,7 +924,6 @@ function pad(value) {
 
   return String(value)
     .padStart(2, "0");
-
 }
 
 
@@ -1050,17 +934,14 @@ function formatDate(date) {
     `${pad(date.getMonth() + 1)}/` +
     `${date.getFullYear()}`
   );
-
 }
 
 
 /* =========================================================
-   BUSCAR MERCADERÍA EN OBSERVACIÓN
+   MERCADERÍA DESDE OBSERVACIÓN
 ========================================================= */
 
-function detectMerchandiseFromObservation(
-  observation
-) {
+function detectMerchandiseFromObservation(observation) {
 
   const text =
     comparable(observation);
@@ -1084,14 +965,12 @@ function detectMerchandiseFromObservation(
     return matches[0];
   }
 
-
   return null;
-
 }
 
 
 /* =========================================================
-   LECTURA DEL EXCEL
+   CARGA EXCEL
 ========================================================= */
 
 document
@@ -1186,17 +1065,14 @@ async function handleExcel(event) {
 
 
 /* =========================================================
-   NORMALIZAR NOMBRES DE COLUMNAS
+   NORMALIZAR COLUMNAS
 ========================================================= */
 
 function normalizeIncomingRow(row) {
 
   const result = {};
 
-  for (
-    const expectedColumn
-    of COLUMNS
-  ) {
+  for (const expectedColumn of COLUMNS) {
 
     const foundKey =
       Object.keys(row)
@@ -1211,27 +1087,22 @@ function normalizeIncomingRow(row) {
       foundKey
         ? row[foundKey]
         : "";
-
   }
 
-
   return result;
-
 }
 
 
 /* =========================================================
-   VALIDACIÓN
+   VALIDACIÓN GENERAL
 ========================================================= */
 
 function validateAll() {
 
   validationResult = {
-
     errors: [],
     warnings: [],
     corrections: []
-
   };
 
 
@@ -1242,12 +1113,11 @@ function validateAll() {
 
 
   render();
-
 }
 
 
 /* =========================================================
-   VALIDAR FILA
+   VALIDACIÓN DE FILA
 ========================================================= */
 
 function validateRow(row, rowIndex) {
@@ -1256,9 +1126,7 @@ function validateRow(row, rowIndex) {
     rowIndex + 2;
 
 
-  /* -----------------------------
-     FECHA
-  ----------------------------- */
+  /* FECHA */
 
   if (
     isEmpty(
@@ -1314,9 +1182,7 @@ function validateRow(row, rowIndex) {
   }
 
 
-  /* -----------------------------
-     CAMPOS OBLIGATORIOS
-  ----------------------------- */
+  /* OBLIGATORIOS */
 
   REQUIRED.forEach(column => {
 
@@ -1333,12 +1199,6 @@ function validateRow(row, rowIndex) {
         row[column]
       )
     ) {
-
-      /*
-        Intentamos recuperar
-        Tipo Mercadería
-        desde Observación.
-      */
 
       if (
         column ===
@@ -1362,20 +1222,15 @@ function validateRow(row, rowIndex) {
           );
 
           return;
-
         }
 
       }
 
 
       addError(
-
         rowIndex,
-
         column,
-
         `Fila ${excelRow} · ${column}: campo obligatorio vacío.`
-
       );
 
     }
@@ -1383,9 +1238,7 @@ function validateRow(row, rowIndex) {
   });
 
 
-  /* -----------------------------
-     GUIONES INVÁLIDOS
-  ----------------------------- */
+  /* GUIONES */
 
   [
     "Entrega",
@@ -1400,13 +1253,9 @@ function validateRow(row, rowIndex) {
     ) {
 
       addError(
-
         rowIndex,
-
         column,
-
         `Fila ${excelRow} · ${column}: el valor "-" no es válido.`
-
       );
 
     }
@@ -1414,16 +1263,7 @@ function validateRow(row, rowIndex) {
   });
 
 
-  /*
-    S/F sí es válido en Factura.
-    No requiere regla adicional porque
-    simplemente no se considera vacío.
-  */
-
-
-  /* -----------------------------
-     CATÁLOGOS + FUZZY
-  ----------------------------- */
+  /* CATÁLOGOS + FUZZY */
 
   Object
     .keys(CATALOGS)
@@ -1458,23 +1298,18 @@ function validateRow(row, rowIndex) {
 
 
         addError(
-
           rowIndex,
-
           column,
-
           `Fila ${excelRow} · ${column}: "${original}" no coincide con un valor permitido.` +
           (
             result.suggestion
               ? ` Posible valor: "${result.suggestion}" (${percent}% de similitud).`
               : ""
           )
-
         );
 
 
         return;
-
       }
 
 
@@ -1488,10 +1323,8 @@ function validateRow(row, rowIndex) {
 
 
         addCorrection(
-
           rowIndex,
           column
-
         );
 
       }
@@ -1499,9 +1332,7 @@ function validateRow(row, rowIndex) {
     });
 
 
-  /* -----------------------------
-     OPCIONALES CON ADVERTENCIA
-  ----------------------------- */
+  /* ADVERTENCIAS */
 
   WARNING_COLUMNS
     .forEach(column => {
@@ -1513,24 +1344,19 @@ function validateRow(row, rowIndex) {
       ) {
 
         addWarning(
-
           rowIndex,
-
           column,
-
           `Fila ${excelRow} · ${column}: celda vacía.`
-
         );
 
       }
 
     });
-
 }
 
 
 /* =========================================================
-   REGISTRO DE RESULTADOS
+   REGISTRO RESULTADOS
 ========================================================= */
 
 function addError(
@@ -1540,11 +1366,9 @@ function addError(
 ) {
 
   validationResult.errors.push({
-
     rowIndex,
     column,
     message
-
   });
 
 }
@@ -1557,11 +1381,9 @@ function addWarning(
 ) {
 
   validationResult.warnings.push({
-
     rowIndex,
     column,
     message
-
   });
 
 }
@@ -1573,10 +1395,8 @@ function addCorrection(
 ) {
 
   validationResult.corrections.push({
-
     rowIndex,
     column
-
   });
 
 }
@@ -1624,7 +1444,6 @@ function renderSummary() {
     )
     .textContent =
       rows.length;
-
 }
 
 
@@ -1757,9 +1576,7 @@ function groupByColumn(items) {
       if (
         !result[item.column]
       ) {
-
         result[item.column] = [];
-
       }
 
 
@@ -1772,7 +1589,6 @@ function groupByColumn(items) {
     },
     {}
   );
-
 }
 
 
@@ -1840,9 +1656,7 @@ function renderTable() {
     if (
       REQUIRED.has(column)
     ) {
-
       th.textContent += " *";
-
     }
 
 
@@ -1984,12 +1798,11 @@ function renderTable() {
 
     }
   );
-
 }
 
 
 /* =========================================================
-   BOTÓN DE ENVÍO
+   BOTÓN
 ========================================================= */
 
 function updateSendButton() {
@@ -2024,7 +1837,6 @@ function updateSendButton() {
 
 
     return;
-
   }
 
 
@@ -2041,60 +1853,226 @@ function updateSendButton() {
 
     status.textContent =
       "Programación validada correctamente.";
-
   }
-
 }
 
 
 /* =========================================================
-   ENVÍO
+   ENVÍO A GOOGLE SHEETS
 ========================================================= */
 
 document
-  .getElementById(
-    "sendButton"
-  )
-  .addEventListener(
-    "click",
-    () => {
+  .getElementById("sendButton")
+  .addEventListener("click", sendProgramming);
 
-      /*
-        IMPORTANTE:
 
-        Aquí conectaremos después
-        Google Sheets / Apps Script
-        para guardar los registros
-        en "Recepción OLT".
-      */
+async function sendProgramming() {
+
+  const button =
+    document.getElementById("sendButton");
+
+  const status =
+    document.getElementById("sendStatus");
+
+
+  if (validationResult.errors.length > 0) {
+
+    alert(
+      "Todavía existen errores obligatorios. Corrígelos antes de enviar."
+    );
+
+    return;
+  }
+
+
+  if (!rows.length) {
+
+    alert(
+      "No existen registros para enviar."
+    );
+
+    return;
+  }
+
+
+  const warningCount =
+    validationResult.warnings.length;
+
+
+  let confirmationMessage =
+    `Se enviarán ${rows.length} registro(s) a Google Sheets.`;
+
+
+  if (warningCount > 0) {
+
+    confirmationMessage +=
+      `\n\nExisten ${warningCount} advertencia(s) amarilla(s).`;
+
+  }
+
+
+  confirmationMessage +=
+    "\n\n¿Deseas continuar?";
+
+
+  const confirmed =
+    confirm(confirmationMessage);
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  button.disabled = true;
+
+  button.textContent =
+    "Enviando...";
+
+  status.textContent =
+    `Enviando ${rows.length} registro(s) a Recepción OLT...`;
+
+
+  try {
+
+    const payload = {
+      rows: rows,
+      origen: "OLT GitHub Pages",
+      total: rows.length
+    };
+
+
+    const response =
+      await fetch(
+        APPS_SCRIPT_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:
+            JSON.stringify(payload)
+        }
+      );
+
+
+    const text =
+      await response.text();
+
+
+    let result;
+
+
+    try {
+
+      result =
+        JSON.parse(text);
+
+    }
+    catch (error) {
+
+      console.error(
+        "Respuesta recibida:",
+        text
+      );
+
+      throw new Error(
+        "El servidor respondió, pero la respuesta no pudo interpretarse."
+      );
+    }
+
+
+    if (!result.ok) {
+
+      console.error(
+        "Error Apps Script:",
+        result
+      );
+
+
+      let message =
+        result.error ||
+        "Google Sheets rechazó la información.";
 
 
       if (
-        validationResult.errors.length
+        result.errores &&
+        result.errores.length
       ) {
 
-        alert(
-          "Todavía existen errores."
-        );
+        const examples =
+          result.errores
+            .slice(0, 5)
+            .map(
+              error =>
+                `Fila ${error.fila} · ${error.columna}: ${error.mensaje}`
+            )
+            .join("\n");
 
-        return;
 
+        message +=
+          "\n\nPrimeros errores:\n" +
+          examples;
       }
 
 
-      console.log(
-        "DATOS LISTOS:",
-        rows
+      throw new Error(
+        message
       );
-
-
-      alert(
-        "La información pasó todas las validaciones obligatorias.\n\n" +
-        "El siguiente paso será conectar este botón con la hoja Recepción OLT."
-      );
-
     }
-  );
+
+
+    status.textContent =
+      `Envío realizado correctamente. ID: ${result.idEnvio}`;
+
+
+    alert(
+      "PROGRAMACIÓN ENVIADA CORRECTAMENTE\n\n" +
+
+      `Registros: ${result.registros}\n` +
+
+      `ID de envío: ${result.idEnvio}\n` +
+
+      `Fecha/Hora: ${result.fechaRecepcion}\n\n` +
+
+      `Guardado en: Recepción OLT`
+    );
+
+
+    console.log(
+      "Respuesta Apps Script:",
+      result
+    );
+
+  }
+  catch (error) {
+
+    console.error(error);
+
+
+    status.textContent =
+      "No se pudo completar el envío.";
+
+
+    alert(
+      "ERROR AL ENVIAR\n\n" +
+      error.message
+    );
+
+  }
+  finally {
+
+    button.textContent =
+      "Enviar programación";
+
+    updateSendButton();
+
+  }
+
+}
 
 </script>
 
