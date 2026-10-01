@@ -235,7 +235,7 @@ tr.leaving td{opacity:0;transition:opacity .25s}tr.leaving{pointer-events:none}
 <section class="catalog" aria-labelledby="distributionTitle"><div class="distribution-heading"><div><span class="eyebrow">ESTRUCTURA DE RECEPCIÓN</span><h2 id="distributionTitle">Distribución del archivo</h2><p>Estos son los 19 campos que recibiremos. Al cargar tu Excel verás la columna de origen de cada uno.</p></div></div><div id="catalog"></div></section>
 <section class="send-panel" aria-label="Envío de programación"><div><strong id="sendTitle">Carga tu archivo para comenzar</strong><p id="sendHelp">El botón se habilitará cuando haya registros y no existan errores rojos.</p><small id="connectionStatus">Conexión con Google Sheets pendiente de configurar.</small></div><div class="actions"><button id="download" class="ghost" disabled>Descargar revisión</button><button id="send" disabled>Enviar archivo validado <span aria-hidden="true">↗</span></button></div></section>
 </main><footer>Programación OLT <span>Los originales se conservan en la revisión. BD no se modifica.</span></footer>
-<dialog id="settings"><form method="dialog"><h2>Configuración de recepción</h2><input id="threshold" type="hidden" value="85"><label>URL de recepción (Apps Script)<input id="endpoint" type="url" placeholder="https://script.google.com/macros/s/…/exec"></label><p class="hint">La URL no es una credencial. Usuario y contraseña se piden al iniciar sesión; la contraseña no se guarda en el navegador.</p><div class="actions"><button value="cancel" class="ghost">Cancelar</button><button id="saveSettings" value="save">Guardar</button></div></form></dialog>
+<dialog id="settings"><form method="dialog"><h2>Configuración de recepción</h2><input id="threshold" type="hidden" value="85"><label>URL de recepción (Apps Script)<input id="endpoint" type="url" placeholder="https://script.google.com/macros/s/…/exec"></label><p class="hint">La URL no es una credencial. Los usuarios se validan en el servidor. La contraseña nunca se guarda en este navegador; solo se conserva temporalmente el token de sesión.</p><div class="actions"><button value="cancel" class="ghost">Cancelar</button><button id="saveSettings" value="save">Guardar</button></div></form></dialog>
 <dialog id="login"><form id="loginForm"><h2>Iniciar sesión</h2><label>Usuario<input id="username" required autocomplete="username"></label><label>Contraseña<input id="password" type="password" required autocomplete="current-password"></label><p id="loginError" role="alert"></p><div class="actions"><button type="button" id="cancelLogin" class="ghost">Cancelar</button><button id="loginSubmit" type="submit">Ingresar</button></div></form></dialog><dialog id="confirm"><form id="sendForm"><h2>Confirmar envío</h2><p id="confirmText"></p><p id="confirmUser"></p><p>Se guardará en <strong>Recepción OLT</strong>, junto con la procedencia del archivo.</p><div class="actions"><button type="button" id="cancelSend" class="ghost">Volver a revisar</button><button type="submit" id="confirmSend">Confirmar y enviar</button></div></form></dialog>
 <script>
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -378,39 +378,423 @@ if(document.modelContext?.registerTool){try{document.modelContext.registerTool({
 </script>
 <script>
 'use strict';
-// Session tokens stay in memory; passwords are cleared after each attempt.
-let oltSession=null,historyVersion=0;
-async function oltRequest(payload){
- if(!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(options.endpoint||''))throw new Error('Configura la URL /exec de Apps Script.');
- const control=new AbortController(),timer=setTimeout(()=>control.abort(),90000);
- try{const response=await fetch(options.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),redirect:'follow',signal:control.signal});const result=await response.json();if(!result.ok){const error=new Error(result.error||'El servidor rechazó la solicitud.');error.details=result.errores;throw error;}return result;}finally{clearTimeout(timer);}
+
+// La contraseña nunca se persiste. Solo se guarda un token temporal de sesión.
+const OLT_SESSION_KEY = 'olt-session-v1';
+let oltSession = null;
+let historyVersion = 0;
+let sessionExpiryTimer = null;
+
+async function oltRequest(payload) {
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(options.endpoint || '')) {
+    throw new Error('Configura la URL /exec de Apps Script.');
+  }
+
+  const control = new AbortController();
+  const timer = setTimeout(() => control.abort(), 90000);
+
+  try {
+    const response = await fetch(options.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+      signal: control.signal
+    });
+
+    const result = await response.json();
+
+    if (!result.ok) {
+      const error = new Error(result.error || 'El servidor rechazó la solicitud.');
+      error.details = result.errores;
+      throw error;
+    }
+
+    return result;
+  } finally {
+    clearTimeout(timer);
+  }
 }
-function displayLast(value){if(!value)return 'Sin envíos registrados';if(/^\d{4}-\d{2}-\d{2}T/.test(value)){const d=new Date(value);if(!isNaN(d))return d.toLocaleString('es-PE',{timeZone:'America/Lima'});}return String(value)+' (Lima)';}
-window.resetOLTSession=function(){historyVersion++;oltSession=null;$('currentUser').textContent='Sin sesión iniciada';$('lastUserUpload').textContent='Inicia sesión para consultar tus envíos.';$('lastFileUpload').textContent='Carga un archivo e inicia sesión para consultar su último envío.';$('loginOpen').hidden=false;$('logout').hidden=true;$('refreshHistory').disabled=true;};
-window.refreshOLTFileHistory=async function(){
- const version=++historyVersion;if(!oltSession){$('lastFileUpload').textContent='Inicia sesión para consultar el último envío de este archivo.';return;}
- const token=oltSession.token,file=fileHash&&$('sheet').value;if(file)$('lastFileUpload').textContent='Consultando historial…';
- try{const res=file?await oltRequest({action:'filehistory',token,fileHash,sheet:$('sheet').value}):await oltRequest({action:'status',token});if(version!==historyVersion)return;
-  if(res.ultimoEnvio!==undefined)$('lastUserUpload').textContent='Último envío del usuario: '+displayLast(res.ultimoEnvio);
-  $('lastFileUpload').textContent=file?'Último envío de este archivo y pestaña por este usuario: '+displayLast(res.ultimoEnvioArchivo):'Selecciona un archivo y una pestaña para consultar su último envío.';
- }catch(error){if(version===historyVersion)$('lastFileUpload').textContent='No se pudo consultar el historial: '+error.message;}
-};
-$('loginOpen').onclick=()=>{if(!options.endpoint){notice('Configura primero la URL de Apps Script.',true);$('settings').showModal();return;}$('loginError').textContent='';$('login').showModal();};
-$('cancelLogin').onclick=()=>{$('password').value='';$('login').close();};
-$('login').addEventListener('close',()=>{$('password').value='';});
-$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginSubmit').disabled=true;$('loginError').textContent='';try{const result=await oltRequest({action:'login',usuario:$('username').value.trim(),password:$('password').value});if(!result.token||!result.usuario)throw new Error('Respuesta de sesión incompleta.');oltSession={token:result.token,usuario:result.usuario};$('currentUser').textContent='Usuario: '+result.usuario;$('lastUserUpload').textContent='Último envío del usuario: '+displayLast(result.ultimoEnvio);$('loginOpen').hidden=true;$('logout').hidden=false;$('refreshHistory').disabled=false;$('login').close();if(fileHash&&$('sheet').value)await window.refreshOLTFileHistory();else $('lastFileUpload').textContent='Selecciona un archivo y una pestaña para consultar su último envío.';}catch(error){$('loginError').textContent=error.message;}finally{$('password').value='';$('loginSubmit').disabled=false;}};
-$('refreshHistory').onclick=()=>window.refreshOLTFileHistory();
-$('logout').onclick=async()=>{if(sending)return;const token=oltSession?.token;window.resetOLTSession();if(token)try{await oltRequest({action:'logout',token});}catch(_){notice('Sesión local cerrada. No se confirmó el cierre en el servidor.',true);}};
-function serverRow(values){return Object.fromEntries(OLT.columns.map(c=>{const label=c.key==='mercaderia'?'Tipo de Mercaderia':c.label;let value=values[c.key];if(c.key==='fecha'&&/^\d{4}-\d{2}-\d{2}$/.test(value))value=value.split('-').reverse().join('/');return [label,value];}));}
-$('send').onclick=()=>{if(totals().errors||!rows.length||sending)return;if(!oltSession){$('loginOpen').click();return;}$('confirmText').textContent='Enviar '+rows.length+' registros de '+filename+', pestaña '+$('sheet').value+'.';$('confirmUser').textContent='Usuario: '+oltSession.usuario;$('confirm').showModal();};
-$('cancelSend').onclick=()=>$('confirm').close();
-$('sendForm').onsubmit=async e=>{
- e.preventDefault();if(sending||!oltSession||totals().errors||!rows.length||rows.length>5000)return;
- sending=true;for(const id of ['confirmSend','cancelSend','logout','refreshHistory'])$(id).disabled=true;render();
- try{const result=await oltRequest({action:'upload',token:oltSession.token,filename,fileHash,sheet:$('sheet').value,rows:rows.map(r=>serverRow(r.result.values))});if(result.procesado!==true||!result.fechaRecepcion)throw new Error('Respuesta de recepción incompleta.');lastSent=revision;$('confirm').close();$('lastUserUpload').textContent='Último envío del usuario: '+displayLast(result.fechaRecepcion);$('lastFileUpload').textContent=result.historialArchivoRegistrado?'Último envío de este archivo y pestaña por este usuario: '+displayLast(result.fechaRecepcion):'Recepción confirmada; el servidor no confirmó el historial por archivo.';notice(result.mensaje||('Recepción confirmada: '+result.insertados+' nuevos, '+result.duplicados+' duplicados omitidos.'));}
- catch(error){let detail='';if(Array.isArray(error.details))detail=error.details.map(x=>'Fila Excel '+(rows[x.fila-1]?.sourceRow??x.fila)+', '+x.columna+': '+x.mensaje).join(' · ');notice('No se confirmó el envío: '+error.message+(detail?' '+detail:''),true);}
- finally{sending=false;for(const id of ['confirmSend','cancelSend','logout','refreshHistory'])$(id).disabled=false;render();}
+
+function displayLast(value) {
+  if (!value) return 'Sin envíos registrados';
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+    const d = new Date(value);
+    if (!isNaN(d)) {
+      return d.toLocaleString('es-PE', { timeZone: 'America/Lima' });
+    }
+  }
+
+  return String(value) + ' (Lima)';
+}
+
+function esErrorSesion(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return (
+    message.includes('sesión expiró') ||
+    message.includes('sesion expiro') ||
+    message.includes('debes iniciar sesión') ||
+    message.includes('debes iniciar sesion') ||
+    message.includes('sesión no es válida') ||
+    message.includes('sesion no es valida') ||
+    message.includes('usuario ya no está activo') ||
+    message.includes('usuario ya no esta activo')
+  );
+}
+
+function guardarSesionLocal() {
+  if (!oltSession) {
+    localStorage.removeItem(OLT_SESSION_KEY);
+    return;
+  }
+
+  localStorage.setItem(
+    OLT_SESSION_KEY,
+    JSON.stringify({
+      token: oltSession.token,
+      expiresAt: oltSession.expiresAt
+    })
+  );
+}
+
+function programarFinSesion() {
+  if (sessionExpiryTimer) {
+    clearTimeout(sessionExpiryTimer);
+    sessionExpiryTimer = null;
+  }
+
+  if (!oltSession) return;
+
+  const restante = Number(oltSession.expiresAt) - Date.now();
+
+  if (restante <= 0) {
+    window.resetOLTSession('Tu sesión de 8 horas terminó. Inicia sesión nuevamente.');
+    return;
+  }
+
+  sessionExpiryTimer = setTimeout(() => {
+    window.resetOLTSession('Tu sesión de 8 horas terminó. Inicia sesión nuevamente.');
+  }, restante);
+}
+
+function activarOLTSession(result, tokenExistente) {
+  const token = tokenExistente || result.token;
+  const expiresAt = Number(result.expiresAt);
+
+  if (!token || !result.usuario || !expiresAt || expiresAt <= Date.now()) {
+    throw new Error('Respuesta de sesión incompleta.');
+  }
+
+  oltSession = {
+    token,
+    usuario: result.usuario,
+    expiresAt
+  };
+
+  guardarSesionLocal();
+  programarFinSesion();
+
+  $('currentUser').textContent = 'Usuario: ' + result.usuario;
+  $('lastUserUpload').textContent = 'Último envío del usuario: ' + displayLast(result.ultimoEnvio);
+  $('loginOpen').hidden = true;
+  $('logout').hidden = false;
+  $('refreshHistory').disabled = false;
+}
+
+window.resetOLTSession = function (message = '') {
+  historyVersion++;
+  oltSession = null;
+  localStorage.removeItem(OLT_SESSION_KEY);
+
+  if (sessionExpiryTimer) {
+    clearTimeout(sessionExpiryTimer);
+    sessionExpiryTimer = null;
+  }
+
+  $('currentUser').textContent = 'Sin sesión iniciada';
+  $('lastUserUpload').textContent = 'Inicia sesión para consultar tus envíos.';
+  $('lastFileUpload').textContent = 'Carga un archivo e inicia sesión para consultar su último envío.';
+  $('loginOpen').hidden = false;
+  $('logout').hidden = true;
+  $('refreshHistory').disabled = true;
+
+  if (message) notice(message, true);
 };
 
+async function restaurarOLTSession() {
+  let savedSession;
+
+  try {
+    savedSession = JSON.parse(localStorage.getItem(OLT_SESSION_KEY) || 'null');
+  } catch (_) {
+    localStorage.removeItem(OLT_SESSION_KEY);
+    return;
+  }
+
+  if (!savedSession?.token) return;
+
+  if (!savedSession.expiresAt || Date.now() >= Number(savedSession.expiresAt)) {
+    window.resetOLTSession('Tu sesión anterior terminó. Inicia sesión nuevamente.');
+    return;
+  }
+
+  try {
+    const result = await oltRequest({
+      action: 'status',
+      token: savedSession.token
+    });
+
+    activarOLTSession(result, savedSession.token);
+
+    if (fileHash && $('sheet').value) {
+      await window.refreshOLTFileHistory();
+    }
+  } catch (error) {
+    window.resetOLTSession('Tu sesión anterior terminó. Inicia sesión nuevamente.');
+  }
+}
+
+window.refreshOLTFileHistory = async function () {
+  const version = ++historyVersion;
+
+  if (!oltSession) {
+    $('lastFileUpload').textContent = 'Inicia sesión para consultar el último envío de este archivo.';
+    return;
+  }
+
+  const token = oltSession.token;
+  const file = fileHash && $('sheet').value;
+
+  if (file) $('lastFileUpload').textContent = 'Consultando historial…';
+
+  try {
+    const res = file
+      ? await oltRequest({ action: 'filehistory', token, fileHash, sheet: $('sheet').value })
+      : await oltRequest({ action: 'status', token });
+
+    if (version !== historyVersion) return;
+
+    if (res.ultimoEnvio !== undefined) {
+      $('lastUserUpload').textContent = 'Último envío del usuario: ' + displayLast(res.ultimoEnvio);
+    }
+
+    $('lastFileUpload').textContent = file
+      ? 'Último envío de este archivo y pestaña por este usuario: ' + displayLast(res.ultimoEnvioArchivo)
+      : 'Selecciona un archivo y una pestaña para consultar su último envío.';
+  } catch (error) {
+    if (esErrorSesion(error)) {
+      window.resetOLTSession('Tu sesión terminó. Inicia sesión nuevamente.');
+      return;
+    }
+
+    if (version === historyVersion) {
+      $('lastFileUpload').textContent = 'No se pudo consultar el historial: ' + error.message;
+    }
+  }
+};
+
+$('loginOpen').onclick = () => {
+  if (!options.endpoint) {
+    notice('Configura primero la URL de Apps Script.', true);
+    $('settings').showModal();
+    return;
+  }
+
+  $('loginError').textContent = '';
+  $('login').showModal();
+};
+
+$('cancelLogin').onclick = () => {
+  $('password').value = '';
+  $('login').close();
+};
+
+$('login').addEventListener('close', () => {
+  $('password').value = '';
+});
+
+$('loginForm').onsubmit = async e => {
+  e.preventDefault();
+  $('loginSubmit').disabled = true;
+  $('loginError').textContent = '';
+
+  try {
+    const result = await oltRequest({
+      action: 'login',
+      usuario: $('username').value.trim(),
+      password: $('password').value
+    });
+
+    activarOLTSession(result);
+    $('login').close();
+
+    if (fileHash && $('sheet').value) {
+      await window.refreshOLTFileHistory();
+    } else {
+      $('lastFileUpload').textContent = 'Selecciona un archivo y una pestaña para consultar su último envío.';
+    }
+  } catch (error) {
+    $('loginError').textContent = error.message;
+  } finally {
+    $('password').value = '';
+    $('loginSubmit').disabled = false;
+  }
+};
+
+$('refreshHistory').onclick = () => window.refreshOLTFileHistory();
+
+$('logout').onclick = async () => {
+  if (sending) return;
+
+  const token = oltSession?.token;
+  window.resetOLTSession();
+
+  if (token) {
+    try {
+      await oltRequest({ action: 'logout', token });
+    } catch (_) {
+      notice('Sesión local cerrada. No se confirmó el cierre en el servidor.', true);
+    }
+  }
+};
+
+function serverRow(values) {
+  return Object.fromEntries(
+    OLT.columns.map(c => {
+      const label = c.key === 'mercaderia' ? 'Tipo de Mercaderia' : c.label;
+      let value = values[c.key];
+
+      if (c.key === 'fecha' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        value = value.split('-').reverse().join('/');
+      }
+
+      return [label, value];
+    })
+  );
+}
+
+function resetProgramacionDespuesDeEnvio() {
+  book = null;
+  filename = '';
+  rows = [];
+  headerInfo = null;
+  page = 0;
+  fileHash = '';
+  lastSent = -1;
+
+  invalidate();
+
+  $('file').value = '';
+  $('fileLabel').textContent = 'Arrastra tu programación aquí';
+  $('sheet').replaceChildren(new Option('Primero carga un archivo'));
+  $('sheet').disabled = true;
+  $('filter').value = 'error';
+  $('workspace').hidden = true;
+  $('empty').hidden = false;
+  $('mappingNote').textContent = '';
+  $('lastFileUpload').textContent = oltSession
+    ? 'Carga un archivo para consultar su último envío.'
+    : 'Carga un archivo e inicia sesión para consultar su último envío.';
+
+  render();
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
+
+$('send').onclick = () => {
+  if (totals().errors || !rows.length || sending) return;
+
+  if (!oltSession) {
+    $('loginOpen').click();
+    return;
+  }
+
+  $('confirmText').textContent =
+    'Enviar ' + rows.length + ' registros de ' + filename + ', pestaña ' + $('sheet').value + '.';
+  $('confirmUser').textContent = 'Usuario: ' + oltSession.usuario;
+  $('confirm').showModal();
+};
+
+$('cancelSend').onclick = () => $('confirm').close();
+
+$('sendForm').onsubmit = async e => {
+  e.preventDefault();
+
+  if (sending || !oltSession || totals().errors || !rows.length || rows.length > 5000) return;
+
+  sending = true;
+  for (const id of ['confirmSend', 'cancelSend', 'logout', 'refreshHistory']) {
+    $(id).disabled = true;
+  }
+  render();
+
+  let envioCorrecto = false;
+  let result = null;
+
+  try {
+    result = await oltRequest({
+      action: 'upload',
+      token: oltSession.token,
+      filename,
+      fileHash,
+      sheet: $('sheet').value,
+      rows: rows.map(r => serverRow(r.result.values))
+    });
+
+    if (result.procesado !== true || !result.fechaRecepcion) {
+      throw new Error('Respuesta de recepción incompleta.');
+    }
+
+    envioCorrecto = true;
+    $('confirm').close();
+    $('lastUserUpload').textContent = 'Último envío del usuario: ' + displayLast(result.fechaRecepcion);
+  } catch (error) {
+    if (esErrorSesion(error)) {
+      $('confirm').close();
+      window.resetOLTSession('Tu sesión terminó. Inicia sesión nuevamente.');
+      return;
+    }
+
+    let detail = '';
+
+    if (Array.isArray(error.details)) {
+      detail = error.details
+        .map(x =>
+          'Fila Excel ' +
+          (rows[x.fila - 1]?.sourceRow ?? x.fila) +
+          ', ' + x.columna + ': ' + x.mensaje
+        )
+        .join(' · ');
+    }
+
+    notice(
+      'No se confirmó el envío: ' + error.message + (detail ? ' ' + detail : ''),
+      true
+    );
+  } finally {
+    sending = false;
+
+    for (const id of ['confirmSend', 'cancelSend', 'logout', 'refreshHistory']) {
+      $(id).disabled = false;
+    }
+
+    if (envioCorrecto) {
+      resetProgramacionDespuesDeEnvio();
+      notice(
+        'Se cargó con éxito. ' +
+        (result?.mensaje || (result?.insertados + ' registro(s) insertado(s).'))
+      );
+    } else {
+      render();
+    }
+  }
+};
+
+// Si existe un token todavía vigente, recupera la sesión sin pedir nuevamente la contraseña.
+restaurarOLTSession();
 </script>
 </body></html>
