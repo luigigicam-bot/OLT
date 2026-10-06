@@ -21,7 +21,229 @@ tr.leaving td{opacity:0;transition:opacity .25s}tr.leaving{pointer-events:none}
 .done-panel{display:flex;gap:16px;align-items:center;padding:22px 24px;border:1px solid #bfe6d6;background:#effaf5;border-radius:14px}.done-panel>b{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#08795d;color:#fff;font-size:20px}.done-panel p{margin:4px 0 0}
 
 .auth-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 85% 8%,#e7e4ff 0,transparent 42%),radial-gradient(ellipse at 5% 75%,#ddf7ef 0,transparent 40%),#f5f7fc}.auth-card{width:min(430px,100%);background:#fff;border:1px solid #dce4ee;border-radius:18px;box-shadow:0 20px 70px #10294e24;padding:32px}.auth-brand{font-size:14px;color:#60738a;margin-bottom:22px}.auth-brand b{font-size:26px;color:#10294e}.auth-brand span{color:#6954e8;margin:0 9px}.auth-card h1{font-size:27px;margin:0 0 8px}.auth-card>p{font-size:14px;margin:0 0 24px}.auth-card label{margin:16px 0}.auth-card button{width:100%;min-height:46px;margin-top:8px}.auth-error{min-height:20px;color:#a52340;font-size:13px;margin:12px 0 0}.auth-security{display:block;text-align:center;margin-top:18px;color:#718096}.auth-loading{opacity:.65;pointer-events:none}#appShell[hidden],#authGate[hidden]{display:none!important}
-</style><script type="text/plain" id="sheetjs-license">                                 Apache License
+</style>
+<style id="olt-professional-theme">
+/* OLT Professional UI — capa visual + resumen de calidad. Mantiene Supabase y las validaciones. */
+:root{
+  --bg:#f4f7fb;
+  --surface:#ffffff;
+  --surface-soft:rgba(255,255,255,.78);
+  --ink:#12233c;
+  --muted:#66758d;
+  --navy:#0e2342;
+  --navy-2:#18375f;
+  --primary:#5b4be6;
+  --primary-2:#7967f2;
+  --teal:#0b8a70;
+  --teal-soft:#e9f8f3;
+  --danger:#c83b58;
+  --warning:#b67a08;
+  --line:#dfe7f1;
+  --shadow-sm:0 8px 24px rgba(18,35,60,.06);
+  --shadow-md:0 18px 48px rgba(18,35,60,.10);
+  --shadow-lg:0 28px 80px rgba(12,28,52,.16);
+  --radius-sm:12px;
+  --radius-md:18px;
+  --radius-lg:26px;
+}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 88% 3%,rgba(103,86,232,.10),transparent 27rem),
+    radial-gradient(circle at 5% 28%,rgba(11,138,112,.08),transparent 25rem),
+    linear-gradient(180deg,#f8faff 0%,#f4f7fb 45%,#f7f9fc 100%);
+  min-height:100vh;
+  letter-spacing:-.005em;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.28;
+  background-image:linear-gradient(rgba(17,40,72,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(17,40,72,.035) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,black,transparent 70%);
+}
+header{
+  position:sticky;top:0;z-index:20;
+  min-height:72px;padding:0 clamp(20px,4vw,64px);
+  background:linear-gradient(115deg,rgba(12,32,61,.97),rgba(27,50,92,.95));
+  border-bottom:1px solid rgba(255,255,255,.10);
+  box-shadow:0 10px 36px rgba(15,34,68,.14);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.brand{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:650;letter-spacing:.01em;opacity:.96}
+.brand b{font-size:24px;letter-spacing:-.04em}.brand span{margin:0 8px;color:#7ce5c8}
+header .ghost{
+  color:#fff;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);
+  border-radius:999px;padding:10px 16px;box-shadow:none;
+}
+header .ghost:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.34)}
+main{max-width:1440px;padding:42px clamp(20px,4vw,58px) 56px}
+.intro{
+  position:relative;overflow:hidden;padding:34px 36px;min-height:180px;
+  background:linear-gradient(125deg,rgba(255,255,255,.94),rgba(250,251,255,.83));
+  border:1px solid rgba(215,225,238,.92);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-md);
+}
+.intro:after{
+  content:"";position:absolute;right:-90px;top:-130px;width:330px;height:330px;border-radius:50%;
+  background:radial-gradient(circle,rgba(91,75,230,.16),rgba(91,75,230,0) 68%);pointer-events:none;
+}
+.eyebrow{color:#087a67;font-size:11px;letter-spacing:.17em;font-weight:800}
+.intro h1{font-size:clamp(31px,3.3vw,47px);line-height:1.06;letter-spacing:-.038em;margin:12px 0 14px;color:#102542;max-width:780px}
+.intro p{font-size:15px;max-width:680px;color:#62728a}
+.destination{
+  z-index:1;border:1px solid #dce7ef;border-left:0;border-radius:16px;background:rgba(255,255,255,.84);
+  padding:14px 18px;box-shadow:0 12px 30px rgba(20,48,72,.08);color:#536780;
+}
+.destination strong{color:#0d725f}
+.session-panel{
+  margin:22px 0 18px;padding:18px 22px;border:1px solid #dce5ef;border-left:0;border-radius:20px;
+  background:rgba(255,255,255,.82);box-shadow:var(--shadow-sm);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.session-panel strong{font-size:14px;color:#172e4d}.session-panel p{color:#708097;margin:4px 0}
+.steps{
+  margin:18px 0 24px;padding:6px;border:1px solid #dfe7f2;border-radius:18px;background:rgba(255,255,255,.72);
+  box-shadow:0 6px 20px rgba(24,48,80,.04);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.steps li{
+  display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 14px;border:0!important;border-radius:13px;
+  color:#7a899d;font-size:13px;font-weight:750;transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .22s ease;
+}
+.steps li span{font-size:13px;margin:0}.steps .active{color:#0b735f;background:#ecf8f4;box-shadow:inset 0 0 0 1px #d6eee7}
+.load-panel{
+  gap:22px;padding:26px;border:1px solid #dae4ef;border-radius:26px;background:rgba(255,255,255,.88);
+  box-shadow:var(--shadow-md);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.drop{
+  min-height:238px;border:1.5px dashed #a9b9cd;border-radius:20px;
+  background:linear-gradient(145deg,#f6fbff 0%,#f6f4ff 52%,#f2fbf7 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75);
+  transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease,background .22s ease;
+}
+.drop:hover,.drop.dragover{border-color:#6656e6;background:linear-gradient(145deg,#f2f8ff,#f2efff 52%,#eefaf6);box-shadow:0 16px 34px rgba(73,61,177,.10);transform:translateY(-2px)}
+.upload-icon{
+  width:52px;height:52px;display:grid;place-items:center;line-height:1;border-radius:16px;font-size:25px;
+  background:linear-gradient(145deg,#ffffff,#f3f1ff);color:#5d4ddd;border:1px solid #e6e1ff;box-shadow:0 10px 24px rgba(91,75,230,.12);
+}
+.choose-file{border-radius:12px;padding:11px 18px;background:linear-gradient(135deg,#5b4be6,#735fe9);box-shadow:0 8px 20px rgba(91,75,230,.22);font-weight:700}
+.load-options{align-content:center;padding:4px 6px;gap:15px}.load-options label{color:#344b67}
+input,select{
+  min-height:44px;border:1px solid #cfd9e5;border-radius:12px;padding:10px 12px;background:#fff;
+  box-shadow:0 1px 2px rgba(20,43,73,.02);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+input:hover,select:hover{border-color:#aebdd0}input:focus,select:focus{outline:none;border-color:#7163e7;box-shadow:0 0 0 4px rgba(105,84,232,.11)}
+button{
+  min-height:42px;border-radius:12px;padding:10px 17px;border:1px solid transparent;
+  background:linear-gradient(135deg,#0b836a,#0a7866);box-shadow:0 8px 18px rgba(8,121,93,.12);
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease,border-color .16s ease;
+}
+button:hover:not(:disabled){filter:none;transform:translateY(-1px);box-shadow:0 11px 24px rgba(18,49,78,.14)}
+button:active:not(:disabled){transform:translateY(0)}
+button:focus-visible{outline:3px solid rgba(91,75,230,.24);outline-offset:2px}
+button:disabled{opacity:.50;box-shadow:none}
+.ghost{background:#fff;color:#304760;border:1px solid #d4deea;box-shadow:0 3px 10px rgba(20,44,75,.04)}
+.ghost:hover:not(:disabled){background:#f9fbfd;border-color:#b9c8d9}
+#notice{
+  margin:15px 2px 22px;padding:10px 2px;font-size:13px;color:#65768d;
+}
+#notice.error{color:#b42c49;font-weight:650}
+.metrics{gap:14px;margin:20px 0 24px}
+.metrics>div{
+  position:relative;overflow:hidden;padding:20px 21px;border:1px solid #dfe7f0;border-top:0;border-radius:20px;
+  background:linear-gradient(145deg,#fff,#fbfcff);box-shadow:var(--shadow-sm);
+}
+.metrics>div:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#274663,#6d7f96)}
+.metrics>div.green:before{background:linear-gradient(90deg,#0b866c,#52c8a6)}
+.metrics>div.red:before{background:linear-gradient(90deg,#bd3653,#eb7186)}
+.metrics>div.yellow:before{background:linear-gradient(90deg,#bc800e,#efc35b)}
+.metrics>div.green,.metrics>div.red,.metrics>div.yellow{background:linear-gradient(145deg,#fff,#fbfcff)}
+.metrics span{color:#728198;font-size:12px;font-weight:650;letter-spacing:.01em}.metrics strong{font-size:31px;letter-spacing:-.035em;color:#17304f;margin-top:7px}
+.review-head{margin:30px 2px 14px}.review-head h2{font-size:21px;letter-spacing:-.02em;color:#18304e}.review-head p{color:#748298}
+.review-head label{color:#687b91}.review-head select{min-width:235px;background:#fff}
+details{
+  padding:0;border:1px solid #dfe7ef;border-radius:16px;background:rgba(255,255,255,.90);box-shadow:0 5px 18px rgba(19,45,75,.04);overflow:hidden;
+}
+summary{padding:15px 17px;list-style:none;color:#304964}summary::-webkit-details-marker{display:none}summary:after{content:"+";float:right;font-size:20px;line-height:1;color:#718197}details[open] summary:after{content:"−"}.issue-item{padding:11px 17px;border-top:1px solid #eef2f6;border-bottom:0}
+.done-panel{border-radius:18px;border:1px solid #cfe9df;background:linear-gradient(135deg,#f4fcf8,#eefaf5);box-shadow:var(--shadow-sm)}
+.table-wrap{
+  max-height:600px;border:1px solid #d9e3ee;border-radius:18px;background:#fff;box-shadow:var(--shadow-md);overflow:auto;
+}
+table{font-size:13px}th{
+  padding:13px 12px;background:linear-gradient(180deg,#19395d,#15334f);min-width:170px;border-right:1px solid rgba(255,255,255,.08);
+  font-weight:700;letter-spacing:.005em;
+}
+th:first-child{min-width:64px}td{padding:7px 9px;border-bottom:1px solid #edf1f5;border-right:1px solid #f1f4f7;background:#fff}
+tbody tr:hover td{background:#fbfcff}td input,td select{min-width:145px;min-height:38px;border-radius:9px;padding:7px 9px}
+td input:focus,td select:focus{outline:none;border-color:#7667e8;box-shadow:0 0 0 3px rgba(105,84,232,.10)}
+.cell-error{background:#fff4f6!important;box-shadow:inset 3px 0 #c93855}.cell-warning{background:#fff9e8!important;box-shadow:inset 3px 0 #d3a326}.cell-changed{background:#eefaf5!important}
+.pager{padding:15px 2px;color:#6e7e93}.pager button{min-height:38px;padding:8px 14px}
+.empty{gap:14px;padding:22px 0 6px}
+.empty>div{padding:22px;border:1px solid #dfe7f0;border-radius:20px;background:rgba(255,255,255,.80);box-shadow:0 8px 24px rgba(20,44,74,.045)}
+.empty>div:nth-child(2),.empty>div:nth-child(3){background:rgba(255,255,255,.80);border-color:#e1e8f0}
+.empty h2{font-size:20px;color:#203a59}.empty p{color:#728097}
+.catalog{padding:28px;border:1px solid #dce5ef;border-radius:24px;background:rgba(255,255,255,.88);box-shadow:var(--shadow-md)}
+.distribution-heading h2{font-size:22px;letter-spacing:-.02em;color:#18304e}.distribution-heading p{color:#728198}
+#catalog{gap:12px;padding-top:22px}.field-card{
+  position:relative;padding:17px;border:1px solid #e0e7f0;border-radius:16px;background:linear-gradient(145deg,#fff,#fafcff);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.field-card:hover{transform:translateY(-2px);border-color:#d0d9e7;box-shadow:0 12px 26px rgba(29,51,80,.08)}
+.field-number{border-radius:8px;padding:5px 8px;background:#f0edff;color:#5e4bd3}.field-title h3{color:#2a405d}.field-source{color:#638097!important}.value-tags span{border-radius:8px;background:#f1f5fb;border-color:#e5eaf1}
+.send-panel{
+  bottom:18px;padding:17px 19px;border:1px solid rgba(199,214,227,.95);border-left:0;border-radius:20px;
+  background:rgba(255,255,255,.92);box-shadow:0 18px 48px rgba(16,39,66,.16);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.send-panel:before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:4px;border-radius:0 6px 6px 0;background:linear-gradient(180deg,#0d8c70,#55c7a8)}
+.send-panel strong{color:#17304f}.send-panel p{color:#697b91}.send-panel small{color:#8090a3}
+#send{min-height:45px;border-radius:13px;background:linear-gradient(135deg,#08795d,#10877e);box-shadow:0 9px 20px rgba(8,121,93,.17)}
+#send:disabled{background:#e6ebf1;color:#8290a0}
+footer{max-width:1440px;margin:0 auto;padding:22px clamp(20px,4vw,58px) 32px;border-top:0;color:#8290a2;font-size:12px}
+dialog{
+  max-width:540px;border:1px solid #dde6ef;border-radius:24px;padding:28px;background:rgba(255,255,255,.98);box-shadow:var(--shadow-lg);
+}
+dialog::backdrop{background:rgba(10,25,47,.56);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+dialog h2{font-size:22px;color:#193350;letter-spacing:-.02em}dialog label{color:#425972}dialog .actions{margin-top:24px}
+.auth-gate{
+  position:relative;overflow:hidden;padding:28px;
+  background:
+    radial-gradient(circle at 82% 12%,rgba(106,86,232,.20),transparent 28rem),
+    radial-gradient(circle at 14% 88%,rgba(13,143,115,.16),transparent 29rem),
+    linear-gradient(145deg,#f8faff,#f1f5fb 52%,#f6f9fc);
+}
+.auth-gate:before,.auth-gate:after{content:"";position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none}
+.auth-gate:before{width:340px;height:340px;right:-130px;bottom:-170px;background:rgba(91,75,230,.08)}
+.auth-gate:after{width:260px;height:260px;left:-100px;top:-120px;background:rgba(11,138,112,.08)}
+.auth-card{
+  position:relative;z-index:1;width:min(460px,100%);padding:38px;border:1px solid rgba(216,226,238,.95);border-radius:28px;
+  background:rgba(255,255,255,.91);box-shadow:0 30px 90px rgba(15,38,69,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.auth-brand{margin-bottom:28px;color:#708096;font-weight:650}.auth-brand b{font-size:29px;letter-spacing:-.045em;color:#102a4b}.auth-brand span{color:#6655df}
+.auth-card h1{font-size:30px;letter-spacing:-.035em;color:#17304f;margin-bottom:8px}.auth-card>p{color:#718096;margin-bottom:26px}
+.auth-card label{color:#40566f;font-size:13px}.auth-card input{min-height:48px;border-radius:13px;background:#fbfcfe}
+.auth-card button{min-height:49px;border-radius:13px;margin-top:11px;background:linear-gradient(135deg,#5848df,#6e5ce9);box-shadow:0 12px 25px rgba(91,75,230,.21)}
+.auth-security{margin-top:20px;color:#8996a6;font-size:12px}
+@media(prefers-reduced-motion:no-preference){
+  .intro,.session-panel,.load-panel,.metrics,.catalog{animation:oltFadeUp .42s ease both}
+  .session-panel{animation-delay:.04s}.load-panel{animation-delay:.08s}.metrics{animation-delay:.10s}.catalog{animation-delay:.12s}
+  @keyframes oltFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+}
+@media(max-width:980px){
+  .intro{align-items:flex-start}.destination{white-space:normal;max-width:260px}.load-panel{grid-template-columns:1fr}.load-options{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}.load-options small{grid-column:1/-1}
+}
+@media(max-width:760px){
+  header{min-height:64px;padding:0 16px}main{padding:22px 14px 36px}.intro{padding:25px 21px;border-radius:22px}.intro h1{font-size:30px}.destination{max-width:none}
+  .session-panel{padding:17px;border-radius:18px}.steps{border-radius:15px}.steps li{padding:10px 7px}.steps li span{font-size:11px}
+  .load-panel{padding:17px;border-radius:21px}.drop{min-height:190px}.load-options{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metrics>div{padding:16px}.metrics strong{font-size:27px}
+  .review-head{align-items:stretch}.review-head select{min-width:0}.table-wrap{border-radius:14px}.catalog{padding:19px;border-radius:20px}
+  .send-panel{bottom:8px;border-radius:17px;padding:14px}.send-panel .actions{width:100%}.send-panel .actions button{flex:1}
+  .auth-card{padding:28px 22px;border-radius:24px}.auth-card h1{font-size:27px}
+}
+@media(max-width:520px){
+  .metrics{grid-template-columns:1fr}.steps li{font-size:12px}.steps li span{display:none}.empty{grid-template-columns:1fr}.brand{max-width:70%;line-height:1.2}footer{flex-direction:column;gap:7px}
+}
+</style>
+<script type="text/plain" id="sheetjs-license">                                 Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
 
@@ -222,13 +444,43 @@ tr.leaving td{opacity:0;transition:opacity .25s}tr.leaving{pointer-events:none}
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-</script></head>
+</script><style id="olt-quality-theme">
+/* ===== Resumen de envío y calidad de información ===== */
+.quality-panel{margin:20px 0 24px;padding:22px;border:1px solid var(--line);border-radius:var(--radius-lg);background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(248,250,255,.92));box-shadow:var(--shadow-sm);overflow:hidden;position:relative}
+.quality-panel:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(180deg,var(--primary),var(--teal));opacity:.9}
+.quality-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.quality-head h2{margin:3px 0 5px;font-size:20px;letter-spacing:-.02em}.quality-head p{margin:0;color:var(--muted);font-size:13px}.quality-eyebrow{font-size:11px;font-weight:800;letter-spacing:.11em;color:var(--primary);text-transform:uppercase}
+.quality-score{min-width:176px;display:flex;gap:12px;align-items:center;justify-content:flex-end}.quality-ring{--score:0;--ring:#9aa8bb;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ring) var(--score),#e7edf5 0);position:relative;flex:0 0 auto}.quality-ring:after{content:"";position:absolute;inset:7px;border-radius:50%;background:#fff}.quality-ring strong{position:relative;z-index:1;font-size:17px;color:var(--ink)}.quality-score-copy b{display:block;font-size:15px}.quality-score-copy span{display:block;margin-top:3px;font-size:12px;color:var(--muted)}
+.quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.quality-card{padding:15px 16px;border:1px solid #e3e9f2;border-radius:16px;background:rgba(255,255,255,.86);min-width:0}.quality-card span{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.quality-card strong{display:block;margin-top:5px;font-size:23px;line-height:1.05;color:var(--ink)}.quality-card small{display:block;margin-top:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.quality-card.quality-good strong{color:var(--teal)}.quality-card.quality-warn strong{color:var(--warning)}.quality-card.quality-bad strong{color:var(--danger)}
+.quality-breakdown{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.quality-box{padding:15px 16px;border:1px solid #e5ebf3;border-radius:16px;background:rgba(248,250,253,.86)}.quality-box h3{font-size:13px;margin:0 0 11px}.quality-tags{display:flex;flex-wrap:wrap;gap:8px}.quality-tag{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #dfe7f1;font-size:12px;color:var(--ink)}.quality-tag b{font-size:12px}.quality-missing-list{display:grid;gap:7px}.quality-missing-item{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:12px}.quality-missing-item span:first-child{color:var(--ink)}.quality-missing-item b{color:var(--warning);font-variant-numeric:tabular-nums}.quality-empty{font-size:12px;color:var(--muted);margin:0}.quality-note{display:flex;align-items:flex-start;gap:9px;margin-top:14px;padding:11px 13px;border-radius:13px;background:#f4f7fb;color:var(--muted);font-size:12px}.quality-note b{color:var(--ink)}
+.quality-panel[data-level="excellent"] .quality-ring{--ring:#0b8a70}.quality-panel[data-level="good"] .quality-ring{--ring:#5b4be6}.quality-panel[data-level="regular"] .quality-ring{--ring:#b67a08}.quality-panel[data-level="low"] .quality-ring{--ring:#c83b58}
+@media(max-width:860px){.quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quality-breakdown{grid-template-columns:1fr}.quality-head{align-items:center}.quality-score{min-width:auto}}
+@media(max-width:560px){.quality-panel{padding:17px}.quality-head{display:block}.quality-score{justify-content:flex-start;margin-top:14px}.quality-grid{grid-template-columns:1fr 1fr}.quality-card{padding:13px}.quality-card strong{font-size:20px}}
+</style>
+</head>
 <body><section id="authGate" class="auth-gate" aria-label="Acceso al sistema"><form id="gateLoginForm" class="auth-card" autocomplete="on"><div class="auth-brand"><b>OLT<span> / </span></b>Recepción de programación</div><h1>Iniciar sesión</h1><p>Ingresa tus credenciales para acceder al sistema.</p><label>Correo<input id="gateUsername" type="email" required autocomplete="username" autocapitalize="none" spellcheck="false"></label><label>Contraseña<input id="gatePassword" type="password" required autocomplete="current-password"></label><p id="gateLoginError" class="auth-error" role="alert" aria-live="polite"></p><button id="gateLoginSubmit" type="submit">Ingresar</button><small class="auth-security">Acceso autorizado únicamente.</small></form></section><div id="appShell" hidden><header><div class="brand"><b>OLT<span> / </span></b>Recepción de programación</div><button id="settingsOpen" class="ghost">Configuración</button></header>
 <main><div class="intro"><div><span class="eyebrow">CONTROL DE INGRESO</span><h1>Una programación lista para operar.</h1><p>Sube tu Excel, revisa las observaciones y envía los registros validados.</p></div><span class="destination">Destino: <strong>Recepción OLT</strong></span></div>
 <section class="session-panel"><div><strong id="currentUser">Sin sesión iniciada</strong><p id="lastUserUpload">Inicia sesión para consultar tus envíos.</p><p id="lastFileUpload">Carga un archivo para consultar su último envío.</p></div><div class="actions"><button id="loginOpen">Iniciar sesión</button><button id="refreshHistory" class="ghost" disabled>Actualizar historial</button><button id="logout" class="ghost" hidden>Cerrar sesión</button></div></section><ol class="steps"><li class="active">1 <span>Cargar archivo</span></li><li>2 <span>Revisar y corregir</span></li><li>3 <span>Enviar programación</span></li></ol>
 <section class="load-panel"><label class="drop" id="drop"><input type="file" id="file" accept=".xlsx,.xls" aria-label="Subir archivo Excel"><span class="upload-icon">↑</span><strong id="fileLabel">Arrastra tu programación aquí</strong><span class="choose-file">Seleccionar archivo Excel</span><span>.xlsx o .xls · hasta 20 MB · lectura en tu navegador</span></label><div class="load-options"><label>Pestaña del archivo<select id="sheet" disabled><option>Primero carga un archivo</option></select></label><label>Año de programación<input id="year" type="number" value="2026" min="2000" max="2100"></label><small>Para fechas sin año, como 26-Set. Las fechas completas conservan su año.</small></div></section>
 <p id="notice" role="status" aria-live="polite">El archivo se revisa localmente. Los datos se envían solo al confirmar.</p>
 <section id="workspace" hidden><div class="metrics"><div><span>Registros</span><strong id="total">0</strong></div><div class="green"><span>Conformes</span><strong id="okRows">0</strong></div><div class="red"><span>Filas por corregir</span><strong id="badRows">0</strong></div><div class="yellow"><span>Errores en celdas</span><strong id="errors">0</strong></div></div>
+<section id="qualityPanel" class="quality-panel" data-level="low" aria-labelledby="qualityTitle">
+  <div class="quality-head">
+    <div><span class="quality-eyebrow">RESUMEN DEL ENVÍO</span><h2 id="qualityTitle">Calidad de la información</h2><p>Se actualiza automáticamente mientras revisas o corriges el archivo.</p></div>
+    <div class="quality-score"><div id="qualityRing" class="quality-ring" style="--score:0%"><strong id="qualityPercent">0%</strong></div><div class="quality-score-copy"><b id="qualityLabel">Sin datos</b><span id="qualityCoverage">0 de 0 datos completos</span></div></div>
+  </div>
+  <div class="quality-grid">
+    <div class="quality-card"><span>Total registros</span><strong id="qualityRecords">0</strong><small id="qualityClientCount">0 clientes/líneas</small></div>
+    <div class="quality-card quality-good"><span>Lima</span><strong id="qualityLima">0</strong><small id="qualityLimaPct">0% del envío</small></div>
+    <div class="quality-card"><span>Provincia</span><strong id="qualityProvincia">0</strong><small id="qualityProvinciaPct">0% del envío</small></div>
+    <div id="qualityIncompleteCard" class="quality-card quality-warn"><span>Datos incompletos</span><strong id="qualityMissingTotal">0</strong><small id="qualityMissingRows">0 filas afectadas</small></div>
+  </div>
+  <div class="quality-breakdown">
+    <div class="quality-box"><h3>Distribución por línea / cliente</h3><div id="qualityClients" class="quality-tags"></div></div>
+    <div class="quality-box"><h3>Campos que reducen la calidad</h3><div id="qualityMissing" class="quality-missing-list"></div></div>
+  </div>
+  <div class="quality-note"><span>ⓘ</span><span><b>Los campos obligatorios continúan bloqueando el envío.</b> Los campos de advertencia, como Bultos, Volumen, Peso, Turno, Cita, Distrito, Provincia y Departamento, no bloquean por estar vacíos, pero sí reducen el porcentaje de calidad.</span></div>
+</section>
 <div class="review-head"><div><h2>Revisión de la programación</h2><p id="mappingNote"></p></div><label>Mostrar<select id="filter"><option value="error">Solo pendientes de corregir</option><option value="all">Todos los registros</option></select></label></div>
 <details id="summary"><summary>Ver detalle de errores</summary><div id="issueList"></div></details>
 <div id="donePanel" class="done-panel" hidden><b>✓</b><div><strong>Todo conforme</strong><p id="doneText"></p></div></div><div class="table-wrap"><table id="grid"><thead></thead><tbody></tbody></table></div><div class="pager"><span id="pageInfo"></span><div><button id="prev" class="ghost">Anterior</button><button id="next" class="ghost">Siguiente</button></div></div>
@@ -348,6 +600,51 @@ const show=(c,v)=>c.key==='fecha'&&/^\d{4}-\d{2}-\d{2}$/.test(v)?v.split('-').re
 function validateRow(r){r.result=OLT.validate(r.raw,{year:Number($('year').value),threshold:Number(options.threshold)||85});r.err=rowErrors(r).length;}
 function revalidate(){rows.forEach((r,i)=>{r.i=i;validateRow(r);});render();}
 function totals(){let errors=0,bad=0,changes=0;for(const r of rows){errors+=r.err;if(r.err)bad++;changes+=r.result.changes.length;}return {errors,bad,ok:rows.length-bad,changes};}
+
+// ===== Resumen del envío y calidad de información =====
+const QUALITY_FIELDS=OLT.columns.filter(c=>c.mode!=='optional');
+function qualitySummary(){
+  const byClient=new Map(),missingByField=new Map();
+  let complete=0,expected=rows.length*QUALITY_FIELDS.length,lima=0,provincia=0,missingTotal=0;
+  const affectedRows=new Set();
+  for(const r of rows){
+    const values=r.result?.values||{};
+    const linea=String(values.linea||r.raw?.linea||'').trim()||'SIN LÍNEA';
+    byClient.set(linea,(byClient.get(linea)||0)+1);
+    const despacho=String(values.despacho||r.raw?.despacho||'').trim().toUpperCase();
+    if(despacho==='LIMA')lima++; else if(despacho==='PROVINCIA')provincia++;
+    for(const c of QUALITY_FIELDS){
+      const v=values[c.key];
+      const hasValue=!(v===''||v===null||v===undefined);
+      const hasError=(r.result?.issues||[]).some(i=>i.key===c.key&&i.severity==='error');
+      if(hasValue&&!hasError){complete++;continue;}
+      missingTotal++;affectedRows.add(r.sourceRow);
+      const x=missingByField.get(c.key)||{label:c.label,count:0,required:c.mode==='required'};x.count++;missingByField.set(c.key,x);
+    }
+  }
+  const percent=expected?Math.round((complete/expected)*100):0;
+  const level=percent>=90?'excellent':percent>=80?'good':percent>=70?'regular':'low';
+  const label=percent>=90?'Excelente':percent>=80?'Buena':percent>=70?'Regular':'Baja';
+  return {byClient,missingByField,complete,expected,percent,level,label,lima,provincia,missingTotal,affectedRows:affectedRows.size};
+}
+function renderQualitySummary(){
+  const panel=$('qualityPanel');if(!panel)return;
+  const q=qualitySummary(),n=v=>Number(v||0).toLocaleString('es-PE'),pct=v=>rows.length?Math.round(v*100/rows.length):0;
+  panel.dataset.level=q.level;$('qualityRing').style.setProperty('--score',q.percent+'%');$('qualityPercent').textContent=q.percent+'%';$('qualityLabel').textContent=q.label;
+  $('qualityCoverage').textContent=`${n(q.complete)} de ${n(q.expected)} datos completos`;$('qualityRecords').textContent=n(rows.length);$('qualityClientCount').textContent=`${n(q.byClient.size)} línea${q.byClient.size===1?'':'s'} / cliente${q.byClient.size===1?'':'s'}`;
+  $('qualityLima').textContent=n(q.lima);$('qualityLimaPct').textContent=pct(q.lima)+'% del envío';$('qualityProvincia').textContent=n(q.provincia);$('qualityProvinciaPct').textContent=pct(q.provincia)+'% del envío';
+  $('qualityMissingTotal').textContent=n(q.missingTotal);$('qualityMissingRows').textContent=`${n(q.affectedRows)} fila${q.affectedRows===1?'':'s'} afectada${q.affectedRows===1?'':'s'}`;
+  $('qualityIncompleteCard').className='quality-card '+(q.missingTotal?'quality-warn':'quality-good');
+  const clients=$('qualityClients');clients.replaceChildren();
+  const clientEntries=[...q.byClient.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'es'));
+  if(!clientEntries.length)clients.append(text('p','Sin datos para resumir.','quality-empty'));
+  else for(const [name,count] of clientEntries){const tag=document.createElement('span');tag.className='quality-tag';tag.append(document.createTextNode(name+' '),text('b',n(count)));clients.append(tag);}
+  const missing=$('qualityMissing');missing.replaceChildren();
+  const missEntries=[...q.missingByField.values()].sort((a,b)=>b.count-a.count||a.label.localeCompare(b.label,'es')).slice(0,8);
+  if(!missEntries.length)missing.append(text('p','Todos los campos evaluados están completos.','quality-empty'));
+  else for(const x of missEntries){const item=document.createElement('div');item.className='quality-missing-item';item.append(text('span',x.label+(x.required?' · obligatorio':'')),text('b',n(x.count)+' pendiente'+(x.count===1?'':'s')));missing.append(item);}
+}
+
 async function load(file){if(!file||sending)return;if(!/\.(xlsx|xls)$/i.test(file.name))return notice('Selecciona un archivo Excel .xlsx o .xls.',true);if(file.size>20*1024*1024)return notice('El archivo supera 20 MB. Divide la programación.',true);if(!window.XLSX)return notice('No se pudo cargar el lector Excel. Recarga la página.',true);notice('Leyendo las pestañas del archivo…');try{const data=await file.arrayBuffer();fileHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),b=>b.toString(16).padStart(2,'0')).join('');book=XLSX.read(data,{type:'array',cellDates:true,sheetRows:10031});filename=file.name;rows=[];headerInfo=null;invalidate();render();$('fileLabel').textContent=file.name;$('sheet').replaceChildren(new Option('Selecciona una pestaña…',''));for(const name of book.SheetNames){const hidden=book.Workbook?.Sheets?.find(s=>s.name===name)?.Hidden;const opt=new Option(name+(hidden?' (oculta)':''),name);$('sheet').add(opt);}$('sheet').disabled=false;$('workspace').hidden=true;$('empty').hidden=false;if(book.SheetNames.length===1){$('sheet').value=book.SheetNames[0];selectSheet();}else notice(`Se encontraron ${book.SheetNames.length} pestañas. Selecciona la programación que deseas enviar.`);}catch(e){notice('No se pudo leer el Excel: '+e.message,true);}}
 function selectSheet(){rows=[];headerInfo=null;page=0;$('filter').value='error';invalidate();render();window.refreshOLTFileHistory?.();const name=$('sheet').value;if(!name)return;const ws=book.Sheets[name];if(ws['!fullref']&&XLSX.utils.decode_range(ws['!fullref']).e.r>=10031){rows=[];$('workspace').hidden=true;return notice('La pestaña supera 10.000 filas de lectura. Divide el archivo antes de continuar.',true);}const matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});headerInfo=OLT.detectHeader(matrix);if(!headerInfo){rows=[];$('workspace').hidden=true;return notice('No se reconoce la tabla. Se necesitan encabezados de programación, incluida Entrega.',true);}if(headerInfo.duplicate.length){rows=[];$('workspace').hidden=true;return notice('Hay columnas duplicadas: '+headerInfo.duplicate.join(', ')+'. Corrige los encabezados.',true);}
  rows=[];for(let i=headerInfo.row+1;i<matrix.length;i++){const cells=matrix[i];const raw={};for(const c of OLT.columns)raw[c.key]=cells[headerInfo.mapping[c.key]]??'';
@@ -360,7 +657,7 @@ function selectSheet(){rows=[];headerInfo=null;page=0;$('filter').value='error';
  const mapped=Object.keys(headerInfo.mapping).length;const extras=(matrix[headerInfo.row]||[]).filter((v,i)=>String(v).trim()&&!Object.values(headerInfo.mapping).includes(i));$('mappingNote').textContent=`Encabezados: fila ${headerInfo.row+1} · ${mapped} de ${OLT.columns.length} campos reconocidos.`+(extras.length?` Fuera del destino: ${extras.join(', ')}.`:'');
  notice(rows.length?`Se revisarán ${rows.length} registros de «${name}». Las columnas ausentes se mostrarán vacías para completarlas.`:'La pestaña no contiene registros.');revalidate();}
 function summary(){clearTimeout(sumTimer);sumTimer=setTimeout(()=>{const m=new Map();for(const r of rows)for(const i of rowErrors(r)){const k=i.key+'|'+i.message;const x=m.get(k)||{...i,rows:[]};x.rows.push(r.sourceRow);m.set(k,x);}const list=$('issueList');list.replaceChildren();for(const x of m.values()){const label=OLT.columns.find(c=>c.key===x.key).label;list.append(text('div',`${label}: ${x.rows.length} celda(s). ${x.message.replace('Campo obligatorio vacío.','Completa este campo.')} Filas ${x.rows.slice(0,20).join(', ')}${x.rows.length>20?'…':''}`,'issue-item red-text'));}if(!m.size)list.append(text('p','No hay errores.'));},rows.length>500?300:0);}
-function stats(){const t=totals(),n=v=>v.toLocaleString('es-PE');$('total').textContent=n(rows.length);$('okRows').textContent=n(t.ok);$('badRows').textContent=n(t.bad);$('errors').textContent=n(t.errors);
+function stats(){renderQualitySummary();const t=totals(),n=v=>v.toLocaleString('es-PE');$('total').textContent=n(rows.length);$('okRows').textContent=n(t.ok);$('badRows').textContent=n(t.bad);$('errors').textContent=n(t.errors);
  $('send').disabled=!!t.errors||!rows.length||sending||lastSent===revision;$('download').disabled=!rows.length||sending;
  $('sendTitle').textContent=!rows.length?'Carga tu archivo para comenzar':sending?'Enviando programación…':t.errors?`Faltan ${n(t.bad)} registros por corregir`:lastSent===revision?'Envío confirmado':'Programación lista para enviar';
  $('sendHelp').textContent=!rows.length?'El botón se habilitará cuando haya registros y no existan errores rojos.':t.errors?`${n(t.errors)} errores impiden el envío. Las filas conformes se ocultan solas.`:`${n(rows.length)} registros listos para enviar.`;
@@ -657,8 +954,9 @@ $('send').onclick = () => {
     return;
   }
 
+  const q = qualitySummary();
   $('confirmText').textContent =
-    'Enviar ' + rows.length + ' registros de ' + filename + ', pestaña ' + $('sheet').value + '.';
+    'Enviar ' + rows.length + ' registros de ' + filename + ', pestaña ' + $('sheet').value + '. Calidad ' + q.percent + '% (' + q.label + '). Lima: ' + q.lima + ' · Provincia: ' + q.provincia + '.';
   $('confirmUser').textContent = 'Usuario: ' + sessionUserLabel();
   $('confirm').showModal();
 };
