@@ -1,0 +1,8 @@
+node_modules/
+tests/
+scripts/
+docs/
+supabase/
+.github/
+README.md
+vendor/README.md
