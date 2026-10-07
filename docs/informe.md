@@ -100,4 +100,19 @@ No hubo login real ni envío autenticado de Excel real a producción/Preview por
 
 Revisar Preview y checks del commit exacto; probar login y Excel con un entorno de datos de prueba; completar acceso a logs Vercel y protección main. Después, adoptar el frontend por PR y cerrar INSERT directo con un mecanismo compatible, una vez definida la unicidad. Crear cargas_olt y roles en migraciones separadas y verificarlos sin ampliar permisos por defecto.
 
-Los identificadores del commit, PR y Preview verificados se incorporan al terminar la publicación de la rama.
+## Publicación y verificación final
+
+- Rama: `work/olt-mejoras`.
+- Commit de código: `d6b895a96ba965f41bdff47f069c38400e549798`.
+- PR en borrador, sin fusionar: [#1](https://github.com/luigigicam-bot/OLT/pull/1).
+- Preview utilizado: [oltprogramacion-15xfbovkw-control-olt.vercel.app](https://oltprogramacion-15xfbovkw-control-olt.vercel.app).
+- Deployment Preview: `dpl_GrwNRpxNt8t6r6dLPvnDghc6M7sD`, READY, source git, branch work/olt-mejoras, SHA correspondiente al commit de código. Target null corresponde al deployment de rama, sin promoción a producción. Framework estático (framework null); build de metadatos aproximadamente 1,9 s, no una medición de rendimiento de aplicación.
+- GitHub Actions: [push](https://github.com/luigigicam-bot/OLT/actions/runs/37684414999) y [PR](https://github.com/luigigicam-bot/OLT/actions/runs/37684439969), ambos completed/success. Estado Vercel del commit: success, Deployment has completed.
+- Acceso visual al Preview: el navegador redirigió al login de Vercel. La generación del enlace temporal fue denegada (403 en lookup_deployment). No se debilitó Deployment Protection ni se inició un login. La interfaz publicada no se declara verificada visualmente; faltan también login OLT y envío real en un entorno de datos de prueba.
+- Producción permanece en el commit inicial; no hubo merge ni promoción. El error original de SheetJS sigue en producción hasta adoptar el PR.
+- El presente informe se actualiza en un commit documental posterior; el código de frontend corresponde al commit y Preview indicados arriba. Consultar el historial del PR para ese commit documental.
+
+### Archivos modificados o añadidos
+
+`index.html`, `README.md`, `styles.css`, `styles/theme-1.css`, `styles/theme-2.css`, `styles/theme-3.css`, `app.js`, `auth.js`, `config.js`, `dashboard.js`, `duplicados.js`, `envio.js`, `errores.js`, `excel.js`, `historial.js`, `supabase.js`, `validaciones.js`, `vendor/xlsx.js`, `vendor/supabase.js`, `vendor/README.md`, `package.json`, `package-lock.json`, `scripts/check.cjs`, `tests/portal.test.cjs`, `.github/workflows/checks.yml`, `.gitignore`, `.vercelignore`, `vercel.json`, `docs/arquitectura.md`, `docs/informe.md`, y las tres migraciones con versiones 20261007201834, 20261007203627 y 20261007203704.
+
