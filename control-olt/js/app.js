@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { calc, todayISO, formatDate } from "./indicators.js";
 import { MONTHS, renderKpi } from "./kpi.js";
+import { sapReportHtml } from "./sap-report-ui.js";
 
 const SUPABASE_URL = "https://vuoqmesrwgkkdqrecxnc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_P5CjX41UyzjQgbvSdkwfwA_jXON8rI1";
@@ -130,6 +131,11 @@ function showApp(user) {
 }
 function showLogin() {
   currentUser = null;
+  reportSequence++;
+  sapReport = null;
+  $("#sapReportContent").innerHTML = "";
+  $("#sapReportFilters").classList.add("hidden");
+  closeFilterDrawer(false);
   els.appView.classList.add("hidden");
   els.loginView.classList.remove("hidden");
 }
@@ -316,6 +322,7 @@ async function loadFilterOptions(sequence) {
 }
 async function loadData() {
   if (!currentUser) return;
+  updateFilterSummary();
   const sequence = ++loadSequence;
   const requestFilters = filters(),
     pageFilters = filters(true);
@@ -605,11 +612,159 @@ function analysisHtml(a) {
     ],
   )}${coverageTable(a.coverage)}<details><summary>Ver OLT sin SAP</summary><p class="muted">Primeras 100 programaciones pendientes.</p><div class="table-scroll"><table class="data-table"><thead><tr><th>Entrega</th><th>Línea</th><th>Fecha</th></tr></thead><tbody>${a.missing_detail.map((r) => `<tr><td>${escapeHtml(r.entrega)}</td><td>${escapeHtml(r.linea)}</td><td>${escapeHtml(r.fecha)}</td></tr>`).join("")}</tbody></table></div></details><p class="muted">RECOGE CLIENTE se conserva en la hoja y se excluye de esta cobertura operativa.</p></section>`;
 }
+let sapReport = null,
+  reportSequence = 0,
+  reportPage = 0,
+  missingReportPage = 0;
+function reportFilters() {
+  return {
+    dt: $("#sapDtSearch").value.trim(),
+    et: $("#sapEtFilter").value,
+    state: $("#sapStateFilter").value,
+    from: $("#sapReportFrom").value,
+    to: $("#sapReportTo").value,
+  };
+}
+function showSapReport(report, source) {
+  sapReport = report;
+  reportPage = 0;
+  missingReportPage = 0;
+  $("#sapReportSource").textContent = source;
+  for (const [id, values] of [
+    ["sapEtFilter", [...new Set(report.rows.map((r) => r.et))].sort()],
+    ["sapStateFilter", [...new Set(report.rows.map((r) => r.state))].sort()],
+  ])
+    $("#" + id).innerHTML =
+      '<option value="">Todos</option>' +
+      values
+        .map(
+          (v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`,
+        )
+        .join("");
+  $("#sapDtSearch").value = "";
+  $("#sapReportFrom").value = "";
+  $("#sapReportTo").value = "";
+  $("#sapReportFilters").classList.remove("hidden");
+  renderSapReport();
+}
+function renderSapReport() {
+  if (!sapReport) return;
+  const f = reportFilters();
+  if (f.from && f.to && f.from > f.to) {
+    $("#sapReportContent").innerHTML =
+      '<p class="notice error">La fecha Desde debe ser anterior o igual a Hasta.</p>';
+    return;
+  }
+  const result = sapReportHtml(sapReport, f, reportPage, missingReportPage);
+  $("#sapReportContent").innerHTML = result.html;
+  $("#sapReportContent")
+    .querySelectorAll("[data-report-page]")
+    .forEach(
+      (b) =>
+        (b.onclick = () => {
+          if (b.dataset.reportPage === "all")
+            reportPage += Number(b.dataset.direction);
+          else missingReportPage += Number(b.dataset.direction);
+          const key = b.dataset.reportPage;
+          renderSapReport();
+          $("#sapReportContent").querySelectorAll("details")[
+            key === "all" ? 1 : 0
+          ].open = true;
+        }),
+    );
+}
+async function loadStoredSapReport(loadId) {
+  const sequence = ++reportSequence;
+  $("#sapReportContent").textContent = "Consultando DT de la versión SAP…";
+  try {
+    const report = await checked(
+      supabase.rpc("olt_sap_dt_report_v1", { p_load: loadId || null }),
+    );
+    if (sequence !== reportSequence) return;
+    showSapReport(
+      report,
+      report.load_id
+        ? `Versión SAP ${report.load_id} · ${report.filename}`
+        : "Sin versión activa. Usa Analizar archivo para revisar tu reporte o la 20 SAP.",
+    );
+  } catch (e) {
+    if (sequence === reportSequence)
+      $("#sapReportContent").innerHTML =
+        '<p class="notice error">No se pudo consultar el resumen. Puedes analizar un archivo SAP.</p>';
+  }
+}
+$("#analyzeSapReport").onclick = () => {
+  $("#sapReportFile").value = "";
+  $("#sapReportFile").click();
+};
+$("#sapReportFile").onchange = async () => {
+  const file = $("#sapReportFile").files[0];
+  if (!file) return;
+  const sequence = ++reportSequence;
+  $("#sapReportContent").textContent = "Analizando DT en segundo plano…";
+  try {
+    if (file.size > 40 * 1024 * 1024)
+      throw new Error("El archivo supera 40 MB.");
+    const buffer = await file.arrayBuffer();
+    const report = await new Promise((resolve, reject) => {
+      const worker = new Worker(
+        new URL("./sap-report-worker.js", import.meta.url),
+        { type: "module" },
+      );
+      worker.onmessage = ({ data }) => {
+        worker.terminate();
+        data.error ? reject(new Error(data.error)) : resolve(data.result);
+      };
+      worker.onerror = () => {
+        worker.terminate();
+        reject(new Error("No se pudo analizar el reporte SAP."));
+      };
+      worker.postMessage(buffer, [buffer]);
+    });
+    if (sequence !== reportSequence) return;
+    showSapReport(
+      report,
+      `Archivo analizado: ${file.name} · Vista local, sin publicar una versión SAP.`,
+    );
+  } catch (e) {
+    if (sequence === reportSequence)
+      $("#sapReportContent").innerHTML =
+        `<p class="notice error">${escapeHtml(e.message)}</p>`;
+  }
+};
+$("#refreshSapReport").onclick = () => loadStoredSapReport(activeSapLoad?.id);
+for (const id of [
+  "sapDtSearch",
+  "sapEtFilter",
+  "sapStateFilter",
+  "sapReportFrom",
+  "sapReportTo",
+])
+  $("#" + id).oninput = () => {
+    reportPage = 0;
+    missingReportPage = 0;
+    renderSapReport();
+  };
+$("#clearSapReportFilters").onclick = () => {
+  for (const id of [
+    "sapDtSearch",
+    "sapEtFilter",
+    "sapStateFilter",
+    "sapReportFrom",
+    "sapReportTo",
+  ])
+    $("#" + id).value = "";
+  reportPage = 0;
+  missingReportPage = 0;
+  renderSapReport();
+};
+
 async function loadSapCenter() {
   if (!currentUser) return;
   try {
     await getActiveSapLoad();
     const c = activeSapLoad;
+    loadStoredSapReport(c?.id);
     $("#activeVersion").innerHTML = `<h2>Última versión SAP activa</h2>${
       c
         ? cards([
@@ -815,6 +970,7 @@ async function publishSap() {
   }
 }
 function setView(view) {
+  closeFilterDrawer(false);
   currentView = ["general", "sap", "kpi"].includes(view) ? view : "general";
   for (const key of ["general", "sap", "kpi"])
     $("#" + key + "View").classList.toggle("hidden", currentView !== key);
@@ -990,4 +1146,62 @@ if (session?.user) {
 } else showLogin();
 supabase.auth.onAuthStateChange((_event, session) => {
   if (!session?.user) showLogin();
+});
+
+function updateFilterSummary() {
+  const f = filters();
+  const labels = [
+    f.date_from ? `Desde ${formatDate(f.date_from)}` : "",
+    f.date_to ? `Hasta ${formatDate(f.date_to)}` : "",
+    f.line,
+    f.indicator,
+    f.zone,
+    f.et,
+    f.month ? MONTHS[f.month - 1] : "",
+  ].filter(Boolean);
+  $("#filterCount").textContent = labels.length ? `(${labels.length})` : "";
+  $("#activeFilterSummary").textContent = labels.length
+    ? "Filtros activos: " + labels.join(" · ")
+    : "";
+  $("#activeFilterSummary").classList.toggle("hidden", !labels.length);
+}
+function closeFilterDrawer(restoreFocus = true) {
+  $("#filterDrawer").classList.add("hidden");
+  $("#filterBackdrop").classList.add("hidden");
+  $("#openFilters").setAttribute("aria-expanded", "false");
+  if (restoreFocus) $("#openFilters").focus();
+}
+$("#openFilters").onclick = () => {
+  $("#filterDrawer").classList.remove("hidden");
+  $("#filterBackdrop").classList.remove("hidden");
+  $("#openFilters").setAttribute("aria-expanded", "true");
+  $("#closeFilters").focus();
+};
+$("#closeFilters").onclick = () => closeFilterDrawer();
+$("#filterBackdrop").onclick = () => closeFilterDrawer();
+$("#viewFilterResults").onclick = () => closeFilterDrawer();
+document.addEventListener("keydown", (e) => {
+  if ($("#filterDrawer").classList.contains("hidden")) return;
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closeFilterDrawer();
+  }
+  if (e.key === "Tab") {
+    const nodes = [
+      ...$("#filterDrawer").querySelectorAll("button,input,select,summary"),
+    ].filter(
+      (el) =>
+        !el.disabled &&
+        (el.closest("#dateRangePicker")?.open || !el.closest(".date-popover")),
+    );
+    const first = nodes[0],
+      last = nodes.at(-1);
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 });

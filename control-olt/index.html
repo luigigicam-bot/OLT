@@ -71,6 +71,15 @@
               placeholder="Buscar entrega, cliente, línea, distrito o transportista..."
             />
           </div>
+          <button
+            id="openFilters"
+            type="button"
+            class="filter-toggle"
+            aria-controls="filterDrawer"
+            aria-expanded="false"
+          >
+            Filtrar <span id="filterCount"></span>
+          </button>
           <div id="pageControls" class="toolbar-group">
             <button
               id="prevBtn"
@@ -90,10 +99,26 @@
             </button>
           </div>
         </section>
-        <section
-          class="filter-panel"
-          aria-label="Filtros compartidos de General y KPI"
+        <p id="activeFilterSummary" class="muted hidden"></p>
+        <div id="filterBackdrop" class="filter-backdrop hidden"></div>
+        <aside
+          id="filterDrawer"
+          class="filter-panel filter-drawer hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="filterDrawerTitle"
         >
+          <div class="filter-drawer-head">
+            <h2 id="filterDrawerTitle">Opciones de filtros</h2>
+            <button
+              id="closeFilters"
+              class="icon-btn"
+              type="button"
+              aria-label="Cerrar filtros"
+            >
+              ×
+            </button>
+          </div>
           <div class="filter-grid">
             <div class="filter-field">
               <label id="dateRangeLabel">Fecha SAP (InActTrans)</label>
@@ -152,7 +177,8 @@
               Limpiar filtros
             </button>
           </div>
-        </section>
+          <button id="viewFilterResults" type="button">Ver resultados</button>
+        </aside>
         <div id="drillChip" class="notice hidden"></div>
       </section>
       <section id="generalView">
@@ -212,6 +238,53 @@
           ><input id="sapFile" type="file" accept=".xlsx,.xls" hidden />
         </div>
         <div id="activeVersion" class="panel"></div>
+        <section class="panel sap-report-section">
+          <div class="analysis-heading">
+            <div>
+              <h2>DT y estados de transporte</h2>
+              <p class="muted">
+                Un registro por DT. Análisis independiente de los KPI de
+                General.
+              </p>
+            </div>
+            <div class="toolbar-group">
+              <button id="refreshSapReport" type="button" class="btn-secondary">
+                Versión activa</button
+              ><button id="analyzeSapReport" type="button">
+                Analizar archivo</button
+              ><input
+                id="sapReportFile"
+                type="file"
+                accept=".xls,.xlsx"
+                hidden
+              />
+            </div>
+          </div>
+          <p id="sapReportSource" class="muted"></p>
+          <div id="sapReportFilters" class="sap-report-filters hidden">
+            <label>DT<input id="sapDtSearch" placeholder="Buscar DT" /></label
+            ><label
+              >Transportista<select id="sapEtFilter">
+                <option value="">Todos</option>
+              </select></label
+            ><label
+              >Estado<select id="sapStateFilter">
+                <option value="">Todos</option>
+              </select></label
+            ><label>Desde<input id="sapReportFrom" type="date" /></label
+            ><label>Hasta<input id="sapReportTo" type="date" /></label
+            ><button
+              id="clearSapReportFilters"
+              class="btn-secondary"
+              type="button"
+            >
+              Limpiar
+            </button>
+          </div>
+          <div id="sapReportContent" aria-live="polite">
+            Cargando resumen DT…
+          </div>
+        </section>
         <div id="sapAnalytics" aria-live="polite"></div>
         <section class="panel">
           <h2>Historial de cargas</h2>

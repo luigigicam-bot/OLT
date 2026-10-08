@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { webcrypto } from "node:crypto";
 import { JSDOM } from "jsdom";
 import { calc, todayISO, formatDate } from "../js/indicators.js";
+import { reportFromBuffer } from "../js/sap-report.js";
+import { sapReportHtml } from "../js/sap-report-ui.js";
 import { MONTHS, renderKpi } from "../js/kpi.js";
 import { parseSapRowsFromBuffer } from "../js/sap-parser.js";
 const pause = () => new Promise((r) => setTimeout(r, 15));
@@ -187,6 +189,16 @@ async function setup({
             generated_at: new Date().toISOString(),
           },
         };
+      if (name === "olt_sap_dt_report_v1")
+        return {
+          data: {
+            rows: [],
+            excluded: 0,
+            blankDt: 0,
+            complete: true,
+            tracking_source: "DT registrados en Control OLT",
+          },
+        };
       if (name === "olt_sap_analysis")
         return missingMigration
           ? { error: { message: "Function unavailable" } }
@@ -240,6 +252,7 @@ async function setup({
     },
   };
   w.createClient = () => api;
+  w.sapReportHtml = sapReportHtml;
   w.MONTHS = MONTHS;
   w.renderKpi = renderKpi;
   w.calc = calc;
@@ -247,10 +260,19 @@ async function setup({
   w.formatDate = formatDate;
   Object.defineProperty(w, "crypto", { value: webcrypto });
   w.Worker = class {
+    constructor(url) {
+      this.report = String(url).includes("sap-report");
+    }
     postMessage(buffer) {
       setTimeout(
         () =>
-          this.onmessage({ data: { result: parseSapRowsFromBuffer(buffer) } }),
+          this.onmessage({
+            data: {
+              result: this.report
+                ? reportFromBuffer(buffer)
+                : parseSapRowsFromBuffer(buffer),
+            },
+          }),
         0,
       );
     }
@@ -259,8 +281,11 @@ async function setup({
   const source = readFileSync(new URL("../js/app.js", import.meta.url), "utf8")
     .replace(/^import[\s\S]*?;\s*/gm, "")
     .replace(
-      /new URL\(\s*["']\.\/sap-worker\.js["'],\s*import\.meta\.url\s*\)/,
-      "'/sap-worker.js'",
+      /new URL\(\s*["']\.\/sap(?:-report)?-worker\.js["'],\s*import\.meta\.url\s*\)/g,
+      (match) =>
+        match.includes("sap-report")
+          ? "'/sap-report-worker.js'"
+          : "'/sap-worker.js'",
     );
   await w.eval(`(async()=>{${source}\n})()`);
   await pause();
@@ -433,6 +458,76 @@ test("General se muestra aunque falle la consulta KPI", async () => {
     assert.match(
       t.w.document.querySelector("#rowStatus").textContent,
       /1 filas visibles/,
+    );
+  } finally {
+    t.dom.window.close();
+  }
+});
+
+test("Filtros en esquina: apertura, Escape, foco y selección compartida", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    assert.equal(
+      d.querySelector("#filterDrawer").classList.contains("hidden"),
+      true,
+    );
+    d.querySelector("#openFilters").click();
+    assert.equal(
+      d.querySelector("#openFilters").getAttribute("aria-expanded"),
+      "true",
+    );
+    d.querySelector("#lineFilter").value = "BIOPAS";
+    d.querySelector("#lineFilter").dispatchEvent(new t.w.Event("change"));
+    await pause();
+    assert.match(d.querySelector("#activeFilterSummary").textContent, /BIOPAS/);
+    d.dispatchEvent(new t.w.KeyboardEvent("keydown", { key: "Escape" }));
+    assert.equal(
+      d.querySelector("#filterDrawer").classList.contains("hidden"),
+      true,
+    );
+    assert.equal(d.activeElement.id, "openFilters");
+    d.querySelector("#navSap").click();
+    await pause();
+    assert.match(d.querySelector("#sapReportContent").textContent, /DT únicos/);
+  } finally {
+    t.dom.window.close();
+  }
+});
+
+test("SAP: analizar archivo es local y no publica ni cambia filtros General", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    d.querySelector("#lineFilter").value = "BIOPAS";
+    d.querySelector("#navSap").click();
+    await pause();
+    const buffer = new TextEncoder().encode(sapText).buffer;
+    Object.defineProperty(d.querySelector("#sapReportFile"), "files", {
+      value: [
+        {
+          name: "reporte.xls",
+          size: buffer.byteLength,
+          arrayBuffer: async () => buffer.slice(0),
+        },
+      ],
+      configurable: true,
+    });
+    d.querySelector("#sapReportFile").dispatchEvent(new t.w.Event("change"));
+    await pause();
+    await pause();
+    assert.match(
+      d.querySelector("#sapReportSource").textContent,
+      /Vista local/,
+    );
+    assert.match(d.querySelector("#sapReportContent").textContent, /DT1/);
+    assert.equal(t.counters.publish, 0);
+    assert.equal(d.querySelector("#lineFilter").value, "BIOPAS");
+    d.querySelector("#sapDtSearch").value = "no existe";
+    d.querySelector("#sapDtSearch").dispatchEvent(new t.w.Event("input"));
+    assert.match(
+      d.querySelector("#sapReportContent").textContent,
+      /Sin registros/,
     );
   } finally {
     t.dom.window.close();

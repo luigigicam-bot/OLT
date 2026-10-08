@@ -978,3 +978,117 @@ button:hover:not(:disabled) {
     padding: 14px;
   }
 }
+/* Compact filters, anchored on the right like the supplied reference. */
+.filter-toggle {
+  border-radius: 24px;
+  white-space: nowrap;
+}
+.filter-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.25);
+  z-index: 990;
+}
+.filter-drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(400px, 100%);
+  z-index: 1000;
+  overflow-y: auto;
+  border-radius: 16px 0 0 16px;
+  margin: 0;
+  padding: 24px;
+  box-shadow: -12px 0 40px #0f172a20;
+}
+.filter-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.filter-drawer .filter-grid {
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.filter-drawer .filter-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 24px;
+}
+.filter-drawer #viewFilterResults {
+  width: 100%;
+  margin-top: 12px;
+}
+.filter-drawer .date-popover {
+  position: static;
+  width: 100%;
+  box-shadow: none;
+  margin-top: 8px;
+}
+.filter-drawer .date-inputs {
+  grid-template-columns: 1fr 1fr;
+}
+#activeFilterSummary {
+  margin: 8px 4px 12px;
+}
+.sap-report-filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  margin: 16px 0;
+}
+.sap-report-filters label {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sap-report-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+.sap-report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+.sap-report-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sap-report-bar {
+  display: grid;
+  grid-template-columns: 80px 1fr 70px;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+.sap-report-bar i {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: #1d4ed8;
+}
+.sap-report-detail {
+  margin-top: 20px;
+}
+@media (max-width: 800px) {
+  .sap-report-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .sap-report-grid {
+    grid-template-columns: 1fr;
+  }
+  .sap-report-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}

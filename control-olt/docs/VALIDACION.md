@@ -35,3 +35,14 @@ Envío real confirmado a las 13:45:21 Lima: 3.086 filas en recepcion_olt y Contr
 Migración control_read_performance aplicada: lectura de datos sin indicadores desde olt_control_live con cierres y corrección de SAP activo; indicadores materializados una vez por documento; opciones sin recalcular indicadores. Se conserva SECURITY INVOKER/RLS y snapshots cerrados.
 
 Mediciones con rol authenticated y propietario: opciones 359,7 ms, KPI 861 ms, página 826,4 ms. KPI permanece 3.086 total, 64 En Fecha y 3.022 Fuera de Fecha; página contiene 100 documentos. Medidas SQL, sin red ni renderizado. Frontend inicia consultas independientes y muestra la tabla apenas termina; falla del KPI no borra documentos. 27 pruebas Node, incluida esa independencia.
+
+
+## Resumen SAP y panel lateral — 8 octubre 2026
+
+32 pruebas Node correctas y build Vite correcto. Pruebas nuevas: primera fila elegible por DT, alternativa máxima incluyendo filas excluidas, exclusiones, filtros propios, totales por estado/ET, escape HTML, aviso de versiones antiguas, apertura/cierre/foco del panel y análisis local sin publicación ni cambios a General.
+
+Libro proporcionado, sin incorporarlo al repositorio: 1.429 DT únicos, 118 sin InActTrans, 702 filas excluidas. Comparación de los 1.429 DT con resultados almacenados de DT Consolidado: estado, ET, InActTrans, alternativa, fecha utilizada y presencia en Mi Data coinciden (0 discrepancias). Mi Data: 820 presentes / 609 faltantes. Se preservan 508 placas realmente vacías; Excel las convertía a cero.
+
+Migraciones sap_dt_report_readonly y sap_dt_report_tracking_once aplicadas. Función nueva SECURITY INVOKER, permisos authenticated, alcance por propietario y carga; ninguna escritura de datos operativos. Seguimiento materializado una vez y unión por DT. SQL real autenticado: 9.094 filas de origen, 1.670 DT del SAP activo existente, metadata_complete=false con aviso visible. Tiempo de ejecución SQL 1.280,852 ms, excluye red/render. Claim ajeno sintético: 0 DT. Advisor sin nuevas observaciones de seguridad.
+
+El archivo suministrado se analiza localmente y no sustituye el SAP activo. Los totales del libro y de la versión activa pertenecen a fuentes diferentes. La evidencia de navegador sigue limitada a DOM simulado; no se afirma prueba visual ni sesión de navegador autenticada.

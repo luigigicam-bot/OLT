@@ -38,7 +38,7 @@ export function isoTime(value) {
     ? `${m[1].padStart(2, "0")}:${m[2]}:${m[3] || "00"}`
     : "";
 }
-function matrixFromSapBuffer(buffer) {
+export function matrixFromSapBuffer(buffer) {
   const bytes = new Uint8Array(buffer);
   const isZip = bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b;
   const isOle =
@@ -50,7 +50,11 @@ function matrixFromSapBuffer(buffer) {
 
   if (isZip || isOle) {
     const workbook = XLSX.read(buffer, { type: "array", cellDates: false });
-    const ws = workbook.Sheets[workbook.SheetNames[0]];
+    const sheetName =
+      workbook.SheetNames.find(
+        (name) => name.trim().toLowerCase() === "datos sap",
+      ) || workbook.SheetNames[0];
+    const ws = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
   }
 
@@ -154,7 +158,19 @@ export function parseSapRowsFromBuffer(buffer) {
       fec_reg: isoDate(r[index.fec_reg]) || null,
       hor_reg: isoTime(r[index.hor_reg]) || null,
       usua_ctrl_re: String(r[index.usua_ctrl_re] ?? "").trim() || null,
-      raw_data: {},
+      raw_data: {
+        report_version: 1,
+        fecha_alternativa:
+          [4, 8, 25, 34, 36, 46]
+            .map((j) => isoDate(r[j]))
+            .filter(Boolean)
+            .sort()
+            .at(-1) || null,
+        excluido_reporte:
+          String(r[37] ?? "")
+            .trim()
+            .startsWith("01-0FF") || referencia.startsWith("500"),
+      },
     });
   }
 
