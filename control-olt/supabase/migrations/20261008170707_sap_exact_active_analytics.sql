@@ -3,7 +3,7 @@ create or replace view public.olt_control_live with (security_invoker=true) as
 select r.id,r.usuario_id,r.fecha,r.entrega,r.razon,r.linea,r.distrito,r.provincia,
  (to_jsonb(r)-array['usuario','archivo','archivo_hash','pestana','created_at'])
  || (coalesce(to_jsonb(g),'{}'::jsonb)-array['olt_id','updated_by','updated_at'])
- || (coalesce(to_jsonb(s),'{}'::jsonb)-array['id','usuario_id','referencia','raw_data']) as row_data,
+ || (coalesce(to_jsonb(s),'{}'::jsonb)-array['id','usuario_id','referencia','raw_data']) || jsonb_build_object('fecha_salida_sap',s.inacttrans,'gestion_version',g.updated_at) as row_data,
  upper(btrim(coalesce(r.transporte,'')))<>'RECOGE CLIENTE' as reporting_included
 from public.recepcion_olt r
 left join olt_control.gestion_olt g on g.olt_id=r.id
@@ -13,7 +13,7 @@ left join olt_control.sap_snapshot s on s.usuario_id=r.usuario_id and s.carga_id
 create or replace view public.olt_sap_snapshots with (security_invoker=true) as
 select * from olt_control.sap_snapshot;
 grant select on public.olt_sap_snapshots to authenticated;
-revoke all on public.olt_sap_snapshots from anon;
+revoke all on public.olt_sap_snapshots from public,anon;
 
 create or replace function public.olt_sap_summary(p_load bigint) returns jsonb
 language sql stable security invoker set search_path=pg_catalog as $f$

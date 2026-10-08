@@ -115,6 +115,13 @@ export function parseSapRowsFromBuffer(buffer) {
   if (missing.length)
     throw new Error("Faltan columnas SAP requeridas: " + missing.join(", "));
 
+  const reportLayoutKnown =
+    index.dt === 0 &&
+    index.et === 10 &&
+    index.placa === 12 &&
+    index.referencia === 14 &&
+    index.inacttrans === 62 &&
+    headers[37] === "Referencia";
   const rows = [];
   const invalidDetails = [];
   let invalid = 0;
@@ -159,17 +166,20 @@ export function parseSapRowsFromBuffer(buffer) {
       hor_reg: isoTime(r[index.hor_reg]) || null,
       usua_ctrl_re: String(r[index.usua_ctrl_re] ?? "").trim() || null,
       raw_data: {
-        report_version: 1,
-        fecha_alternativa:
-          [4, 8, 25, 34, 36, 46]
-            .map((j) => isoDate(r[j]))
-            .filter(Boolean)
-            .sort()
-            .at(-1) || null,
+        report_version: reportLayoutKnown ? 1 : undefined,
+        fecha_alternativa: reportLayoutKnown
+          ? [4, 8, 25, 34, 36, 46]
+              .map((j) => isoDate(r[j]))
+              .filter(Boolean)
+              .sort()
+              .at(-1) || null
+          : null,
         excluido_reporte:
-          String(r[37] ?? "")
-            .trim()
-            .startsWith("01-0FF") || referencia.startsWith("500"),
+          (reportLayoutKnown &&
+            String(r[37] ?? "")
+              .trim()
+              .startsWith("01-0FF")) ||
+          referencia.startsWith("500"),
       },
     });
   }

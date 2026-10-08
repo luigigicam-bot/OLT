@@ -15,6 +15,7 @@ async function setup({
   missingMigration = false,
   failPublish = false,
   failMetrics = false,
+  morePages = false,
 } = {}) {
   const dom = new JSDOM(
     readFileSync(new URL("../index.html", import.meta.url), "utf8"),
@@ -120,19 +121,20 @@ async function setup({
     auth: {
       getSession: async () => ({ data: { session: { user } } }),
       onAuthStateChange: () => {},
-      signOut: async () => {},
+      signOut: async () => ({}),
       signInWithPassword: async () => ({ data: { user } }),
     },
     rpc: async (name, args) => {
       if (name.startsWith("olt_metric_"))
         counters.requests.push({ name, args });
+      if (name === "olt_cell_history_v1") return { data: [] };
       if (name === "olt_metric_options_v1")
         return { data: { lines: ["BIOPAS"], ets: ["ET"] } };
-      if (name === "olt_metric_page_v1")
+      if (name === "olt_metric_page_v2")
         return {
           data: {
             rows: [{ id: 1, row_data: row, cerrado: false }],
-            has_next: false,
+            has_next: morePages,
           },
         };
       if (name === "olt_metric_kpi_v1" && failMetrics)
@@ -203,7 +205,7 @@ async function setup({
         return missingMigration
           ? { error: { message: "Function unavailable" } }
           : { data: analysis };
-      if (name === "olt_save_cell") {
+      if (name === "olt_save_cell_v2") {
         counters.save++;
         row[args.p_key] = args.p_value;
         return { data: row };
@@ -413,7 +415,7 @@ test("KPI: filtros de fechas independientes, porcentajes y detalle conservan pob
     d.querySelector('#kpiContent [data-drill="1"]').click();
     await pause();
     req = t.counters.requests
-      .filter((r) => r.name === "olt_metric_page_v1")
+      .filter((r) => r.name === "olt_metric_page_v2")
       .at(-1).args.p_filters;
     assert.equal(req.reporting_only, true);
     assert.equal(req.zone, "LIMA");
@@ -434,7 +436,7 @@ test("KPI: filtros de fechas independientes, porcentajes y detalle conservan pob
     d.querySelector("#clearFilters").click();
     await pause();
     req = t.counters.requests
-      .filter((r) => r.name === "olt_metric_page_v1")
+      .filter((r) => r.name === "olt_metric_page_v2")
       .at(-1).args.p_filters;
     assert.equal(req.month, null);
     assert.equal(req.date_from, null);
@@ -529,6 +531,32 @@ test("SAP: analizar archivo es local y no publica ni cambia filtros General", as
       d.querySelector("#sapReportContent").textContent,
       /Sin registros/,
     );
+  } finally {
+    t.dom.window.close();
+  }
+});
+
+test("Paginación solo lee página; cerrar sesión limpia vistas", async () => {
+  const t = await setup({ morePages: true });
+  try {
+    const d = t.w.document;
+    const before = t.counters.requests.length;
+    d.querySelector("#nextBtn").disabled = false;
+    d.querySelector("#nextBtn").click();
+    await pause();
+    const calls = t.counters.requests.slice(before);
+    assert.deepEqual(
+      calls.map((x) => x.name),
+      ["olt_metric_page_v2"],
+    );
+    d.querySelector(".cell-input").focus();
+    d.querySelector("#cellHistory").click();
+    await pause();
+    assert.match(d.querySelector("#modalBody").textContent, /Sin cambios/);
+    d.querySelector("#logoutBtn").click();
+    await pause();
+    assert.equal(d.querySelector("#tableBody").children.length, 0);
+    assert.equal(d.querySelector("#kpiContent").textContent, "");
   } finally {
     t.dom.window.close();
   }

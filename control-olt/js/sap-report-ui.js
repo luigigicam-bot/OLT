@@ -5,7 +5,7 @@ const date = (d) => (d ? d.split("-").reverse().join("/") : "—");
 function table(headers, rows) {
   return `<div class="kpi-table-scroll"><table class="data-table"><thead><tr>${headers.map((h) => `<th>${escape(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${headers.length}">Sin registros para estos filtros.</td></tr>`}</tbody></table></div>`;
 }
-function detail(rows) {
+function detail(rows, known = true) {
   return table(
     [
       "DT",
@@ -20,7 +20,7 @@ function detail(rows) {
     ],
     rows.map(
       (r) =>
-        `<tr><td>${escape(r.dt)}</td><td>${escape(r.state)}</td><td>${escape(r.et)}</td><td>${escape(r.plate)}</td><td>${date(r.inacttrans)}</td><td>${date(r.alternative)}</td><td>${date(r.date)}</td><td>${escape(r.date_type)}</td><td>${r.in_tracking ? "Sí" : "No"}</td></tr>`,
+        `<tr><td>${escape(r.dt)}</td><td>${escape(r.state)}</td><td>${escape(r.et)}</td><td>${escape(r.plate)}</td><td>${date(r.inacttrans)}</td><td>${date(r.alternative)}</td><td>${date(r.date)}</td><td>${escape(r.date_type)}</td><td>${!known ? "No evaluada" : r.in_tracking ? "Sí" : "No"}</td></tr>`,
     ),
   );
 }
@@ -61,6 +61,6 @@ export function sapReportHtml(report, filters = {}, page = 0, missingPage = 0) {
   return {
     total: rows.length,
     missing: without.length,
-    html: `${quality}<div class="sap-report-stats">${stat("DT únicos seleccionados", s.total)}${stat("Sin InActTrans", s.missing)}${stat("Con fecha alternativa", s.alternative)}${stat("Sin fecha identificable", s.no_date)}</div><p class="muted">Archivo: ${count(report.excluded)} filas de factura/devolución excluidas · ${count(report.blankDt)} filas sin DT. Fecha utilizada: InActTrans de la primera fila válida; si falta, máxima alternativa de E, I, Z, AI, AK y AU del DT.</p>${known ? `<p class="notice">Comparación con ${escape(report.tracking_source)}: <strong>${count(s.in_tracking)}</strong> DT presentes y <strong>${count(s.total - s.in_tracking)}</strong> faltantes.</p>` : '<p class="muted">Este archivo no contiene Mi Data; no se evalúa presencia en seguimiento.</p>'}<div class="sap-report-grid"><section><h3>Resumen por Sts.Trp</h3><div class="sap-report-bars">${stateBars || "<p>Sin estados.</p>"}</div></section><section><h3>Resumen por fecha</h3>${dates}</section></div><section><h3>Sts.Trp por transportista</h3>${transport}</section><details class="sap-report-detail"><summary>DT sin InActTrans (${count(without.length)})</summary>${pager("missing", missingPage, without.length)}${detail(missing)}</details><details class="sap-report-detail"><summary>DT consolidado (${count(rows.length)})</summary>${pager("all", page, rows.length)}${detail(visible)}</details>`,
+    html: `${quality}<div class="sap-report-stats">${stat("DT únicos seleccionados", s.total)}${stat("Sin InActTrans", s.missing)}${stat("Con fecha alternativa", s.alternative)}${stat("Sin fecha identificable", s.no_date)}</div><p class="muted">Archivo: ${count(report.excluded)} filas de factura/devolución excluidas · ${count(report.blankDt)} filas sin DT. Fecha utilizada: InActTrans de la primera fila válida; si falta, máxima alternativa de E, I, Z, AI, AK y AU del DT.</p>${known ? `<p class="notice">Comparación con ${escape(report.tracking_source)}: <strong>${count(s.in_tracking)}</strong> DT presentes y <strong>${count(s.total - s.in_tracking)}</strong> faltantes.</p>` : '<p class="muted">Este archivo no contiene Mi Data; no se evalúa presencia en seguimiento.</p>'}<div class="sap-report-grid"><section><h3>Resumen por Sts.Trp</h3><div class="sap-report-bars">${stateBars || "<p>Sin estados.</p>"}</div></section><section><h3>Resumen por fecha</h3>${dates}</section></div><section><h3>Sts.Trp por transportista</h3>${transport}</section><details class="sap-report-detail"><summary>DT sin InActTrans (${count(without.length)})</summary>${pager("missing", missingPage, without.length)}${detail(missing, known)}</details><details class="sap-report-detail"><summary>DT consolidado (${count(rows.length)})</summary>${pager("all", page, rows.length)}${detail(visible, known)}</details>`,
   };
 }

@@ -35,6 +35,7 @@ const els = {
   modalBody: $("#modalBody"),
 };
 
+let selectedCell = null;
 let currentUser = null;
 let currentPage = 0;
 let currentRows = [];
@@ -131,6 +132,26 @@ function showApp(user) {
 }
 function showLogin() {
   currentUser = null;
+  loadSequence++;
+  clearTimeout(searchTimer);
+  currentRows = [];
+  selectedCell = null;
+  $("#cellHistory").disabled = true;
+  kpiData = null;
+  activeSapLoad = null;
+  pendingSap = null;
+  hasNext = false;
+  els.tableBody.replaceChildren();
+  for (const id of [
+    "kpiContent",
+    "generalKpis",
+    "activeVersion",
+    "sapHistory",
+    "sapAnalytics",
+  ])
+    $("#" + id).replaceChildren();
+  els.modal.classList.add("hidden");
+  els.password.value = "";
   reportSequence++;
   sapReport = null;
   $("#sapReportContent").innerHTML = "";
@@ -237,6 +258,7 @@ function renderRows() {
     .forEach((input) => input.addEventListener("change", saveCell));
 }
 async function saveCell(ev) {
+  const owner = currentUser?.id;
   const input = ev.currentTarget;
   const id = Number(input.dataset.id);
   const key = input.dataset.key;
@@ -245,28 +267,33 @@ async function saveCell(ev) {
   const value = input.value.trim() || null;
   input.disabled = true;
 
-  const { data: saved, error } = await supabase.rpc("olt_save_cell", {
+  const { data: saved, error } = await supabase.rpc("olt_save_cell_v2", {
     p_id: id,
     p_key: key,
     p_value: value,
+    p_expected: row.gestion_version || null,
   });
   input.disabled = false;
+  if (owner !== currentUser?.id) return;
   if (error) {
     alert("No se pudo guardar: " + error.message);
     input.value = row[key] || "";
+    if (error.code === "40001")
+      await loadData({ skipOptions: true, skipSap: true });
     return;
   }
-  await loadData();
+  await loadData({ skipOptions: true, skipSap: true });
 }
 
 async function getActiveSapLoad() {
+  const owner = currentUser?.id;
   const pointer = await supabase
     .from("olt_sap_active")
     .select("carga_activa_id")
     .maybeSingle();
   if (pointer.error) throw pointer.error;
   const id = pointer.data?.carga_activa_id;
-  activeSapLoad = id
+  const active = id
     ? await checked(
         supabase
           .from("olt_sap_loads")
@@ -276,6 +303,8 @@ async function getActiveSapLoad() {
           .single(),
       )
     : null;
+  if (!owner || owner !== currentUser?.id) return null;
+  activeSapLoad = active;
   els.sapStatus.textContent = activeSapLoad
     ? `Última actualización SAP: ${stamp(activeSapLoad.publicada_at)} · ${activeSapLoad.referencias_unicas} referencias activas`
     : "SAP: todavía no existe una versión activa.";
@@ -320,7 +349,11 @@ async function loadFilterOptions(sequence) {
     el.value = selected;
   }
 }
-async function loadData() {
+async function loadData({
+  pageOnly = false,
+  skipOptions = false,
+  skipSap = false,
+} = {}) {
   if (!currentUser) return;
   updateFilterSummary();
   const sequence = ++loadSequence;
@@ -329,11 +362,11 @@ async function loadData() {
   const requestOffset = currentPage * PAGE_SIZE;
   showLoading(true);
   els.rowStatus.textContent = "Consultando documentos…";
-  $("#kpiContent").setAttribute("aria-busy", "true");
+  if (!pageOnly) $("#kpiContent").setAttribute("aria-busy", "true");
   const pageTask = (async () => {
     try {
       const page = await checked(
-        supabase.rpc("olt_metric_page_v1", {
+        supabase.rpc("olt_metric_page_v2", {
           p_filters: pageFilters,
           p_offset: requestOffset,
         }),
@@ -365,34 +398,46 @@ async function loadData() {
       if (sequence === loadSequence) showLoading(false);
     }
   })();
-  const metricsTask = (async () => {
-    try {
-      const metrics = await checked(
-        supabase.rpc("olt_metric_kpi_v1", { p_filters: requestFilters }),
-      );
-      if (sequence !== loadSequence) return;
-      kpiData = metrics;
-      migrationReady = true;
-      renderMetrics();
-    } catch (e) {
-      if (sequence !== loadSequence) return;
-      kpiData = null;
-      migrationReady = false;
-      $("#kpiContent").innerHTML =
-        '<div class="notice error">No se pudieron actualizar los indicadores. La tabla se carga de forma independiente.</div>';
-      $("#generalKpis").innerHTML = "";
-    } finally {
-      if (sequence === loadSequence)
-        $("#kpiContent").removeAttribute("aria-busy");
-    }
-  })();
-  const optionsTask = loadFilterOptions(sequence).catch(() => {});
-  const sapTask = getActiveSapLoad()
-    .then(() => {
-      if (sequence === loadSequence && currentView === "sap")
-        return loadSapCenter();
-    })
-    .catch(() => {});
+  const metricsTask = pageOnly
+    ? Promise.resolve()
+    : (async () => {
+        try {
+          const metrics = await checked(
+            supabase.rpc("olt_metric_kpi_v1", { p_filters: requestFilters }),
+          );
+          if (sequence !== loadSequence) return;
+          kpiData = metrics;
+          migrationReady = true;
+          renderMetrics();
+        } catch (e) {
+          if (sequence !== loadSequence) return;
+          kpiData = null;
+          migrationReady = false;
+          $("#kpiContent").innerHTML =
+            '<div class="notice error">No se pudieron actualizar los indicadores. La tabla se carga de forma independiente.</div>';
+          $("#generalKpis").innerHTML = "";
+        } finally {
+          if (sequence === loadSequence)
+            $("#kpiContent").removeAttribute("aria-busy");
+        }
+      })();
+  const optionsTask =
+    pageOnly || skipOptions
+      ? Promise.resolve()
+      : loadFilterOptions(sequence).catch(() => {
+          if (sequence === loadSequence)
+            els.rowStatus.textContent +=
+              " · No se actualizaron las opciones de filtros.";
+        });
+  const sapTask =
+    pageOnly || skipSap
+      ? Promise.resolve()
+      : getActiveSapLoad()
+          .then(() => {
+            if (sequence === loadSequence && currentView === "sap")
+              return loadSapCenter();
+          })
+          .catch(() => {});
   await Promise.allSettled([pageTask, metricsTask, optionsTask, sapTask]);
 }
 
@@ -761,8 +806,10 @@ $("#clearSapReportFilters").onclick = () => {
 
 async function loadSapCenter() {
   if (!currentUser) return;
+  const owner = currentUser.id;
   try {
     await getActiveSapLoad();
+    if (owner !== currentUser?.id) return;
     const c = activeSapLoad;
     loadStoredSapReport(c?.id);
     $("#activeVersion").innerHTML = `<h2>Última versión SAP activa</h2>${
@@ -783,6 +830,7 @@ async function loadSapCenter() {
         .order("id", { ascending: false })
         .limit(30),
     );
+    if (owner !== currentUser?.id) return;
     $("#sapHistory").innerHTML =
       history
         .map(
@@ -797,6 +845,7 @@ async function loadSapCenter() {
       );
     if (c) {
       const a = await supabase.rpc("olt_sap_analysis", { p_load: c.id });
+      if (owner !== currentUser?.id) return;
       $("#sapAnalytics").innerHTML = a.error
         ? '<div class="notice warn">El análisis de versiones y cobertura requiere la migración pendiente de aprobación.</div>'
         : analysisHtml(a.data);
@@ -808,10 +857,28 @@ async function loadSapCenter() {
 }
 async function reviewLoad(id, history) {
   const c = history.find((x) => x.id === id);
+  const owner = currentUser?.id;
   modal(
-    `<h2>${escapeHtml(c.archivo)}</h2><p>${escapeHtml(c.mensaje || c.estado)}</p><p class="muted">${stamp(c.created_at)} · ${c.total_filas} filas · ${c.referencias_unicas} referencias</p><div id="historyAnalysis">Cargando análisis…</div>`,
+    `<h2>${escapeHtml(c.archivo)}</h2><p>${escapeHtml(c.mensaje || c.estado)}</p><p class="muted">${stamp(c.created_at)} · ${c.total_filas} filas · ${c.referencias_unicas} referencias</p><div id="historyAnalysis">Cargando análisis…</div>${c.estado === "validando" ? '<button id="cancelHistoryLoad" class="btn-secondary">Cancelar validación pendiente</button>' : ""}`,
   );
+  if (c.estado === "validando")
+    $("#cancelHistoryLoad").onclick = async () => {
+      try {
+        await checked(
+          supabase.rpc("olt_sap_reject", {
+            p_load: id,
+            p_message: "Cancelada desde historial por el usuario",
+          }),
+        );
+        if (owner !== currentUser?.id) return;
+        await closeModal();
+        await loadSapCenter();
+      } catch {
+        alert("No se pudo cancelar la validación. Vuelve a intentarlo.");
+      }
+    };
   const a = await supabase.rpc("olt_sap_analysis", { p_load: id });
+  if (owner !== currentUser?.id || !$("#historyAnalysis")) return;
   $("#historyAnalysis").innerHTML = a.error
     ? '<p class="notice warn">Detalle analítico pendiente de la migración de base de datos.</p>'
     : a.data
@@ -819,7 +886,12 @@ async function reviewLoad(id, history) {
       : "<p>Esta carga no tiene un snapshot disponible.</p>";
 }
 async function prepareSap(file) {
-  if (busySap) return;
+  if (busySap || !currentUser) return;
+  const owner = currentUser.id;
+  const ensureOwner = () => {
+    if (owner !== currentUser?.id)
+      throw new Error("La sesión cambió. Vuelve a seleccionar el archivo.");
+  };
   busySap = true;
   els.modalClose.disabled = true;
   modal(
@@ -830,8 +902,9 @@ async function prepareSap(file) {
     if (file.size > 40 * 1024 * 1024)
       throw new Error("El archivo supera el límite actual de 40 MB.");
     const buffer = await file.arrayBuffer();
-    hash = await sha256(file);
+    hash = await sha256({ arrayBuffer: async () => buffer });
     const parsed = await parseFile(buffer);
+    ensureOwner();
     if (!parsed.rows.length) throw new Error("No hay filas SAP válidas.");
     if (parsed.rows.length > 250000)
       throw new Error("Esta versión admite hasta 250 000 filas por carga.");
@@ -839,17 +912,28 @@ async function prepareSap(file) {
       throw new Error(
         "Más del 10% de las filas son inválidas. Revisa el archivo antes de cargarlo.",
       );
-    const loadId = await checked(
-      supabase.rpc("olt_sap_start", {
-        p_file: file.name,
+    const resume = await checked(
+      supabase.rpc("olt_sap_resume_v1", {
         p_hash: hash,
         p_valid: parsed.rows.length,
-        p_invalid: parsed.invalid,
-        p_alerts: parsed.invalidDetails,
       }),
     );
+    ensureOwner();
+    const loadId =
+      resume?.load_id ||
+      (await checked(
+        supabase.rpc("olt_sap_start", {
+          p_file: file.name,
+          p_hash: hash,
+          p_valid: parsed.rows.length,
+          p_invalid: parsed.invalid,
+          p_alerts: parsed.invalidDetails,
+        }),
+      ));
+    ensureOwner();
     pendingSap = { file, hash, ...parsed, loadId };
     for (let i = 0; i < parsed.rows.length; i += 400) {
+      ensureOwner();
       await checked(
         supabase.rpc("olt_sap_append", {
           p_load: loadId,
@@ -861,6 +945,7 @@ async function prepareSap(file) {
         `Validando filas ${Math.min(i + 400, parsed.rows.length)} / ${parsed.rows.length}`,
       );
     }
+    ensureOwner();
     const summary = await checked(
       supabase.rpc("olt_sap_summary", { p_load: loadId }),
     );
@@ -869,7 +954,9 @@ async function prepareSap(file) {
       Number(summary.unique) !== parsed.latest.length
     )
       throw new Error("La validación del servidor no coincide con el archivo.");
+    ensureOwner();
     const a = await supabase.rpc("olt_sap_analysis", { p_load: loadId });
+    ensureOwner();
     const reduced =
       summary.previous_unique > 0 &&
       summary.unique < summary.previous_unique * 0.7;
@@ -909,12 +996,8 @@ async function prepareSap(file) {
       $("#ackReduction").onchange = (e) =>
         ($("#publishSap").disabled = !e.target.checked);
   } catch (e) {
-    if (pendingSap?.loadId)
-      await supabase.rpc("olt_sap_reject", {
-        p_load: pendingSap.loadId,
-        p_message: e.message,
-      });
-    else if (hash)
+    if (owner !== currentUser?.id) return;
+    if (!pendingSap?.loadId && hash)
       await supabase.rpc("olt_sap_failure", {
         p_file: file.name,
         p_hash: hash,
@@ -922,7 +1005,7 @@ async function prepareSap(file) {
       });
     pendingSap = null;
     modal(
-      `<div class="notice error">No se puede publicar: ${escapeHtml(e.message)}</div>`,
+      `<div class="notice error">No se puede publicar: ${escapeHtml(e.message)}</div><p>Si la carga se interrumpió, selecciona el mismo archivo para reanudar la validación. La versión activa se conserva.</p>`,
     );
   } finally {
     busySap = false;
@@ -1089,29 +1172,35 @@ els.loginForm.addEventListener("submit", async (e) => {
     password: els.password.value,
   });
   if (error) {
-    els.loginMsg.textContent = error.message;
+    els.loginMsg.textContent =
+      "No se pudo ingresar. Revisa tu correo, contraseña y conexión.";
     return;
   }
   els.loginMsg.textContent = "";
   showApp(data.user);
   currentPage = 0;
+  els.password.value = "";
   await loadData();
 });
 els.logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    alert("No se pudo cerrar sesión. Vuelve a intentarlo.");
+    return;
+  }
   showLogin();
 });
 els.refreshBtn.addEventListener("click", () => loadData());
 els.prevBtn.addEventListener("click", () => {
   if (currentPage > 0) {
     currentPage--;
-    loadData();
+    loadData({ pageOnly: true });
   }
 });
 els.nextBtn.addEventListener("click", () => {
   if (hasNext) {
     currentPage++;
-    loadData();
+    loadData({ pageOnly: true });
   }
 });
 els.searchInput.addEventListener("input", () => {
@@ -1145,7 +1234,19 @@ if (session?.user) {
   await loadData();
 } else showLogin();
 supabase.auth.onAuthStateChange((_event, session) => {
-  if (!session?.user) showLogin();
+  if (!session?.user) {
+    showLogin();
+    return;
+  }
+  const user = session.user;
+  setTimeout(() => {
+    if (currentUser?.id !== user.id) {
+      showLogin();
+      showApp(user);
+      currentPage = 0;
+      loadData();
+    } else currentUser = user;
+  }, 0);
 });
 
 function updateFilterSummary() {
@@ -1205,3 +1306,32 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
+
+document.addEventListener("focusin", (event) => {
+  const input = event.target.closest?.(".cell-input");
+  if (input) {
+    selectedCell = { id: Number(input.dataset.id), key: input.dataset.key };
+    $("#cellHistory").disabled = false;
+  }
+});
+$("#cellHistory").onclick = async () => {
+  if (!selectedCell || !currentUser || busySap) return;
+  const owner = currentUser.id;
+  const cell = { ...selectedCell };
+  modal("<h2>Historial de cambios</h2><p>Consultando…</p>");
+  try {
+    const rows = await checked(
+      supabase.rpc("olt_cell_history_v1", { p_id: cell.id }),
+    );
+    if (owner !== currentUser?.id) return;
+    const label = COLUMNS.find((x) => x.key === cell.key)?.label || cell.key;
+    modal(
+      `<h2>${escapeHtml(label)} · Historial</h2><p class="muted">Hasta 100 cambios de esta fila. El registro comienza desde la activación de la auditoría.</p><div class="table-scroll"><table class="data-table"><thead><tr><th>Fecha Lima</th><th>Campo</th><th>Antes</th><th>Después</th></tr></thead><tbody>${rows.flatMap((r) => Object.entries(r.changes).map(([key, v]) => `<tr><td>${stamp(r.changed_at)}</td><td>${escapeHtml(COLUMNS.find((x) => x.key === key)?.label || key)}</td><td>${escapeHtml(v.before ?? "—")}</td><td>${escapeHtml(v.after ?? "—")}</td></tr>`)).join("") || '<tr><td colspan="4">Sin cambios registrados.</td></tr>'}</tbody></table></div>`,
+    );
+  } catch {
+    if (owner === currentUser?.id)
+      modal(
+        '<p class="notice error">No se pudo consultar el historial. Vuelve a intentarlo.</p>',
+      );
+  }
+};

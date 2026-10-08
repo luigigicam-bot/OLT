@@ -11,6 +11,7 @@ function matrix() {
     [10, "Nombre 1"],
     [12, "Placa"],
     [14, "Entrega"],
+    [37, "Referencia"],
     [62, "InActTrans"],
   ])
     header[i] = v;
@@ -77,4 +78,10 @@ test("Reporte: sin comparación, aviso histórico y escape de datos", () => {
   assert.match(out.html, /no contiene Mi Data/);
   assert.match(out.html, /&lt;script&gt;/);
   assert.doesNotMatch(out.html, /<script>/);
+});
+
+test("Plantilla reordenada bloquea auxiliares posicionales", () => {
+  const m = matrix();
+  m[0][37] = "Otra columna";
+  assert.throws(() => consolidateDt(m), /posición/);
 });

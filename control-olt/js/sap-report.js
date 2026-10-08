@@ -27,6 +27,17 @@ export function consolidateDt(matrix, miData = null) {
     throw new Error(
       "Faltan columnas para consolidar DT, estado, transportista, placa y entrega.",
     );
+  const positional =
+    d === 0 &&
+    et === 10 &&
+    placa === 12 &&
+    entrega === 14 &&
+    date === 62 &&
+    headers[37] === "Referencia";
+  if (headers.length >= 47 && !positional)
+    throw new Error(
+      "Las columnas del reporte SAP cambiaron de posición. Usa la plantilla original para evitar fechas o exclusiones incorrectas.",
+    );
   const known = new Set(
     (miData || []).filter(Boolean).map((v) => String(v).trim()),
   );
@@ -89,7 +100,7 @@ export function consolidateDt(matrix, miData = null) {
     blankDt,
     tracking_source:
       miData !== null ? "Mi Data del archivo" : "Sin comparación",
-    complete: true,
+    complete: positional,
   };
 }
 export function reportFromBuffer(buffer) {

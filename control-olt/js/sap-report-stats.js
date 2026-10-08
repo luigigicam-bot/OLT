@@ -24,16 +24,21 @@ export function summarizeDt(rows) {
     dates = countBy((r) => r.date || "Sin fecha").sort((a, b) =>
       a.label.localeCompare(b.label),
     );
-  const ets = [...new Set(rows.map((r) => r.et))].sort().map((et) => ({
-    et,
-    total: rows.filter((r) => r.et === et).length,
-    states: Object.fromEntries(
-      states.map((s) => [
-        s.label,
-        rows.filter((r) => r.et === et && r.state === s.label).length,
-      ]),
-    ),
-  }));
+  const transports = new Map();
+  for (const r of rows) {
+    let group = transports.get(r.et);
+    if (!group) {
+      group = {
+        et: r.et,
+        total: 0,
+        states: Object.fromEntries(states.map((x) => [x.label, 0])),
+      };
+      transports.set(r.et, group);
+    }
+    group.total++;
+    group.states[r.state]++;
+  }
+  const ets = [...transports.values()].sort((a, b) => a.et.localeCompare(b.et));
   return {
     total: rows.length,
     missing: rows.filter((r) => !r.inacttrans).length,
