@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { webcrypto } from "node:crypto";
 import { JSDOM } from "jsdom";
 import { calc, todayISO, formatDate } from "../js/indicators.js";
+import { MONTHS, renderKpi } from "../js/kpi.js";
 import { parseSapRowsFromBuffer } from "../js/sap-parser.js";
 const pause = () => new Promise((r) => setTimeout(r, 15));
 const sapText =
@@ -14,7 +15,7 @@ async function setup({ missingMigration = false, failPublish = false } = {}) {
     { url: "http://localhost/#general", runScripts: "outside-only" },
   );
   const w = dom.window;
-  const counters = { publish: 0, append: 0, reject: 0, save: 0 };
+  const counters = { publish: 0, append: 0, reject: 0, save: 0, requests: [] };
   const user = {
     id: "00000000-0000-4000-8000-000000000001",
     email: "fixture@example.test",
@@ -117,23 +118,69 @@ async function setup({ missingMigration = false, failPublish = false } = {}) {
       signInWithPassword: async () => ({ data: { user } }),
     },
     rpc: async (name, args) => {
-      if (name === "olt_control_analytics")
-        return missingMigration
-          ? { error: { message: "Function unavailable" } }
-          : {
-              data: {
-                totals: {
-                  total: 1,
-                  cumple: 0,
-                  no_cumple: 0,
-                  por_vencer: 0,
-                  pendientes: 1,
-                  con_sap: 0,
-                },
-                lines: ["BIOPAS"],
-                transports: ["TERRESTRE"],
+      if (name.startsWith("olt_metric_"))
+        counters.requests.push({ name, args });
+      if (name === "olt_metric_options_v1")
+        return { data: { lines: ["BIOPAS"], ets: ["ET"] } };
+      if (name === "olt_metric_page_v1")
+        return {
+          data: {
+            rows: [{ id: 1, row_data: row, cerrado: false }],
+            has_next: false,
+          },
+        };
+      if (name === "olt_metric_kpi_v1")
+        return {
+          data: {
+            totals: {
+              total: 2,
+              en_fecha: 1,
+              fuera_fecha: 1,
+              sin_indicador: 0,
+              sin_zona: 0,
+            },
+            zones: [
+              {
+                zona: "LIMA",
+                total: 2,
+                en_fecha: 1,
+                fuera_fecha: 1,
+                sin_indicador: 0,
               },
-            };
+              {
+                zona: "PROVINCIA",
+                total: 0,
+                en_fecha: 0,
+                fuera_fecha: 0,
+                sin_indicador: 0,
+              },
+            ],
+            lines: [
+              {
+                zona: "LIMA",
+                linea: "BIOPAS",
+                total: 2,
+                en_fecha: 1,
+                fuera_fecha: 1,
+                sin_indicador: 0,
+              },
+            ],
+            incidents: [
+              { zona: "LIMA", responsable: "AL", motivo: "Demora", total: 1 },
+            ],
+            transports: [
+              {
+                zona: "LIMA",
+                et: "ET",
+                total: 2,
+                en_fecha: 1,
+                fuera_fecha: 1,
+                sin_indicador: 0,
+              },
+            ],
+            generated_at: new Date().toISOString(),
+          },
+        };
       if (name === "olt_sap_analysis")
         return missingMigration
           ? { error: { message: "Function unavailable" } }
@@ -187,6 +234,8 @@ async function setup({ missingMigration = false, failPublish = false } = {}) {
     },
   };
   w.createClient = () => api;
+  w.MONTHS = MONTHS;
+  w.renderKpi = renderKpi;
   w.calc = calc;
   w.todayISO = todayISO;
   w.formatDate = formatDate;
@@ -293,11 +342,72 @@ test("Migración ausente: aviso visible y publicación bloqueada", async () => {
   try {
     assert.match(
       t.w.document.querySelector("#generalKpis").textContent,
-      /pendientes/,
+      /Documentos KPI/,
     );
     await t.upload();
     assert.equal(t.w.document.querySelector("#publishSap").disabled, true);
     assert.equal(t.counters.publish, 0);
+  } finally {
+    t.dom.window.close();
+  }
+});
+
+test("KPI: filtros de fechas independientes, porcentajes y detalle conservan población", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    d.querySelector("#navKpi").click();
+    assert.equal(
+      d.querySelector("#kpiView").classList.contains("hidden"),
+      false,
+    );
+    assert.match(d.querySelector("#kpiContent").textContent, /50%/);
+    d.querySelector("#dateFrom").value = "2026-10-01";
+    d.querySelector("#dateTo").value = "2026-10-08";
+    d.querySelector("#applyDates").click();
+    await pause();
+    d.querySelector("#monthFilter").value = "9";
+    d.querySelector("#monthFilter").dispatchEvent(new t.w.Event("change"));
+    await pause();
+    let req = t.counters.requests
+      .filter((r) => r.name === "olt_metric_kpi_v1")
+      .at(-1).args.p_filters;
+    assert.equal(req.date_from, "2026-10-01");
+    assert.equal(req.date_to, "2026-10-08");
+    assert.equal(req.month, 9);
+    assert.match(
+      d.querySelector("#dateRangeSummary").textContent,
+      /01\/10\/2026/,
+    );
+    d.querySelector('#kpiContent [data-drill="1"]').click();
+    await pause();
+    req = t.counters.requests
+      .filter((r) => r.name === "olt_metric_page_v1")
+      .at(-1).args.p_filters;
+    assert.equal(req.reporting_only, true);
+    assert.equal(req.zone, "LIMA");
+    assert.equal(req.indicator, "Fuera de Fecha");
+    assert.equal(req.month, 9);
+    assert.equal(req.date_to, "2026-10-08");
+    assert.equal(
+      d.querySelector("#generalView").classList.contains("hidden"),
+      false,
+    );
+    d.querySelector("#dateFrom").value = "2026-10-09";
+    d.querySelector("#dateTo").value = "2026-10-01";
+    const before = t.counters.requests.length;
+    d.querySelector("#applyDates").click();
+    await pause();
+    assert.equal(t.counters.requests.length, before);
+    assert.ok(d.querySelector("#dateError").textContent);
+    d.querySelector("#clearFilters").click();
+    await pause();
+    req = t.counters.requests
+      .filter((r) => r.name === "olt_metric_page_v1")
+      .at(-1).args.p_filters;
+    assert.equal(req.month, null);
+    assert.equal(req.date_from, null);
+    assert.equal(req.reporting_only, undefined);
   } finally {
     t.dom.window.close();
   }

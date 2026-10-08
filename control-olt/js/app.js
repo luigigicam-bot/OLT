@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { calc, todayISO, formatDate } from "./indicators.js";
+import { MONTHS, renderKpi } from "./kpi.js";
 
 const SUPABASE_URL = "https://vuoqmesrwgkkdqrecxnc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_P5CjX41UyzjQgbvSdkwfwA_jXON8rI1";
@@ -45,6 +46,11 @@ let holidays = new Set();
 let loadSequence = 0;
 let migrationReady = false;
 let returnFocus = null;
+let currentView = "general";
+let kpiData = null;
+let kpiState = { lines: "LIMA", incidents: "LIMA", transports: "" };
+let drillFilters = null;
+let appliedDates = { date_from: null, date_to: null };
 
 const COLUMNS = [
   ["A", "nro_cargo", "Nro. De Cargo", "gestion"],
@@ -244,8 +250,7 @@ async function saveCell(ev) {
     input.value = row[key] || "";
     return;
   }
-  Object.assign(row, saved || { [key]: value });
-  renderRows();
+  await loadData();
 }
 
 async function getActiveSapLoad() {
@@ -270,111 +275,170 @@ async function getActiveSapLoad() {
     : "SAP: todavía no existe una versión activa.";
   return activeSapLoad;
 }
-function filters() {
-  return {
-    p_period: $("#periodFilter").value
-      ? $("#periodFilter").value + "-01"
-      : null,
-    p_line: $("#lineFilter").value || null,
-    p_transport: $("#transportFilter").value || null,
-    p_zone: $("#zoneFilter").value || null,
+function filters(includeDrill = false) {
+  const result = {
+    ...appliedDates,
+    line: $("#lineFilter").value || null,
+    indicator: $("#indicatorFilter").value || null,
+    zone: $("#zoneFilter").value || null,
+    et: $("#etFilter").value || null,
+    month: $("#monthFilter").value ? Number($("#monthFilter").value) : null,
+    search: els.searchInput.value.trim() || null,
   };
+  return includeDrill && drillFilters
+    ? { ...result, ...drillFilters, reporting_only: true }
+    : result;
 }
-function filterQuery(q) {
-  const f = filters();
-  if (f.p_period) {
-    const d = new Date(f.p_period + "T00:00:00Z");
-    d.setUTCMonth(d.getUTCMonth() + 1);
-    q = q.gte("fecha", f.p_period).lt("fecha", d.toISOString().slice(0, 10));
+async function loadFilterOptions(sequence) {
+  const options = await checked(supabase.rpc("olt_metric_options_v1"));
+  if (sequence !== loadSequence) return;
+  for (const [id, values, label] of [
+    ["lineFilter", options.lines, "Todas las líneas"],
+    ["etFilter", options.ets, "Todos los transportistas"],
+  ]) {
+    const el = $("#" + id),
+      selected = el.value;
+    el.innerHTML =
+      `<option value="">${label}</option>` +
+      values
+        .map(
+          (v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`,
+        )
+        .join("");
+    if (selected && !values.includes(selected)) {
+      const o = document.createElement("option");
+      o.value = selected;
+      o.textContent = selected;
+      el.append(o);
+    }
+    el.value = selected;
   }
-  if (f.p_line) q = q.eq("linea", f.p_line);
-  if (f.p_transport) q = q.eq("row_data->>transporte", f.p_transport);
-  if (f.p_zone) q = q.eq("row_data->>despacho", f.p_zone);
-  return q;
 }
 async function loadData() {
   if (!currentUser) return;
   const sequence = ++loadSequence;
+  const requestFilters = filters();
+  const pageFilters = filters(true);
+  const requestOffset = currentPage * PAGE_SIZE;
   showLoading(true);
+  $("#kpiContent").setAttribute("aria-busy", "true");
   try {
     await getActiveSapLoad();
-    const calendar = await checked(
-      supabase.from("calendario_feriados").select("fecha").eq("activo", true),
-    );
-    holidays = new Set(calendar.map((x) => x.fecha));
-    await loadGeneralAnalytics();
-    let q = filterQuery(
-      supabase
-        .from("olt_control_rows")
-        .select("id,row_data,cerrado")
-        .order("fecha", { ascending: false })
-        .order("id", { ascending: false }),
-    );
-    const search = els.searchInput.value.trim().replace(/[(),%*\\]/g, " ");
-    if (search) {
-      const p = `%${search}%`;
-      q = q.or(
-        `entrega.ilike.${p},razon.ilike.${p},linea.ilike.${p},distrito.ilike.${p},provincia.ilike.${p}`,
-      );
-    }
-    const base = await checked(
-      q.range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE),
+    if (sequence !== loadSequence) return;
+    await loadFilterOptions(sequence);
+    if (sequence !== loadSequence) return;
+    const metrics = await checked(
+      supabase.rpc("olt_metric_kpi_v1", { p_filters: requestFilters }),
     );
     if (sequence !== loadSequence) return;
-    hasNext = base.length > PAGE_SIZE;
-    currentRows = base.slice(0, PAGE_SIZE).map((x) => {
-      let r = { ...x.row_data, id: x.id, cerrado: x.cerrado };
-      if (!r.cerrado && r.carga_id && r.carga_id !== activeSapLoad?.id) {
-        for (const k of [
-          "carga_id",
-          "inacttrans",
-          "hraitr",
-          "dt",
-          "et",
-          "placa",
-          "fecha_salida_sap",
-          "estado_viaje",
-          "estado_entrega",
-          "fec_reg",
-          "hor_reg",
-          "usua_ctrl_re",
-        ])
-          delete r[k];
-        r = calc(r, { holidays });
-      }
-      return r;
-    });
-    if (!migrationReady) {
-      for (const [id, key] of [
-        ["lineFilter", "linea"],
-        ["transportFilter", "transporte"],
-      ]) {
-        const el = $("#" + id);
-        const values = new Set([...el.options].map((o) => o.value));
-        for (const row of currentRows) {
-          const v = row[key];
-          if (v && !values.has(v)) {
-            const o = document.createElement("option");
-            o.value = v;
-            o.textContent = v;
-            el.append(o);
-            values.add(v);
-          }
-        }
-      }
-    }
+    kpiData = metrics;
+    migrationReady = true;
+    renderMetrics();
+    const page = await checked(
+      supabase.rpc("olt_metric_page_v1", {
+        p_filters: pageFilters,
+        p_offset: requestOffset,
+      }),
+    );
+    if (sequence !== loadSequence) return;
+    hasNext = page.has_next;
+    currentRows = page.rows.map((x) => ({
+      ...x.row_data,
+      id: x.id,
+      cerrado: x.cerrado,
+    }));
     renderRows();
     els.pageInfo.textContent = `Página ${currentPage + 1}`;
     els.prevBtn.disabled = currentPage === 0;
     els.nextBtn.disabled = !hasNext;
     els.rowStatus.textContent = `${currentRows.length} filas visibles`;
-    if (!$("#sapView").classList.contains("hidden")) await loadSapCenter();
+    $("#appMessage").classList.add("hidden");
+    if (currentView === "sap") await loadSapCenter();
   } catch (e) {
-    els.rowStatus.textContent = "No se pudo cargar la operación: " + e.message;
+    if (sequence !== loadSequence) return;
+    migrationReady = false;
+    kpiData = null;
+    currentRows = [];
+    renderRows();
+    const message =
+      "No se pudieron cargar los datos. Actualiza la vista para volver a intentar.";
+    els.rowStatus.textContent = message;
+    $("#kpiContent").innerHTML = `<div class="notice error">${message}</div>`;
+    $("#generalKpis").innerHTML = "";
+    $("#appMessage").textContent = message;
+    $("#appMessage").classList.remove("hidden");
+    console.error("Consulta operacional fallida", e.code || e.message);
   } finally {
-    if (sequence === loadSequence) showLoading(false);
+    if (sequence === loadSequence) {
+      showLoading(false);
+      $("#kpiContent").removeAttribute("aria-busy");
+    }
   }
 }
+function renderMetrics() {
+  if (!kpiData) return;
+  const t = kpiData.totals;
+  $("#generalKpis").innerHTML = cards([
+    ["Documentos KPI", t.total],
+    ["En Fecha", t.en_fecha],
+    ["Fuera de Fecha", t.fuera_fecha],
+    ["Sin indicador", t.sin_indicador],
+  ]);
+  const render = renderKpi(kpiData, kpiState);
+  $("#kpiContent").innerHTML = render.html;
+  $("#kpiAsOf").textContent =
+    `Actualizado ${stamp(kpiData.generated_at)} · Lima`;
+  $("#kpiContent")
+    .querySelectorAll("[data-kpi-tab]")
+    .forEach(
+      (button) =>
+        (button.onclick = () => {
+          kpiState[button.dataset.kpiTab] = button.dataset.zone;
+          renderMetrics();
+        }),
+    );
+  $("#kpiContent")
+    .querySelectorAll("[data-drill]")
+    .forEach(
+      (button) =>
+        (button.onclick = () => {
+          drillFilters = render.drills[Number(button.dataset.drill)];
+          currentPage = 0;
+          const labels = Object.values(drillFilters)
+            .filter(Boolean)
+            .join(" · ");
+          $("#drillChip").innerHTML =
+            `<span>Detalle KPI: ${escapeHtml(labels)} · RECOGE CLIENTE excluido</span><button id="clearDrill" type="button" class="text-btn">Quitar detalle</button>`;
+          $("#drillChip").classList.remove("hidden");
+          $("#clearDrill").onclick = () => {
+            clearDrill();
+            currentPage = 0;
+            loadData();
+          };
+          setView("general");
+          loadData();
+        }),
+    );
+}
+function clearDrill() {
+  drillFilters = null;
+  $("#drillChip").classList.add("hidden");
+  $("#drillChip").innerHTML = "";
+}
+function dateRangeLabel() {
+  const format = (v) => (v ? v.split("-").reverse().join("/") : "");
+  const f = appliedDates.date_from,
+    t = appliedDates.date_to;
+  $("#dateRangeSummary").textContent =
+    f && t
+      ? `${format(f)} – ${format(t)}`
+      : f
+        ? `Desde ${format(f)}`
+        : t
+          ? `Hasta ${format(t)}`
+          : "Todas las fechas";
+}
+
 async function checked(promise) {
   const { data, error } = await promise;
   if (error) throw error;
@@ -392,45 +456,6 @@ function stamp(value) {
 function cards(entries) {
   return `<div class="summary-grid">${entries.map(([label, value]) => `<div class="summary-card"><strong>${escapeHtml(value ?? 0)}</strong><span>${escapeHtml(label)}</span></div>`).join("")}</div>`;
 }
-async function loadGeneralAnalytics() {
-  const result = await supabase.rpc("olt_control_analytics", filters());
-  if (result.error) {
-    migrationReady = false;
-    $("#generalKpis").innerHTML =
-      '<div class="notice warn">Los indicadores globales están pendientes de activar la migración de análisis. La hoja operativa sigue disponible.</div>';
-    return;
-  }
-  migrationReady = true;
-  const a = result.data,
-    t = a.totals;
-  $("#generalKpis").innerHTML = cards([
-    ["Programaciones", t.total],
-    ["Cumple", t.cumple],
-    ["No cumple", t.no_cumple],
-    ["Por vencer / hoy", t.por_vencer],
-    ["Cargos pendientes", t.pendientes],
-    [
-      "Cobertura SAP",
-      t.total ? `${((100 * t.con_sap) / t.total).toFixed(1)}%` : "—",
-    ],
-  ]);
-  for (const [id, list, placeholder] of [
-    ["lineFilter", a.lines, "Todas las líneas"],
-    ["transportFilter", a.transports, "Todos los transportes"],
-  ]) {
-    const el = $("#" + id),
-      value = el.value;
-    el.innerHTML =
-      `<option value="">${placeholder}</option>` +
-      list
-        .map(
-          (x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`,
-        )
-        .join("");
-    el.value = value;
-  }
-}
-
 async function sha256(file) {
   const buf = await file.arrayBuffer();
   const hash = await crypto.subtle.digest("SHA-256", buf);
@@ -776,47 +801,95 @@ async function publishSap() {
   }
 }
 function setView(view) {
-  const sap = view === "sap";
-  $("#generalView").classList.toggle("hidden", sap);
-  $("#sapView").classList.toggle("hidden", !sap);
-  $("#viewTitle").textContent = sap ? "Centro SAP" : "General / Operación OLT";
-  for (const [id, active] of [
-    ["navGeneral", !sap],
-    ["navSap", sap],
+  currentView = ["general", "sap", "kpi"].includes(view) ? view : "general";
+  for (const key of ["general", "sap", "kpi"])
+    $("#" + key + "View").classList.toggle("hidden", currentView !== key);
+  $("#sharedControls").classList.toggle("hidden", currentView === "sap");
+  $("#pageControls").classList.toggle("hidden", currentView !== "general");
+  $("#viewTitle").textContent = {
+    general: "General / Operación OLT",
+    sap: "Centro SAP",
+    kpi: "KPI / Indicadores OLT",
+  }[currentView];
+  for (const [id, key] of [
+    ["navGeneral", "general"],
+    ["navSap", "sap"],
+    ["navKpi", "kpi"],
   ]) {
-    const b = $("#" + id);
-    b.classList.toggle("btn-secondary", !active);
+    const button = $("#" + id),
+      active = currentView === key;
+    button.classList.toggle("btn-secondary", !active);
     active
-      ? b.setAttribute("aria-current", "page")
-      : b.removeAttribute("aria-current");
+      ? button.setAttribute("aria-current", "page")
+      : button.removeAttribute("aria-current");
   }
-  history.replaceState(null, "", sap ? "#sap" : "#general");
-  if (sap) loadSapCenter();
+  $("#drillChip").classList.toggle(
+    "hidden",
+    !drillFilters || currentView !== "general",
+  );
+  history.replaceState(null, "", "#" + currentView);
+  if (currentView === "sap") loadSapCenter();
+  if (currentView === "kpi") renderMetrics();
 }
 $("#navGeneral").onclick = () => setView("general");
 $("#navSap").onclick = () => setView("sap");
+$("#navKpi").onclick = () => setView("kpi");
 $("#sapDetailLink").onclick = () => setView("sap");
 for (const id of [
-  "periodFilter",
   "lineFilter",
-  "transportFilter",
+  "indicatorFilter",
+  "etFilter",
   "zoneFilter",
+  "monthFilter",
 ])
   $("#" + id).onchange = () => {
+    clearDrill();
     currentPage = 0;
     loadData();
   };
-$("#clearFilters").onclick = () => {
-  for (const id of [
-    "periodFilter",
-    "lineFilter",
-    "transportFilter",
-    "zoneFilter",
-  ])
-    $("#" + id).value = "";
+$("#monthFilter").innerHTML =
+  '<option value="">Todos los meses</option>' +
+  MONTHS.map((name, i) => `<option value="${i + 1}">${name}</option>`).join("");
+$("#applyDates").onclick = () => {
+  const from = $("#dateFrom").value || null,
+    to = $("#dateTo").value || null;
+  if (from && to && from > to) {
+    $("#dateError").textContent =
+      "La fecha Hasta debe ser igual o posterior a Desde.";
+    return;
+  }
+  $("#dateError").textContent = "";
+  appliedDates = { date_from: from, date_to: to };
+  dateRangeLabel();
+  $("#dateRangePicker").open = false;
+  clearDrill();
   currentPage = 0;
   loadData();
 };
+$("#clearFilters").onclick = () => {
+  for (const id of [
+    "lineFilter",
+    "indicatorFilter",
+    "etFilter",
+    "zoneFilter",
+    "monthFilter",
+    "dateFrom",
+    "dateTo",
+  ])
+    $("#" + id).value = "";
+  appliedDates = { date_from: null, date_to: null };
+  els.searchInput.value = "";
+  $("#dateError").textContent = "";
+  $("#dateRangePicker").open = false;
+  dateRangeLabel();
+  clearDrill();
+  currentPage = 0;
+  loadData();
+};
+document.addEventListener("click", (e) => {
+  if (!$("#dateRangePicker").contains(e.target))
+    $("#dateRangePicker").open = false;
+});
 document.addEventListener("keydown", (e) => {
   if (els.modal.classList.contains("hidden")) return;
   if (e.key === "Escape") closeModal();
@@ -874,6 +947,7 @@ els.nextBtn.addEventListener("click", () => {
 els.searchInput.addEventListener("input", () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
+    clearDrill();
     currentPage = 0;
     loadData();
   }, 350);
@@ -892,7 +966,7 @@ els.modal.addEventListener("click", (e) => {
 });
 
 renderHeader();
-setView(location.hash === "#sap" ? "sap" : "general");
+setView(location.hash.slice(1));
 const {
   data: { session },
 } = await supabase.auth.getSession();

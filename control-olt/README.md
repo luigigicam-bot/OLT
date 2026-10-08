@@ -10,13 +10,24 @@ Las dependencias están fijadas y el lockfile se versiona. Supabase JS se empaqu
 
 ## General
 
-43 columnas A:AQ, encabezados y número de fila sticky, scroll horizontal y páginas de 100 filas consultadas al servidor. Filtros de periodo, línea, transporte, Lima/Provincia y búsqueda con debounce. Solo A:B, Y:AB y AL:AM son editables por `olt_save_cell`; los meses cerrados son lectura. F:X siguen proviniendo de `recepcion_olt`.
+43 columnas A:AQ, encabezados y número de fila sticky, scroll horizontal y páginas de 100 filas consultadas al servidor. Filtros compartidos con KPI: rango inclusivo de InActTrans (día/mes/año), línea, Indicador En/Fuera de Fecha, Lima/Provincia, transportista ET y nombre de mes de Fec.Despacho (todos los años), además de búsqueda con debounce. Solo A:B, Y:AB y AL:AM son editables por `olt_save_cell`; los meses cerrados son lectura. F:X siguen proviniendo de `recepcion_olt`.
 
-La vista `olt_control_rows` calcula los indicadores en Supabase y conserva los cierres. El frontend descarta coincidencias recuperadas de una carga distinta a la activa y recalcula esas filas con el calendario consultado. Esto protege la hoja durante la transición; no reemplaza aplicar la corrección SQL pendiente.
+La capa `olt_metric_rows_v1` conserva filas cerradas y recalcula indicadores de filas abiertas en Supabase. Retira campos SAP cuando la carga recuperada no coincide con el puntero activo exacto. Las consultas nuevas son SECURITY INVOKER y respetan el RLS existente por usuario.
+
+## KPI operativo
+
+- Tarjetas Lima/Provincia: total, participación del total seleccionado y porcentajes En/Fuera de Fecha sobre el total de cada zona.
+- Cumplimiento por línea y zona: todas las líneas presentes, ordenadas por mayor porcentaje Fuera de Fecha. 1 fuera de 2 documentos = 50%.
+- Responsables e incidencias: solo Fuera de Fecha, agrupados por zona, responsable AL y motivo AM; porcentaje sobre los documentos fuera de fecha de esa zona.
+- Transportista ET: todos/Lima/Provincia, sumas ponderadas por documentos antes de calcular porcentaje, nunca promedio de porcentajes.
+- Cada fila OLT es un documento. RECOGE CLIENTE se excluye del KPI y de su detalle. Sin indicador sigue en el denominador y se muestra gris; sin zona reconocida se anuncia. Campos vacíos reciben etiquetas explícitas.
+- Pulsar cifras abre General con el mismo conjunto filtrado y el desglose seleccionado; `Quitar detalle` vuelve al conjunto general.
+
+La migración aditiva `20261008175823_operational_kpi_readonly.sql` **está aplicada**. Solo crea objetos nuevos de lectura; no cambia datos operativos, punteros SAP ni permisos de objetos existentes. General y KPI no dependen de la migración SAP pendiente.
 
 ## Centro SAP
 
-Navegación General/SAP, versión activa, historial de 30 cargas, actualización por etapas y confirmación explícita. La lectura ocurre en un Web Worker. Detecta ZIP XLSX, OLE XLS y texto SAP tabulado Windows-1252/UTF-8/UTF-16LE por contenido. Soporta Entrega/Columna1 y conserva el primer Nombre 1.
+Navegación General/SAP/KPI, versión activa, historial de 30 cargas, actualización por etapas y confirmación explícita. La lectura ocurre en un Web Worker. Detecta ZIP XLSX, OLE XLS y texto SAP tabulado Windows-1252/UTF-8/UTF-16LE por contenido. Soporta Entrega/Columna1 y conserva el primer Nombre 1.
 
 Selección: Entrega, InActTrans DATE descendente, HrAITr TIME descendente, primera fila física. Rechaza fechas/horas imposibles. Los campos SAP vacíos se mantienen como información incompleta. Límite actual: 40 MB y 250.000 filas; bloquea cargas con más de 10% de filas inválidas.
 
@@ -26,7 +37,7 @@ Flujo: parser → `olt_sap_start` → lotes de 400 por `olt_sap_append` → `olt
 
 `supabase/migrations/20261008170707_sap_exact_active_analytics.sql` está preparada, pero **no aplicada**: la revisión automática rechazó la mutación de la base compartida. Corrige la unión al snapshot activo exacto y la comparación contra la carga base exacta. Añade vistas/RPC de lectura para KPIs, cobertura, diferencias y observaciones.
 
-Hasta aplicarla, la interfaz muestra un aviso y **bloquea publicar SAP si el análisis completo no está disponible**. La hoja y el historial existente siguen accesibles. No se debe presentar este preview como plataforma completamente activada.
+El centro SAP **bloquea publicar SAP si el análisis completo no está disponible**. La hoja y el historial existente siguen accesibles. No se debe presentar este preview como plataforma completamente activada.
 
 La migración no borra tablas ni datos legacy, no modifica `recepcion_olt` ni cambia el modelo de propiedad por usuario. Sus consultas se validaron con EXPLAIN de solo lectura. Tras aprobar: aplicar, ejecutar pruebas reales con sesión autenticada y verificar publicación fallida/concurrente y el puntero anterior.
 

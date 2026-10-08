@@ -51,11 +51,11 @@
 
       <nav class="workspace-nav" aria-label="Entornos">
         <button id="navGeneral" aria-current="page">General</button
-        ><button id="navSap" class="btn-secondary">SAP</button>
+        ><button id="navSap" class="btn-secondary">SAP</button
+        ><button id="navKpi" class="btn-secondary">KPI</button>
       </nav>
       <p id="appMessage" class="notice hidden" role="status"></p>
-      <section id="generalView">
-        <div id="generalKpis" class="summary-grid"></div>
+      <section id="sharedControls">
         <section class="toolbar">
           <div class="toolbar-group">
             <button id="refreshBtn" class="btn-secondary" type="button">
@@ -67,39 +67,96 @@
               id="searchInput"
               class="search"
               type="search"
-              placeholder="Buscar entrega, cliente, línea, distrito..."
+              aria-label="Buscar documentos"
+              placeholder="Buscar entrega, cliente, línea, distrito o transportista..."
             />
           </div>
-          <div class="toolbar-group">
-            <button id="prevBtn" class="btn-secondary" type="button">←</button>
-            <span id="pageInfo" class="page-info">Página 1</span>
-            <button id="nextBtn" class="btn-secondary" type="button">→</button>
+          <div id="pageControls" class="toolbar-group">
+            <button
+              id="prevBtn"
+              class="btn-secondary"
+              type="button"
+              aria-label="Página anterior"
+            >
+              ←</button
+            ><span id="pageInfo" class="page-info">Página 1</span
+            ><button
+              id="nextBtn"
+              class="btn-secondary"
+              type="button"
+              aria-label="Página siguiente"
+            >
+              →
+            </button>
           </div>
         </section>
-
-        <section class="filters" aria-label="Filtros de operación">
-          <label>Periodo<input id="periodFilter" type="month" /></label>
-          <label
-            >Línea<select id="lineFilter">
-              <option value="">Todas las líneas</option>
-            </select></label
-          >
-          <label
-            >Transporte<select id="transportFilter">
-              <option value="">Todos los transportes</option>
-            </select></label
-          >
-          <label
-            >Zona<select id="zoneFilter">
-              <option value="">Lima y Provincia</option>
-              <option>LIMA</option>
-              <option>PROVINCIA</option>
-            </select></label
-          >
-          <button id="clearFilters" class="btn-secondary">
-            Limpiar filtros
-          </button>
+        <section
+          class="filter-panel"
+          aria-label="Filtros compartidos de General y KPI"
+        >
+          <div class="filter-grid">
+            <div class="filter-field">
+              <label id="dateRangeLabel">Fecha SAP (InActTrans)</label>
+              <details id="dateRangePicker" class="date-control">
+                <summary aria-labelledby="dateRangeLabel dateRangeSummary">
+                  <span aria-hidden="true">▦</span
+                  ><span id="dateRangeSummary">Todas las fechas</span
+                  ><span aria-hidden="true">⌄</span>
+                </summary>
+                <div class="date-popover">
+                  <div class="date-inputs">
+                    <label>Desde<input id="dateFrom" type="date" /></label
+                    ><label>Hasta<input id="dateTo" type="date" /></label>
+                  </div>
+                  <p id="dateError" class="message" role="status"></p>
+                  <button id="applyDates" type="button">Aplicar fechas</button>
+                </div>
+              </details>
+              <small>Desde / hasta · día/mes/año</small>
+            </div>
+            <label class="filter-field"
+              >Línea<select id="lineFilter">
+                <option value="">Todas las líneas</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >Indicador<select id="indicatorFilter">
+                <option value="">Todos los indicadores</option>
+                <option>En Fecha</option>
+                <option>Fuera de Fecha</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >ET / Transportista<select id="etFilter">
+                <option value="">Todos los transportistas</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >Tipo de despacho<select id="zoneFilter">
+                <option value="">Lima y Provincia</option>
+                <option value="LIMA">LIMA</option>
+                <option value="PROVINCIA">PROVINCIA</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >Mes de despacho (Fec.Despacho)<select id="monthFilter">
+                <option value="">Todos los meses</option></select
+              ><small>Solo el nombre del mes · todos los años</small></label
+            >
+          </div>
+          <div class="filter-footer">
+            <p id="filterScope" class="muted">
+              Los filtros se comparten entre General y KPI.
+            </p>
+            <button id="clearFilters" class="btn-secondary" type="button">
+              Limpiar filtros
+            </button>
+          </div>
         </section>
+        <div id="drillChip" class="notice hidden"></div>
+      </section>
+      <section id="generalView">
+        <div id="generalKpis" class="summary-grid"></div>
         <section class="statusbar">
           <span id="sapStatus">SAP: buscando última carga válida…</span
           ><button id="sapDetailLink" class="text-btn">
@@ -127,6 +184,20 @@
             </table>
           </div>
         </section>
+      </section>
+      <section id="kpiView" class="hidden" aria-label="Indicadores operativos">
+        <div class="kpi-heading">
+          <div>
+            <p class="eyebrow">INDICADORES OPERATIVOS</p>
+            <h2>En Fecha / Fuera de Fecha</h2>
+            <p class="muted">
+              Cada fila OLT cuenta como un documento. RECOGE CLIENTE está
+              excluido de los KPI.
+            </p>
+          </div>
+          <p id="kpiAsOf" class="muted"></p>
+        </div>
+        <div id="kpiContent" aria-live="polite"></div>
       </section>
       <section id="sapView" class="hidden">
         <div class="panel sap-heading">
