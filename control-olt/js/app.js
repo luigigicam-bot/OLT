@@ -317,64 +317,78 @@ async function loadFilterOptions(sequence) {
 async function loadData() {
   if (!currentUser) return;
   const sequence = ++loadSequence;
-  const requestFilters = filters();
-  const pageFilters = filters(true);
+  const requestFilters = filters(),
+    pageFilters = filters(true);
   const requestOffset = currentPage * PAGE_SIZE;
   showLoading(true);
+  els.rowStatus.textContent = "Consultando documentos…";
   $("#kpiContent").setAttribute("aria-busy", "true");
-  try {
-    await getActiveSapLoad();
-    if (sequence !== loadSequence) return;
-    await loadFilterOptions(sequence);
-    if (sequence !== loadSequence) return;
-    const metrics = await checked(
-      supabase.rpc("olt_metric_kpi_v1", { p_filters: requestFilters }),
-    );
-    if (sequence !== loadSequence) return;
-    kpiData = metrics;
-    migrationReady = true;
-    renderMetrics();
-    const page = await checked(
-      supabase.rpc("olt_metric_page_v1", {
-        p_filters: pageFilters,
-        p_offset: requestOffset,
-      }),
-    );
-    if (sequence !== loadSequence) return;
-    hasNext = page.has_next;
-    currentRows = page.rows.map((x) => ({
-      ...x.row_data,
-      id: x.id,
-      cerrado: x.cerrado,
-    }));
-    renderRows();
-    els.pageInfo.textContent = `Página ${currentPage + 1}`;
-    els.prevBtn.disabled = currentPage === 0;
-    els.nextBtn.disabled = !hasNext;
-    els.rowStatus.textContent = `${currentRows.length} filas visibles`;
-    $("#appMessage").classList.add("hidden");
-    if (currentView === "sap") await loadSapCenter();
-  } catch (e) {
-    if (sequence !== loadSequence) return;
-    migrationReady = false;
-    kpiData = null;
-    currentRows = [];
-    renderRows();
-    const message =
-      "No se pudieron cargar los datos. Actualiza la vista para volver a intentar.";
-    els.rowStatus.textContent = message;
-    $("#kpiContent").innerHTML = `<div class="notice error">${message}</div>`;
-    $("#generalKpis").innerHTML = "";
-    $("#appMessage").textContent = message;
-    $("#appMessage").classList.remove("hidden");
-    console.error("Consulta operacional fallida", e.code || e.message);
-  } finally {
-    if (sequence === loadSequence) {
-      showLoading(false);
-      $("#kpiContent").removeAttribute("aria-busy");
+  const pageTask = (async () => {
+    try {
+      const page = await checked(
+        supabase.rpc("olt_metric_page_v1", {
+          p_filters: pageFilters,
+          p_offset: requestOffset,
+        }),
+      );
+      if (sequence !== loadSequence) return;
+      hasNext = page.has_next;
+      currentRows = page.rows.map((x) => ({
+        ...x.row_data,
+        id: x.id,
+        cerrado: x.cerrado,
+      }));
+      renderRows();
+      els.pageInfo.textContent = `Página ${currentPage + 1}`;
+      els.prevBtn.disabled = currentPage === 0;
+      els.nextBtn.disabled = !hasNext;
+      els.rowStatus.textContent = currentRows.length
+        ? `${currentRows.length} filas visibles`
+        : "Sin documentos con los filtros actuales. Pulsa Limpiar filtros para ver todos.";
+      $("#appMessage").classList.add("hidden");
+    } catch (e) {
+      if (sequence !== loadSequence) return;
+      currentRows = [];
+      renderRows();
+      els.rowStatus.textContent =
+        "No se pudo cargar la tabla. Actualiza la vista.";
+      $("#appMessage").textContent = els.rowStatus.textContent;
+      $("#appMessage").classList.remove("hidden");
+    } finally {
+      if (sequence === loadSequence) showLoading(false);
     }
-  }
+  })();
+  const metricsTask = (async () => {
+    try {
+      const metrics = await checked(
+        supabase.rpc("olt_metric_kpi_v1", { p_filters: requestFilters }),
+      );
+      if (sequence !== loadSequence) return;
+      kpiData = metrics;
+      migrationReady = true;
+      renderMetrics();
+    } catch (e) {
+      if (sequence !== loadSequence) return;
+      kpiData = null;
+      migrationReady = false;
+      $("#kpiContent").innerHTML =
+        '<div class="notice error">No se pudieron actualizar los indicadores. La tabla se carga de forma independiente.</div>';
+      $("#generalKpis").innerHTML = "";
+    } finally {
+      if (sequence === loadSequence)
+        $("#kpiContent").removeAttribute("aria-busy");
+    }
+  })();
+  const optionsTask = loadFilterOptions(sequence).catch(() => {});
+  const sapTask = getActiveSapLoad()
+    .then(() => {
+      if (sequence === loadSequence && currentView === "sap")
+        return loadSapCenter();
+    })
+    .catch(() => {});
+  await Promise.allSettled([pageTask, metricsTask, optionsTask, sapTask]);
 }
+
 function renderMetrics() {
   if (!kpiData) return;
   const t = kpiData.totals;

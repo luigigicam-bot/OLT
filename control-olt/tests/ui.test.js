@@ -9,7 +9,11 @@ import { parseSapRowsFromBuffer } from "../js/sap-parser.js";
 const pause = () => new Promise((r) => setTimeout(r, 15));
 const sapText =
   "Entrega\tTransporte\tNombre 1\tPlaca\tInActTrans\tSts.Trp\tEstatus\tFec. Reg.\tHor. Reg.\tUsuaCtrlRe\tHrAITr\n1\tDT1\tET\tABC\t08.10.2026\tV\tE\t08.10.2026\t09:00:00\tUSER\t10:00:00";
-async function setup({ missingMigration = false, failPublish = false } = {}) {
+async function setup({
+  missingMigration = false,
+  failPublish = false,
+  failMetrics = false,
+} = {}) {
   const dom = new JSDOM(
     readFileSync(new URL("../index.html", import.meta.url), "utf8"),
     { url: "http://localhost/#general", runScripts: "outside-only" },
@@ -129,6 +133,8 @@ async function setup({ missingMigration = false, failPublish = false } = {}) {
             has_next: false,
           },
         };
+      if (name === "olt_metric_kpi_v1" && failMetrics)
+        return { error: { message: "timeout" } };
       if (name === "olt_metric_kpi_v1")
         return {
           data: {
@@ -408,6 +414,26 @@ test("KPI: filtros de fechas independientes, porcentajes y detalle conservan pob
     assert.equal(req.month, null);
     assert.equal(req.date_from, null);
     assert.equal(req.reporting_only, undefined);
+  } finally {
+    t.dom.window.close();
+  }
+});
+
+test("General se muestra aunque falle la consulta KPI", async () => {
+  const t = await setup({ failMetrics: true });
+  try {
+    assert.equal(
+      t.w.document.querySelectorAll("#tableBody tr:first-child td").length,
+      44,
+    );
+    assert.match(
+      t.w.document.querySelector("#kpiContent").textContent,
+      /independiente/,
+    );
+    assert.match(
+      t.w.document.querySelector("#rowStatus").textContent,
+      /1 filas visibles/,
+    );
   } finally {
     t.dom.window.close();
   }

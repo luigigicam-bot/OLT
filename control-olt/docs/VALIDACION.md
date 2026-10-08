@@ -26,3 +26,12 @@
 - No se realizó prueba entre dos usuarios reales ni de carrera entre dos sesiones.
 - La descarga de Chromium falló en este entorno. No se afirma inspección visual real ni flujo autenticado de navegador; el test DOM no sustituye esas pruebas.
 - Verificación Vercel y commit se documentan en el informe de entrega una vez completados. READY indica build/deploy, no validación funcional autenticada completa.
+
+
+## Lectura rápida — 8 octubre 2026
+
+Envío real confirmado a las 13:45:21 Lima: 3.086 filas en recepcion_olt y Control. Antes de esta mejora los logs registraban filtros 7,6 s, KPI 3,6 s, página 3,8 s, ejecutados en serie.
+
+Migración control_read_performance aplicada: lectura de datos sin indicadores desde olt_control_live con cierres y corrección de SAP activo; indicadores materializados una vez por documento; opciones sin recalcular indicadores. Se conserva SECURITY INVOKER/RLS y snapshots cerrados.
+
+Mediciones con rol authenticated y propietario: opciones 359,7 ms, KPI 861 ms, página 826,4 ms. KPI permanece 3.086 total, 64 En Fecha y 3.022 Fuera de Fecha; página contiene 100 documentos. Medidas SQL, sin red ni renderizado. Frontend inicia consultas independientes y muestra la tabla apenas termina; falla del KPI no borra documentos. 27 pruebas Node, incluida esa independencia.
