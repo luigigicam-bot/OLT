@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OLT Control</title>
+    <link rel="stylesheet" href="./css/app.css" />
+  </head>
+  <body>
+    <div id="loginView" class="auth-shell">
+      <form id="loginForm" class="auth-card">
+        <div class="brand-mark">OLT</div>
+        <p class="eyebrow">CONTROL OPERATIVO</p>
+        <h1>Iniciar sesión</h1>
+        <p class="muted">Usa el mismo usuario de Supabase del sistema OLT.</p>
+        <label
+          >Correo<input
+            id="email"
+            type="email"
+            autocomplete="username"
+            required
+        /></label>
+        <label
+          >Contraseña<input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            required
+        /></label>
+        <button id="loginBtn" type="submit">Ingresar</button>
+        <p id="loginMsg" class="message" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <main id="appView" class="shell hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CONTROL OLT</p>
+          <h1 id="viewTitle">General / Operación OLT</h1>
+          <p class="muted">
+            OLT + SAP + gestión + indicadores en una sola vista.
+          </p>
+        </div>
+        <div class="top-actions">
+          <span id="userBadge" class="user-badge"></span>
+          <button id="logoutBtn" class="btn-secondary" type="button">
+            Salir
+          </button>
+        </div>
+      </header>
+
+      <nav class="workspace-nav" aria-label="Entornos">
+        <button id="navGeneral" aria-current="page">General</button
+        ><button id="navSap" class="btn-secondary">SAP</button
+        ><button id="navKpi" class="btn-secondary">KPI</button>
+      </nav>
+      <p id="appMessage" class="notice hidden" role="status"></p>
+      <section id="sharedControls">
+        <section class="toolbar">
+          <div class="toolbar-group">
+            <button id="refreshBtn" class="btn-secondary" type="button">
+              Actualizar vista
+            </button>
+          </div>
+          <div class="toolbar-group grow">
+            <input
+              id="searchInput"
+              class="search"
+              type="search"
+              aria-label="Buscar documentos"
+              placeholder="Buscar entrega, cliente, línea, distrito o transportista..."
+            />
+          </div>
+          <button
+            id="openFilters"
+            type="button"
+            class="filter-toggle"
+            aria-controls="filterDrawer"
+            aria-expanded="false"
+          >
+            Filtrar <span id="filterCount"></span>
+          </button>
+          <div id="pageControls" class="toolbar-group">
+            <button id="cellHistory" class="btn-secondary" disabled>
+              Historial de cambios
+            </button>
+            <button
+              id="prevBtn"
+              class="btn-secondary"
+              type="button"
+              aria-label="Página anterior"
+            >
+              ←</button
+            ><span id="pageInfo" class="page-info">Página 1</span
+            ><button
+              id="nextBtn"
+              class="btn-secondary"
+              type="button"
+              aria-label="Página siguiente"
+            >
+              →
+            </button>
+          </div>
+        </section>
+        <p id="activeFilterSummary" class="muted hidden"></p>
+        <div id="filterBackdrop" class="filter-backdrop hidden"></div>
+        <aside
+          id="filterDrawer"
+          class="filter-panel filter-drawer hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="filterDrawerTitle"
+        >
+          <div class="filter-drawer-head">
+            <h2 id="filterDrawerTitle">Opciones de filtros</h2>
+            <button
+              id="closeFilters"
+              class="icon-btn"
+              type="button"
+              aria-label="Cerrar filtros"
+            >
+              ×
+            </button>
+          </div>
+          <div class="filter-grid">
+            <div class="filter-field">
+              <label id="dateRangeLabel">Fecha SAP (InActTrans)</label>
+              <details id="dateRangePicker" class="date-control">
+                <summary aria-labelledby="dateRangeLabel dateRangeSummary">
+                  <span aria-hidden="true">▦</span
+                  ><span id="dateRangeSummary">Todas las fechas</span
+                  ><span aria-hidden="true">⌄</span>
+                </summary>
+                <div class="date-popover">
+                  <div class="date-inputs">
+                    <label>Desde<input id="dateFrom" type="date" /></label
+                    ><label>Hasta<input id="dateTo" type="date" /></label>
+                  </div>
+                  <p id="dateError" class="message" role="status"></p>
+                  <button id="applyDates" type="button">Aplicar fechas</button>
+                </div>
+              </details>
+              <small>Desde / hasta · día/mes/año</small>
+            </div>
+            <label class="filter-field"
+              >Línea<select id="lineFilter">
+                <option value="">Todas las líneas</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >Indicador<select id="indicatorFilter">
+                <option value="">Todos los indicadores</option>
+                <option>En Fecha</option>
+                <option>Fuera de Fecha</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >ET / Transportista<select id="etFilter">
+                <option value="">Todos los transportistas</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >Tipo de despacho<select id="zoneFilter">
+                <option value="">Lima y Provincia</option>
+                <option value="LIMA">LIMA</option>
+                <option value="PROVINCIA">PROVINCIA</option>
+              </select></label
+            >
+            <label class="filter-field"
+              >Mes de despacho (Fec.Despacho)<select id="monthFilter">
+                <option value="">Todos los meses</option></select
+              ><small>Solo el nombre del mes · todos los años</small></label
+            >
+          </div>
+          <div class="filter-footer">
+            <p id="filterScope" class="muted">
+              Los filtros se comparten entre General y KPI.
+            </p>
+            <button id="clearFilters" class="btn-secondary" type="button">
+              Limpiar filtros
+            </button>
+          </div>
+          <button id="viewFilterResults" type="button">Ver resultados</button>
+        </aside>
+        <div id="drillChip" class="notice hidden"></div>
+      </section>
+      <section id="generalView">
+        <div class="general-export-bar"><div><h2>General</h2><p class="muted">Descarga todos los registros, con sus columnas y valores actuales.</p></div><button id="downloadGeneral" type="button" class="btn-secondary">Descargar todo en Excel</button></div>
+        <p id="generalExportMessage" class="muted export-message" role="status"></p>
+        <div id="generalKpis" class="summary-grid"></div>
+        <section class="statusbar">
+          <span id="sapStatus">SAP: buscando última carga válida…</span
+          ><button id="sapDetailLink" class="text-btn">
+            Ver detalle SAP →
+          </button>
+          <span id="rowStatus"></span>
+        </section>
+
+        <section class="legend">
+          <span><i class="dot green"></i>Cumple / En Fecha</span>
+          <span><i class="dot red"></i>No Cumple / Fuera de Fecha</span>
+          <span><i class="dot amber"></i>Pendiente / Por vencer</span>
+          <span
+            ><i class="dot gray"></i>RECOGE CLIENTE: trazabilidad, fuera de
+            KPI</span
+          >
+        </section>
+
+        <section class="sheet">
+          <div id="loading" class="loading hidden">Cargando información…</div>
+          <div class="sheet-scroll">
+            <table id="oltTable" class="grid">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+      <section id="kpiView" class="hidden" aria-label="Indicadores operativos">
+        <div class="kpi-heading">
+          <div>
+            <p class="eyebrow">INDICADORES OPERATIVOS</p>
+            <h2>En Fecha / Fuera de Fecha</h2>
+            <p class="muted">
+              Cada fila OLT cuenta como un documento. RECOGE CLIENTE está
+              excluido de los KPI.
+            </p>
+          </div>
+          <p id="kpiAsOf" class="muted"></p>
+        </div>
+        <div id="kpiContent" aria-live="polite"></div>
+      </section>
+      <section id="sapView" class="hidden">
+        <div class="panel sap-heading">
+          <div>
+            <p class="eyebrow">CENTRO SAP</p>
+            <h2>Control de versiones SAP</h2>
+            <p class="muted">
+              Valida el archivo, revisa los cambios y confirma su publicación.
+            </p>
+          </div>
+          <button id="btnSap" type="button">Actualizar SAP</button
+          ><input id="sapFile" type="file" accept=".xlsx,.xls" hidden />
+        </div>
+        <div id="activeVersion" class="panel"></div>
+        <div id="sapDashboard" aria-live="polite"></div>
+        <details class="panel sap-secondary"><summary>Más análisis SAP y archivo local</summary>
+        <section class="sap-report-section">
+          <div class="analysis-heading">
+            <div>
+              <h2>DT y estados de transporte</h2>
+              <p class="muted">
+                Un registro por DT. Análisis independiente de los KPI de
+                General.
+              </p>
+            </div>
+            <div class="toolbar-group">
+              <button id="refreshSapReport" type="button" class="btn-secondary">
+                Versión activa</button
+              ><button id="analyzeSapReport" type="button">
+                Analizar archivo</button
+              ><input
+                id="sapReportFile"
+                type="file"
+                accept=".xls,.xlsx"
+                hidden
+              />
+            </div>
+          </div>
+          <p id="sapReportSource" class="muted"></p>
+          <div id="sapReportFilters" class="sap-report-filters hidden">
+            <label>DT<input id="sapDtSearch" placeholder="Buscar DT" /></label
+            ><label
+              >Transportista<select id="sapEtFilter">
+                <option value="">Todos</option>
+              </select></label
+            ><label
+              >Estado<select id="sapStateFilter">
+                <option value="">Todos</option>
+              </select></label
+            ><label>Desde<input id="sapReportFrom" type="date" /></label
+            ><label>Hasta<input id="sapReportTo" type="date" /></label
+            ><button
+              id="clearSapReportFilters"
+              class="btn-secondary"
+              type="button"
+            >
+              Limpiar
+            </button>
+          </div>
+          <div id="sapReportContent" aria-live="polite">
+            Cargando resumen DT…
+          </div>
+        </section>
+        <div id="sapAnalytics" aria-live="polite"></div>
+        </details>
+        <section class="panel">
+          <details class="sap-secondary"><summary>Historial de cargas</summary>
+          <p class="muted">
+            Las versiones publicadas se conservan para revisión.
+          </p>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Fecha / hora</th>
+                  <th>Archivo</th>
+                  <th>Usuario</th>
+                  <th>Filas</th>
+                  <th>Referencias</th>
+                  <th>Nuevas</th>
+                  <th>Modificadas</th>
+                  <th>Estado</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="sapHistory"></tbody>
+            </table>
+          </div>
+          </details>
+        </section>
+      </section>
+    </main>
+
+    <div
+      id="modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+    >
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">ACTUALIZAR SAP</p>
+            <h2 id="modalTitle">Validación de carga</h2>
+          </div>
+          <button id="modalClose" class="icon-btn" type="button">×</button>
+        </div>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

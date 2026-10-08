@@ -1,0 +1,8 @@
+node_modules/
+tests/
+docs/
+supabase/
+.github/
+README.md
+vendor/README.md
+control-olt/supabase/

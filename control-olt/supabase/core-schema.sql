@@ -1,0 +1,76 @@
+-- Catalog snapshot, documentation only. NOT a bootstrap migration.
+-- OLT canonical schema inspected 2026-10-08.
+-- cierre_mensual.id: bigint NOT NULL
+-- cierre_mensual.periodo: date NOT NULL
+-- cierre_mensual.olt_id: bigint NOT NULL
+-- cierre_mensual.entrega: text
+-- cierre_mensual.snapshot: jsonb NOT NULL
+-- cierre_mensual.cerrado_at: timestamp with time zone NOT NULL
+-- cierre_mensual.cerrado_por: uuid
+-- gestion_olt.olt_id: bigint NOT NULL
+-- gestion_olt.nro_cargo: text
+-- gestion_olt.fec_cargo: date
+-- gestion_olt.codigo_transporte: text
+-- gestion_olt.placa_prog: text
+-- gestion_olt.dt_prog: text
+-- gestion_olt.transporte_prog: text
+-- gestion_olt.responsable: text
+-- gestion_olt.motivo: text
+-- gestion_olt.updated_at: timestamp with time zone NOT NULL
+-- gestion_olt.updated_by: uuid
+-- sap_cargas.id: bigint NOT NULL
+-- sap_cargas.created_at: timestamp with time zone NOT NULL
+-- sap_cargas.usuario_id: uuid NOT NULL
+-- sap_cargas.archivo: text
+-- sap_cargas.total_filas: integer NOT NULL
+-- sap_cargas.referencias_unicas: integer NOT NULL
+-- sap_cargas.referencias_nuevas: integer NOT NULL
+-- sap_cargas.referencias_actualizadas: integer NOT NULL
+-- sap_cargas.estado: text NOT NULL
+-- sap_cargas.mensaje: text
+-- sap_cargas.publicada_at: timestamp with time zone
+-- sap_cargas.archivo_hash: text
+-- sap_cargas.schema_version: integer NOT NULL
+-- sap_cargas.filas_invalidas: integer NOT NULL
+-- sap_cargas.procesada_at: timestamp with time zone
+-- sap_cargas.base_carga_id: bigint
+-- sap_cargas.alertas: jsonb NOT NULL
+-- sap_estado_usuario.usuario_id: uuid NOT NULL
+-- sap_estado_usuario.carga_activa_id: bigint
+-- sap_estado_usuario.updated_at: timestamp with time zone NOT NULL
+-- sap_snapshot.id: bigint NOT NULL
+-- sap_snapshot.usuario_id: uuid NOT NULL
+-- sap_snapshot.carga_id: bigint NOT NULL
+-- sap_snapshot.referencia: text NOT NULL
+-- sap_snapshot.inacttrans: date
+-- sap_snapshot.dt: text
+-- sap_snapshot.et: text
+-- sap_snapshot.placa: text
+-- sap_snapshot.estado_viaje: text
+-- sap_snapshot.estado_entrega: text
+-- sap_snapshot.fec_reg: date
+-- sap_snapshot.hor_reg: time without time zone
+-- sap_snapshot.usua_ctrl_re: text
+-- sap_snapshot.raw_data: jsonb NOT NULL
+-- sap_snapshot.fecha_salida_sap: date GENERATED
+-- sap_snapshot.hraitr: time without time zone
+-- sap_staging.id: bigint NOT NULL
+-- sap_staging.carga_id: bigint NOT NULL
+-- sap_staging.fila_origen: integer
+-- sap_staging.referencia: text
+-- sap_staging.inacttrans: date
+-- sap_staging.dt: text
+-- sap_staging.et: text
+-- sap_staging.placa: text
+-- sap_staging.fecha_salida_sap: date
+-- sap_staging.estado_viaje: text
+-- sap_staging.estado_entrega: text
+-- sap_staging.fec_reg: date
+-- sap_staging.hor_reg: time without time zone
+-- sap_staging.usua_ctrl_re: text
+-- sap_staging.raw_data: jsonb NOT NULL
+-- sap_staging.hraitr: time without time zone
+-- All six olt_control tables have RLS with ownership-scoped SELECT policies.
+-- Public RPCs are invoker wrappers; existing private write RPCs validate ownership/state.
+-- Authenticated cannot INSERT canonical snapshot or UPDATE active pointer directly.
+-- See pending migration 20261008170707_sap_exact_active_analytics.sql.
