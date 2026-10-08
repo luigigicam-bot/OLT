@@ -1,9 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
-import * as XLSX from "xlsx";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
+import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("Falta configurar Supabase en Vercel.");
+const SUPABASE_URL = "https://vuoqmesrwgkkdqrecxnc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_P5CjX41UyzjQgbvSdkwfwA_jXON8rI1";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const PAGE_SIZE = 100;
