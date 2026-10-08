@@ -54,88 +54,79 @@ function resetProgramacionDespuesDeEnvio() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-$('send').onclick = async () => {
+let uploadCheckpoint = null;
+function uploadProgress(checkpoint, message='') {
+  const done=checkpoint.offset, total=checkpoint.payload.length;
+  const detail=`${done.toLocaleString('es-PE')} de ${total.toLocaleString('es-PE')} procesados · ${checkpoint.insertados.toLocaleString('es-PE')} guardados · ${checkpoint.duplicados.toLocaleString('es-PE')} duplicados omitidos`;
+  duplicateState(detail, 'warn');
+  $('sendTitle').textContent=message || 'Enviando programación…';
+  $('sendHelp').textContent=detail;
+  notice(message ? message+' '+detail : detail);
+}
+
+$('send').onclick = () => {
   if (totals().errors || !rows.length || sending || reviewingDuplicates || rows.length > 5000) return;
   if (!oltSession?.user) { $('loginOpen').click(); return; }
-  $('send').disabled = true;
-  reviewingDuplicates = true;
-  const reviewedRevision = revision, reviewedUser = oltSession.user.id;
-  duplicateState('comparando las 19 columnas contra Supabase…','warn');
-  notice('Comprobando duplicados exactos antes de enviar…');
-  try {
-    pendingSendReview = await revisarDuplicadosExactos(rows);
-    if (reviewedRevision !== revision || reviewedUser !== oltSession?.user?.id) {
-      pendingSendReview = null; notice('La programación o la sesión cambió. Vuelve a revisar antes de enviar.', true); return;
-    }
-    const d=pendingSendReview.duplicateRows.length, n=pendingSendReview.newRows.length, total=pendingSendReview.received;
-    if (!n) {
-      duplicateState(total.toLocaleString('es-PE')+' de '+total.toLocaleString('es-PE')+' registros ya existen al 100%. No se insertará ninguno.','bad');
-      notice('El archivo fue revisado. Todos los registros ya existían y no se duplicó información.');
-      render(); return;
-    }
-    duplicateState(d ? d.toLocaleString('es-PE')+' duplicado(s) exacto(s) serán omitidos; '+n.toLocaleString('es-PE')+' registro(s) nuevo(s) pasarán.' : 'no se encontraron duplicados exactos. Los '+n.toLocaleString('es-PE')+' registros pasarán.','ok');
-    const q = qualitySummary();
-    $('confirmText').textContent = 'Recibidos: '+total+'. Nuevos: '+n+'. Duplicados exactos omitidos: '+d+'. Archivo '+filename+', pestaña '+$('sheet').value+'. Calidad '+q.percent+'% ('+q.label+'). Lima: '+q.lima+' · Provincia: '+q.provincia+'.';
-    $('confirmUser').textContent = 'Usuario: ' + sessionUserLabel();
-    $('confirm').showModal();
-    notice(d ? d+' duplicado(s) exacto(s) detectado(s). Solo se enviarán los registros nuevos.' : 'No se detectaron duplicados exactos.');
-  } catch(error) {
-    pendingSendReview=null;
-    duplicateState(errorMessage(error, 'duplicados'),'bad');
-    notice(errorMessage(error, 'duplicados'),true);
-  } finally { reviewingDuplicates = false; render(); }
+  const q=qualitySummary();
+  $('confirmText').textContent=`Se procesarán ${rows.length.toLocaleString('es-PE')} registros del archivo ${filename}, pestaña ${$('sheet').value}. Calidad ${q.percent}%. Supabase comprobará coincidencias exactas en las 19 columnas y omitirá los registros ya guardados.`;
+  $('confirmUser').textContent='Usuario: '+sessionUserLabel();
+  $('confirm').showModal();
 };
-
 $('cancelSend').onclick = () => $('confirm').close();
-
 $('sendForm').onsubmit = async e => {
   e.preventDefault();
   if (sending || !oltSession?.user || totals().errors || !rows.length || rows.length > 5000) return;
-  sending = true;
-  for (const id of ['confirmSend', 'cancelSend', 'logout', 'refreshHistory']) $(id).disabled = true;
-  render();
-  let insertados = 0, ultimaFecha = null, duplicados = 0, recibidos = rows.length;
+  const user=oltSession.user;
+  sending=true;render();
   try {
-    const user = oltSession.user;
-    // Segunda comprobación inmediatamente antes de insertar.
-    const review = await revisarDuplicadosExactos(rows);
-    pendingSendReview = review;
-    duplicados = review.duplicateRows.length;
-    const payload = review.newRows.map(r => supabaseRow(r.result.values, user));
-    if (!payload.length) {
-      $('confirm').close();
-      duplicateState(recibidos.toLocaleString('es-PE')+' de '+recibidos.toLocaleString('es-PE')+' registros ya existían al 100%. No se insertó ninguno.','bad');
-      notice('El archivo fue procesado. Todos los registros ya existían y no se duplicó información.');
-      await window.refreshOLTFileHistory();
-      return;
+  if (!uploadCheckpoint || uploadCheckpoint.revision!==revision || uploadCheckpoint.userId!==user.id) {
+    const payload=rows.map(r=>supabaseRow(r.result.values,user));
+    const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(payload)));
+    const digest=Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
+    const storageKey='olt-upload:'+user.id+':'+digest;
+    let jobId;
+    try {jobId=localStorage.getItem(storageKey);} catch {}
+    if(!/^[0-9a-f-]{36}$/i.test(jobId||'')) jobId=crypto.randomUUID();
+    try {localStorage.setItem(storageKey,jobId);} catch {}
+    uploadCheckpoint={revision,userId:user.id,payload,jobId,storageKey,offset:0,insertados:0,duplicados:0,ultimaFecha:null};
+  }
+  } catch(error) {sending=false;render();notice("No se pudo preparar el envío. Vuelve a intentarlo.",true);return;}
+  const checkpoint=uploadCheckpoint;
+  sending=true;
+  for(const id of ['confirmSend','cancelSend','logout','refreshHistory']) $(id).disabled=true;
+  render();
+  let completed=false;
+  try {
+    const batchSize=500;
+    while(checkpoint.offset<checkpoint.payload.length) {
+      if(oltSession?.user?.id!==checkpoint.userId) throw new Error('La sesión cambió. Inicia sesión y vuelve a enviar.');
+      const batch=checkpoint.payload.slice(checkpoint.offset,checkpoint.offset+batchSize);
+      uploadProgress(checkpoint,`Enviando lote ${Math.floor(checkpoint.offset/batchSize)+1} de ${Math.ceil(checkpoint.payload.length/batchSize)}…`);
+      const {data,error}=await supabaseClient.rpc('olt_insertar_lote_v2',{p_job:checkpoint.jobId,p_batch:Math.floor(checkpoint.offset/batchSize),p_rows:batch});
+      if(error) throw error;
+      if(!Number.isInteger(data?.insertados)||!Number.isInteger(data?.duplicados)||data.insertados<0||data.duplicados<0||data.insertados+data.duplicados!==batch.length) throw new Error('Invalid upload response');
+      checkpoint.insertados+=data.insertados;checkpoint.duplicados+=data.duplicados;checkpoint.offset+=batch.length;
+      if(data.ultima_fecha&&(!checkpoint.ultimaFecha||data.ultima_fecha>checkpoint.ultimaFecha)) checkpoint.ultimaFecha=data.ultima_fecha;
+      uploadProgress(checkpoint);
     }
-    const batchSize = 500;
-    for (let i = 0; i < payload.length; i += batchSize) {
-      const batch = payload.slice(i, i + batchSize);
-      const { data, error } = await supabaseClient.rpc('olt_insertar_lote', { p_rows: batch });
-      if (error) throw error;
-      if (!Number.isInteger(data?.insertados) || !Number.isInteger(data?.duplicados) || data.insertados + data.duplicados !== batch.length) throw new Error('Invalid upload response');
-      insertados += data.insertados;
-      duplicados += data.duplicados;
-      const batchLast = data.ultima_fecha;
-      if (batchLast && (!ultimaFecha || batchLast > ultimaFecha)) ultimaFecha = batchLast;
-    }
+    completed=true;
     $('confirm').close();
-    $('lastUserUpload').textContent = 'Último envío del usuario: ' + displayLast(ultimaFecha || new Date().toISOString());
-    const resultMessage = duplicados
-      ? insertados.toLocaleString('es-PE')+' registro(s) nuevo(s) insertado(s). '+duplicados.toLocaleString('es-PE')+' duplicado(s) exacto(s) fueron omitidos.'
-      : insertados.toLocaleString('es-PE')+' registro(s) insertado(s).';
-    resetProgramacionDespuesDeEnvio();
-    notice('Se cargó con éxito. '+resultMessage);
-    await window.refreshOLTFileHistory();
-  } catch (error) {
-    notice(errorMessage(error, 'insercion') + (insertados ? ` Se confirmaron ${insertados} registros antes del error. Al reintentar se omitirán los duplicados.` : ''), true);
-    duplicateState('el envío no se completó; vuelve a revisar antes de reintentar.','bad');
-    render();
+    if(checkpoint.ultimaFecha) $('lastUserUpload').textContent='Último envío del usuario: '+displayLast(checkpoint.ultimaFecha);
+    const message=`Se procesó con éxito: ${checkpoint.insertados.toLocaleString('es-PE')} registro(s) guardado(s), ${checkpoint.duplicados.toLocaleString('es-PE')} duplicado(s) exacto(s) omitidos.`;
+    try {localStorage.removeItem(checkpoint.storageKey);} catch {}
+    uploadCheckpoint=null;resetProgramacionDespuesDeEnvio();notice(message);
+  } catch(error) {
+    const message=errorMessage(error,'insercion')+` Se confirmaron ${checkpoint.offset} de ${checkpoint.payload.length} registros (${checkpoint.insertados} guardados y ${checkpoint.duplicados} duplicados). Pulsa Enviar para reanudar; los lotes confirmados se conservaron.`;
+    notice(message,true);duplicateState('Envío parcial. Puedes reanudar; Supabase comprobará también cualquier lote cuya respuesta no llegó.','bad');
   } finally {
-    sending = false;
-    for (const id of ['confirmSend', 'cancelSend', 'logout', 'refreshHistory']) $(id).disabled = false;
+    sending=false;
+    for(const id of ['confirmSend','cancelSend','logout','refreshHistory']) $(id).disabled=false;
     render();
+    if(!completed) {$('sendTitle').textContent='Envío pendiente · puedes reanudar';$('sendHelp').textContent=`${checkpoint.offset} de ${checkpoint.payload.length} registros confirmados. El siguiente envío continúa desde el lote pendiente.`;}
+  }
+  // History is a separate read: an error here must never turn a successful upload into a failed one.
+  if(completed) {
+    try {await window.refreshOLTFileHistory();}
+    catch(error) {notice('La programación se guardó. No se pudo actualizar el historial; pulsa Actualizar historial.',true);}
   }
 };
-

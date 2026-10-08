@@ -17,6 +17,7 @@ function portal({ initialSession = null } = {}) {
   w.scrollTo = () => {};
   w.console.warn = (...args) => errors.push(args.join(' '));
   Object.defineProperty(w.crypto,'subtle',{ value:webcrypto.subtle });
+  w.crypto.randomUUID=()=>webcrypto.randomUUID();
   for (const dialog of w.document.querySelectorAll('dialog')) {
     dialog.showModal = () => { dialog.open = true; };
     dialog.close = () => { dialog.open = false; dialog.dispatchEvent(new w.Event('close')); };
@@ -71,6 +72,7 @@ async function loadExcel(p, rawRows) {
   const bytes=w.XLSX.write(wb,{bookType:'xlsx',type:'array'});
   await w.load({name:'qa.xlsx',size:bytes.byteLength,arrayBuffer:async()=>bytes});
   await settle();
+  return bytes;
 }
 
 test('login errors are safe, login displays app, logout hides data',async()=>{
@@ -99,7 +101,7 @@ test('real XLSX reader, validation, exact duplicate comparison, upload and reset
     assert.equal(p.records.length,2);assert.match($('notice').textContent,/2 registro/);
     assert.equal(p.w.totals().ok,0);assert.equal($('confirmSend').disabled,false);
     await loadExcel(p,[sample]);await $('send').onclick();
-    assert.match($('notice').textContent,/Todos los registros ya exist/);assert.equal(p.records.length,2);
+    await $('sendForm').onsubmit({preventDefault(){}});assert.match($('notice').textContent,/1 duplicado/);assert.equal(p.records.length,2);
   } finally {p.close();}
 });
 
@@ -116,12 +118,12 @@ test('invalid Excel values block sends; malformed files show safe errors',async(
 test('backend race duplicates are counted; insertion errors permit a safe retry',async()=>{
   const p=portal({initialSession:{user:owner}});try {
     await settle();await loadExcel(p,[sample]);
-    p.behaviors.olt_insertar_lote=async()=>({data:{insertados:0,duplicados:1,ultima_fecha:null},error:null});
+    p.behaviors.olt_insertar_lote_v2=async()=>({data:{insertados:0,duplicados:1,ultima_fecha:null},error:null});
     const $=id=>p.w.document.getElementById(id);
     await $('sendForm').onsubmit({preventDefault(){}});
     assert.match($('notice').textContent,/1 duplicado/);
     await loadExcel(p,[sample]);
-    p.behaviors.olt_insertar_lote=async()=>({data:null,error:{code:'42501',message:'secret database definition'}});
+    p.behaviors.olt_insertar_lote_v2=async()=>({data:null,error:{code:'42501',message:'secret database definition'}});
     await $('sendForm').onsubmit({preventDefault(){}});
     assert.match($('notice').textContent,/no tiene permiso/);assert.doesNotMatch($('notice').textContent,/secret/);
     assert.equal($('send').disabled,false);assert.equal($('confirmSend').disabled,false);
@@ -137,4 +139,33 @@ test('stale dashboard responses cannot repaint data after logout',async()=>{
     resolve({data:{totales:{registros:999999},historial:[]},error:null});await pending;
     assert.equal(p.w.document.getElementById('dashRecords').textContent,'0');
   } finally {p.close();}
+});
+
+test('3000 rows: six RPCs, no duplicate GET passes, failed batch resumes at its offset',async()=>{
+ const p=portal({initialSession:{user:owner}});try {
+ await settle();await loadExcel(p,Array.from({length:3000},(_,i)=>({...sample,entrega:'SPEED-'+i})));
+ const $=id=>p.w.document.getElementById(id);let attempts=0;const lengths=[];
+ p.behaviors.olt_insertar_lote_v2=async({p_rows})=>{attempts++;lengths.push(p_rows[0].entrega);if(attempts===2)return {error:{code:'57014',message:'timeout'}};return {data:{insertados:p_rows.length,duplicados:0,ultima_fecha:null}};};
+ const before=p.calls.filter(c=>c.table==='recepcion_olt').length;
+ await $('send').onclick();await $('sendForm').onsubmit({preventDefault(){}});
+ assert.match($('notice').textContent,/500 de 3000/);assert.equal($('send').disabled,false);
+ await $('send').onclick();await $('sendForm').onsubmit({preventDefault(){}});
+ assert.equal(attempts,7);assert.equal(lengths[1],lengths[2]);assert.match($('notice').textContent,/3,000 registro/);
+ assert.equal(p.calls.filter(c=>c.table==='recepcion_olt').length-before,1); // history read only after completion
+ }finally{p.close();}
+});
+
+test('respuesta perdida: recargar conserva job y recupera conteo confirmado',async()=>{
+ const first=portal({initialSession:{user:owner}});let second;try{await settle();const bytes=await loadExcel(first,[sample]);let receipt,job;
+ first.behaviors.olt_insertar_lote_v2=async args=>{job=args.p_job;receipt={insertados:1,duplicados:0,ultima_fecha:null};return {error:{code:'57014',message:'lost response'}};};
+ await first.w.document.getElementById('sendForm').onsubmit({preventDefault(){}});
+ const entries=Object.keys(first.w.localStorage).filter(k=>k.startsWith('olt-upload:')).map(k=>[k,first.w.localStorage.getItem(k)]);assert.equal(entries.length,1);
+ second=portal({initialSession:{user:owner}});for(const [k,v]of entries)second.w.localStorage.setItem(k,v);await settle();
+ const bytes2=new second.w.Uint8Array(new Uint8Array(bytes)).buffer;
+ await second.w.load({name:'qa.xlsx',size:bytes2.byteLength,arrayBuffer:async()=>bytes2});await settle();
+ second.behaviors.olt_insertar_lote_v2=async args=>{assert.equal(args.p_job,job);return {data:receipt};};
+ await second.w.document.getElementById('sendForm').onsubmit({preventDefault(){}});
+ assert.match(second.w.document.getElementById('notice').textContent,/1 registro\(s\) guardado/);
+ assert.equal(Object.keys(second.w.localStorage).filter(k=>k.startsWith('olt-upload:')).length,0);
+ }finally{first.close();second?.close();}
 });

@@ -1,62 +1,30 @@
-# OLT · Recepción de programación
+# OLT — Programación y Control
 
-Aplicación estática que lee y valida Excel en el navegador y utiliza Supabase Auth y PostgreSQL con RLS. No utiliza Apps Script ni Google Sheets.
+El repositorio contiene Programación en la raíz y Control en `control-olt/`. Comparten Supabase; cada módulo tiene su proyecto Vercel y sus checks.
 
-## Desarrollo y verificación
+| Módulo | Rama de producción | Proyecto Vercel | Salida |
+| --- | --- | --- | --- |
+| Programación | `work/olt-estilo-azul` | `olt_programacion` | `dist-programacion/` |
+| Control | `feature/olt-control` | `controlt` | `control-olt/dist/` |
 
-```sh
-npm ci --ignore-scripts
-npm run check
-npm test
-python3 -m http.server 8765
-```
+Programación: `npm ci --ignore-scripts`, `npm run check`, `npm test`, `npm run build`.
+Control: los mismos comandos desde `control-olt/`, excepto `check`.
 
-Las pruebas de interfaz usan JSDOM, un lector XLSX real y servicios simulados. No escriben en Supabase ni verifican credenciales reales. Las pruebas de base de datos realizadas durante esta mejora se ejecutaron con transacciones revertidas y roles PostgreSQL simulados.
+Los builds deben utilizar el commit exacto y el proyecto correspondiente. `main` no se modificó. Los comandos de ignorar builds limitan cada proyecto a su rama; los despliegues por SHA requieren el archivo identificador del módulo. Revisar estado y SHA antes de dar una publicación por terminada.
 
-## Organización
+## Correcciones de auditoría del 8 de octubre de 2026
 
-| Archivo | Responsabilidad |
-| --- | --- |
-| `index.html`, `styles.css`, `styles/` | Interfaz y estilos existentes |
-| `config.js` | Configuración pública, exclusivamente clave publishable |
-| `validaciones.js` | Catálogos, encabezados y reglas de validación originales |
-| `excel.js` | Lectura local, selección de pestaña y hash SHA-256 del archivo |
-| `app.js` | Estado de revisión, edición, paginación, calidad y exportación |
-| `supabase.js` | Cliente, sesión compartida y formato de fechas |
-| `auth.js` | Inicio/cierre de sesión y puerta de acceso |
-| `duplicados.js` | Comparación visual de los 19 campos, dentro del usuario |
-| `envio.js` | Confirmación y envío en lotes de 500 mediante RPC |
-| `historial.js`, `dashboard.js` | Últimos envíos y resumen mensual agregado |
-| `errores.js` | Mensajes seguros por categoría y logs sin datos ni tokens |
-| `vendor/` | Dependencias fijadas y servidas localmente |
-| `supabase/migrations/` | Migraciones ya aplicadas, versiones coincidentes con Supabase |
+- SAP se inserta por conjuntos de hasta 400 filas, conserva metadatos y permite repetir lotes idénticos. La reanudación busca la carga del propietario por hash. Requiere seleccionar nuevamente el mismo archivo.
+- Programación usa recibos de lotes persistentes y guarda localmente solo el identificador del trabajo. Una respuesta perdida puede recuperarse al repetir el archivo sin duplicar registros.
+- La tabla protege la unicidad de los 19 campos de negocio dentro de cada usuario mediante SHA-256. No elimina registros existentes.
+- Control incorpora historial de cambios, versiones de edición, limpieza de sesión y paginación sin repetir todos los indicadores y opciones.
+- Se valida la plantilla SAP antes de interpretar columnas posicionales. Los formatos desconocidos se señalan como incompletos.
+- Dependencias del lector y del cliente tienen versiones y hashes fijados. Los archivos públicos de Programación se construyen separadamente del código, pruebas y SQL.
 
-Los scripts siguen siendo clásicos, con estado compartido y orden explícito en el HTML. Esta extracción conservadora evita cambiar simultáneamente el contrato interno de la aplicación. Una siguiente etapa puede convertirlos en módulos ES después de aislar el estado.
+Las cuatro migraciones de auditoría de ingesta, recibos, edición y unicidad están aplicadas. Las versiones locales de archivo representan su orden; los timestamps del historial remoto pueden diferir. No ejecutarlas nuevamente en producción.
 
-## Flujo de publicación
+La migración `20261008170707_sap_exact_active_analytics.sql` se aplicó el 8 de octubre de 2026 tras autorización específica del usuario. Activa la comparación y cobertura SAP, conserva RLS como invocador y corrige la fecha de salida en la vista activa. Se verificaron staging, análisis, publicación transaccional, selección de la fila más reciente, comparación idéntica sin falsos cambios y aislamiento entre propietarios; todos los datos de prueba se revirtieron. No reaplicarla en producción.
 
-1. Trabajar en `work/olt-mejoras` o una nueva rama de trabajo.
-2. Ejecutar los checks y revisar el Preview de Vercel correspondiente al commit exacto.
-3. Validar login real y un Excel de prueba en un entorno con datos de prueba.
-4. Revisar el PR y sus cambios de base de datos.
-5. Integrar en `main` únicamente después de validar: los pushes a `main` actualmente despliegan producción.
+`control-olt/supabase/schema-checkpoint.json` registra estructura y definiciones, sin datos de negocio. Es un checkpoint, no un instalador ni una copia de seguridad restaurada. Las migraciones dependen del esquema previo.
 
-No fusionar un PR con checks fallidos. `main` no tenía protección durante la auditoría; crear un PR no impide técnicamente futuros pushes directos. Configurar protección de rama y requerir el check `checks` es una tarea pendiente del administrador.
-
-**El Preview utiliza el mismo Supabase que producción.** El Preview aísla el frontend, no los datos. Las pruebas automáticas usan servicios simulados. No enviar Excel reales desde Preview para probar sin un entorno de base de datos separado.
-
-## Duplicados y compatibilidad
-
-`olt_insertar_lote` usa una transacción y un bloqueo por usuario para serializar sus llamadas. Compara los 19 campos de negocio, ignora metadatos del archivo y omite coincidencias exactas. Usa un índice no único con hash como localizador y compara también la clave completa para evitar falsos duplicados por una colisión. Propietario, identidad y fecha se calculan en el servidor. El frontend conserva su revisión visual previa.
-
-La protección se aplica a llamadas concurrentes que pasan por esa RPC. Por compatibilidad, el frontend antiguo conserva INSERT directo y puede omitirla. No es una restricción global de la tabla. Los registros idénticos de usuarios distintos siguen permitidos; definir unicidad global exige aclarar propiedad, privacidad y registros legítimos. Se conservó el grupo de duplicados ya existente.
-
-Cada lote es atómico; un archivo de hasta 5.000 filas sigue enviándose en varios lotes. Un fallo posterior puede dejar lotes previos confirmados. El mensaje informa cuántos se confirmaron y el reintento omite esos registros.
-
-## Base de datos y roles futuros
-
-La migración de seguridad conserva las políticas de SELECT e INSERT por propietario, restringe permisos y añade PK e índices. Las RPC nuevas son `SECURITY INVOKER`, con `search_path` fijo y sin ejecución anónima.
-
-No reaplicar estas migraciones sobre OLT: ya constan en su historial. Un entorno limpio necesita primero el esquema original de `recepcion_olt`, sus políticas y `rls_auto_enable`; estas migraciones son incrementales.
-
-Consultar `docs/arquitectura.md` para las propuestas de cargas, roles y escalabilidad, y `docs/informe.md` para la auditoría y sus límites.
+Pendientes administrativos: protección de ramas y checks obligatorios; confirmar respaldos mediante restauración; alertas y acceso a logs; protección de contraseñas filtradas en Auth. No se verificaron login real ni una carga real en navegador. Las pruebas SQL se ejecutaron en transacciones revertidas. No eliminar staging: el reporte SAP lo utiliza.

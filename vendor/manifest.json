@@ -1,0 +1,10 @@
+{
+  "xlsx.js": {
+    "version": "0.20.3",
+    "sha256": "2c4e34261b70dfbf494ca00a463a256a2ff98623610ce22117df1cae3f922d1a"
+  },
+  "supabase.js": {
+    "version": "2.117.3",
+    "sha256": "d6a5c4414a5d4ce646d9c1de223aa7067d3ff664c15394ffeb7fcffc763354a3"
+  }
+}

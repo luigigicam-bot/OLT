@@ -10,3 +10,8 @@ for (const match of html.matchAll(/(?:src|href)="([^"#]+\.(?:js|css))"/g)) {
   if (!fs.existsSync(path.join(root, match[1]))) throw new Error('Missing asset: '+match[1]);
 }
 console.log('JavaScript syntax and local asset paths: PASS');
+
+const crypto=require('node:crypto');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'vendor/manifest.json'),'utf8'));
+for(const [name,entry] of Object.entries(manifest)){const actual=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'vendor',name))).digest('hex');if(actual!==entry.sha256)throw new Error('Vendor integrity mismatch: '+name);}
+console.log('Pinned vendor SHA-256: PASS');
