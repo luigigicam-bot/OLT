@@ -7,26 +7,83 @@
   <link rel="stylesheet" href="./css/app.css" />
 </head>
 <body>
-  <main class="shell">
+  <div id="loginView" class="auth-shell">
+    <form id="loginForm" class="auth-card">
+      <div class="brand-mark">OLT</div>
+      <p class="eyebrow">CONTROL OPERATIVO</p>
+      <h1>Iniciar sesión</h1>
+      <p class="muted">Usa el mismo usuario de Supabase del sistema OLT.</p>
+      <label>Correo<input id="email" type="email" autocomplete="username" required /></label>
+      <label>Contraseña<input id="password" type="password" autocomplete="current-password" required /></label>
+      <button id="loginBtn" type="submit">Ingresar</button>
+      <p id="loginMsg" class="message" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <main id="appView" class="shell hidden">
     <header class="topbar">
       <div>
         <p class="eyebrow">CONTROL OLT</p>
-        <h1>Vista operativa</h1>
+        <h1>Hoja operativa</h1>
+        <p class="muted">OLT + SAP + gestión + indicadores en una sola vista.</p>
       </div>
-      <button id="btnSap" type="button">Actualizar SAP</button>
+      <div class="top-actions">
+        <span id="userBadge" class="user-badge"></span>
+        <button id="logoutBtn" class="btn-secondary" type="button">Salir</button>
+      </div>
     </header>
 
-    <section class="status" aria-live="polite">
-      <span id="sapStatus">SAP: sin carga en esta versión inicial</span>
+    <section class="toolbar">
+      <div class="toolbar-group">
+        <button id="btnSap" type="button">Actualizar SAP</button>
+        <input id="sapFile" type="file" accept=".xlsx,.xls" hidden />
+        <button id="refreshBtn" class="btn-secondary" type="button">Actualizar vista</button>
+      </div>
+      <div class="toolbar-group grow">
+        <input id="searchInput" class="search" type="search" placeholder="Buscar entrega, cliente, línea, distrito..." />
+      </div>
+      <div class="toolbar-group">
+        <button id="prevBtn" class="btn-secondary" type="button">←</button>
+        <span id="pageInfo" class="page-info">Página 1</span>
+        <button id="nextBtn" class="btn-secondary" type="button">→</button>
+      </div>
+    </section>
+
+    <section class="statusbar">
+      <span id="sapStatus">SAP: buscando última carga válida…</span>
+      <span id="rowStatus"></span>
+    </section>
+
+    <section class="legend">
+      <span><i class="dot green"></i>Cumple / En Fecha</span>
+      <span><i class="dot red"></i>No Cumple / Fuera de Fecha</span>
+      <span><i class="dot amber"></i>Pendiente / Por vencer</span>
+      <span><i class="dot gray"></i>RECOGE CLIENTE: trazabilidad, fuera de KPI</span>
     </section>
 
     <section class="sheet">
-      <div class="sheet-placeholder">
-        <strong>Base del segundo proyecto creada.</strong>
-        <span>La siguiente etapa conectará Supabase, carga SAP e indicadores.</span>
+      <div id="loading" class="loading hidden">Cargando información…</div>
+      <div class="sheet-scroll">
+        <table id="oltTable" class="grid">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
       </div>
     </section>
   </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">ACTUALIZAR SAP</p>
+          <h2>Validación de carga</h2>
+        </div>
+        <button id="modalClose" class="icon-btn" type="button">×</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
 
   <script type="module" src="./js/app.js"></script>
 </body>
