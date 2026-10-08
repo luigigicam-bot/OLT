@@ -47,3 +47,21 @@ La migración no borra tablas ni datos legacy, no modifica `recepcion_olt` ni ca
 - `docs/REGLAS_NEGOCIO.md`: indicadores, calendario y reporting.
 - `docs/VALIDACION.md`: evidencia y pruebas pendientes.
 - `supabase/core-schema.sql`: inventario del esquema canónico observado; no es un instalador.
+
+## Resúmenes SAP y descargas
+
+La pantalla SAP utiliza exclusivamente la carga activa publicada del usuario. El resumen contiene un registro por DT (`Transporte` SAP), con el `Sts.Trp` de la primera fila elegible, como el reporte consolidado previo. Los transportes, meses, fechas y DT pueden desplegarse. Los análisis previos y el historial permanecen disponibles en secciones plegables.
+
+La fecha de agrupación procede únicamente de una columna explícita `Fec. Despacho` (se admiten `Fec.Despacho`, `Fecha de despacho` y `Fecha Despacho`). Se guarda en los metadatos de staging; si la columna o el valor no existen, se muestra **Sin fecha**. No se sustituye por InActTrans ni por fechas alternativas. Las cargas anteriores sin este metadato mantienen sus fechas vacías.
+
+El segundo bloque cuenta DT en estado 1 por transportista. La alerta cuenta los estado 1 con InActTrans vacío. La descarga incluye todos los estado 1 de esa carga, con DT, Transporte, Fec. Despacho, Estado e InActTrans.
+
+El tercer bloque compara DT únicos de SAP contra todos los DT presentes en General, incluyendo los valores congelados de cierres. Excluye de la comparación el transporte `RECOJO DE MERCADERÍA EN CD-STA` (normaliza mayúsculas, espacios y tildes). La tabla pagina los faltantes de 50 en 50.
+
+General muestra un solo encabezado descriptivo. Su descarga contiene todas las filas del propietario y las 43 columnas, sin aplicar filtros ni limitarse a la página visible. Usa una única consulta consistente a la capa existente de indicadores; conserva los valores congelados de cierres mensuales. Los Excel se generan en un worker local, con identificadores como texto, fechas Excel y celdas vacías conservadas.
+
+## Base de datos y verificación
+
+Migración incremental `20261008214726_sap_dashboard_and_general_export.sql`: añade dos RPC de lectura con SECURITY INVOKER, RLS existente y ejecución solo para authenticated. No modifica recepcion_olt, snapshots ni la función de publicación.
+
+Pruebas: `npm test`; build: `npm run build`. Se verificaron 40 pruebas, incluidos el cruce, fechas sin fallback, exclusión, descarga completa y lectura de los archivos Excel generados. La verificación SQL se ejecutó en una transacción revertida y comprobó carga publicada, consolidación DT, presencia en General, exportación sin truncar y aislamiento por propietario. No se realizó una carga operativa real ni una prueba de sesión real en navegador.

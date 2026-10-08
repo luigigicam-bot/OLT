@@ -8,6 +8,7 @@ import { reportFromBuffer } from "../js/sap-report.js";
 import { sapReportHtml } from "../js/sap-report-ui.js";
 import { MONTHS, renderKpi } from "../js/kpi.js";
 import { parseSapRowsFromBuffer } from "../js/sap-parser.js";
+import { dashboardData, sapDashboardHtml } from "../js/sap-dashboard.js";
 const pause = () => new Promise((r) => setTimeout(r, 15));
 const sapText =
   "Entrega\tTransporte\tNombre 1\tPlaca\tInActTrans\tSts.Trp\tEstatus\tFec. Reg.\tHor. Reg.\tUsuaCtrlRe\tHrAITr\n1\tDT1\tET\tABC\t08.10.2026\tV\tE\t08.10.2026\t09:00:00\tUSER\t10:00:00";
@@ -22,7 +23,7 @@ async function setup({
     { url: "http://localhost/#general", runScripts: "outside-only" },
   );
   const w = dom.window;
-  const counters = { publish: 0, append: 0, reject: 0, save: 0, requests: [] };
+  const counters = { publish: 0, append: 0, reject: 0, save: 0, requests: [], exports: [], filenames: [] };
   const user = {
     id: "00000000-0000-4000-8000-000000000001",
     email: "fixture@example.test",
@@ -125,6 +126,11 @@ async function setup({
       signInWithPassword: async () => ({ data: { user } }),
     },
     rpc: async (name, args) => {
+      if (name === "olt_general_export_v1") return { data: { rows: Array.from({ length: 123 }, (_, i) => ({ id: i + 1, row_data: { ...row, entrega: `E${i}`, linea: i % 2 ? "OTRA" : "BIOPAS" } })) } };
+      if (name === "olt_sap_dashboard_v1") return { data: { load_id: load?.estado === "publicada" ? load.id : null, filename: "20.XLS", dispatch_column_present: true, rows: [
+        { dt: "0001", et: "MUNDO", state: "1", dispatch_date: null, inacttrans: null, in_general: false },
+        { dt: "0002", et: "ANDI", state: "6", dispatch_date: "2026-10-08", inacttrans: "2026-10-08", in_general: true },
+      ] } };
       if (name.startsWith("olt_metric_"))
         counters.requests.push({ name, args });
       if (name === "olt_cell_history_v1") return { data: [] };
@@ -255,6 +261,11 @@ async function setup({
   };
   w.createClient = () => api;
   w.sapReportHtml = sapReportHtml;
+  w.dashboardData = dashboardData;
+  w.sapDashboardHtml = sapDashboardHtml;
+  w.URL.createObjectURL = () => "blob:fixture";
+  w.URL.revokeObjectURL = () => {};
+  w.HTMLAnchorElement.prototype.click = function () { counters.filenames.push(this.download); };
   w.MONTHS = MONTHS;
   w.renderKpi = renderKpi;
   w.calc = calc;
@@ -264,8 +275,10 @@ async function setup({
   w.Worker = class {
     constructor(url) {
       this.report = String(url).includes("sap-report");
+      this.excel = String(url).includes("excel-export");
     }
     postMessage(buffer) {
+      if (this.excel) { counters.exports.push(buffer); setTimeout(() => this.onmessage({ data: { buffer: new ArrayBuffer(8) } }), 0); return; }
       setTimeout(
         () =>
           this.onmessage({
@@ -283,9 +296,9 @@ async function setup({
   const source = readFileSync(new URL("../js/app.js", import.meta.url), "utf8")
     .replace(/^import[\s\S]*?;\s*/gm, "")
     .replace(
-      /new URL\(\s*["']\.\/sap(?:-report)?-worker\.js["'],\s*import\.meta\.url\s*\)/g,
+      /new URL\(\s*["']\.\/(?:sap(?:-report)?|excel-export)-worker\.js["'],\s*import\.meta\.url\s*\)/g,
       (match) =>
-        match.includes("sap-report")
+        match.includes("excel-export") ? "'/excel-export-worker.js'" : match.includes("sap-report")
           ? "'/sap-report-worker.js'"
           : "'/sap-worker.js'",
     );
@@ -560,4 +573,40 @@ test("Paginación solo lee página; cerrar sesión limpia vistas", async () => {
   } finally {
     t.dom.window.close();
   }
+});
+
+test("General: one descriptive header and full export ignores visible filters and page", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    assert.equal(d.querySelectorAll('#tableHead tr').length, 1);
+    assert.equal(d.querySelector('#tableHead th:nth-child(2)').textContent, 'Nro. De Cargo');
+    d.querySelector('#lineFilter').value = 'BIOPAS';
+    d.querySelector('#downloadGeneral').click();
+    await pause(); await pause();
+    assert.equal(t.counters.exports.length, 1);
+    assert.equal(t.counters.exports[0].rows.length, 123);
+    assert.equal(t.counters.exports[0].headers.length, 43);
+    assert.equal(t.counters.exports[0].rows[1][16], 'OTRA');
+    assert.match(t.counters.filenames[0], /^General_OLT_.*\.xlsx$/);
+  } finally { t.dom.window.close(); }
+});
+test("SAP: three latest-load reports, expand hierarchy and download only status 1", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    await t.upload(); d.querySelector('#publishSap').click();
+    await pause(); await pause();
+    d.querySelector('#navSap').click(); await pause(); await pause();
+    assert.equal(d.querySelectorAll('#sapDashboard > section').length, 3);
+    assert.match(d.querySelector('#sapDashboard').textContent, /Comparación SAP vs. General/);
+    d.querySelector('[data-sap-expand="t1"]').click();
+    assert.match(d.querySelector('#sapDashboard').textContent, /Sin fecha/);
+    d.querySelector('#downloadStatus1').click(); await pause(); await pause();
+    const payload = t.counters.exports[0];
+    assert.equal(payload.sheetName, 'Estado 1');
+    assert.equal(payload.rows.length, 1);
+    assert.deepEqual(Array.from(payload.rows[0]), ['0001', 'MUNDO', null, '1', null]);
+    assert.match(t.counters.filenames[0], /^SAP_Estado_1_.*\.xlsx$/);
+  } finally { t.dom.window.close(); }
 });

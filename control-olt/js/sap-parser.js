@@ -122,6 +122,7 @@ export function parseSapRowsFromBuffer(buffer) {
     index.referencia === 14 &&
     index.inacttrans === 62 &&
     headers[37] === "Referencia";
+  const dispatchIndex = firstIndex("Fec. Despacho", "Fec.Despacho", "Fecha de despacho", "Fecha Despacho");
   const rows = [];
   const invalidDetails = [];
   let invalid = 0;
@@ -129,7 +130,7 @@ export function parseSapRowsFromBuffer(buffer) {
     const r = matrix[i] || [];
     if (!r.some((v) => String(v ?? "").trim())) continue;
     const referencia = String(r[index.referencia] ?? "").trim();
-    const badDate = [index.inacttrans, index.fec_reg].some(
+    const badDate = [index.inacttrans, index.fec_reg, ...(dispatchIndex >= 0 ? [dispatchIndex] : [])].some(
       (j) => String(r[j] ?? "").trim() && !isoDate(r[j]),
     );
     const badTime = [index.hraitr, index.hor_reg].some(
@@ -166,6 +167,8 @@ export function parseSapRowsFromBuffer(buffer) {
       hor_reg: isoTime(r[index.hor_reg]) || null,
       usua_ctrl_re: String(r[index.usua_ctrl_re] ?? "").trim() || null,
       raw_data: {
+        dispatch_column_present: dispatchIndex >= 0,
+        fecha_despacho: dispatchIndex >= 0 ? isoDate(r[dispatchIndex]) || null : null,
         report_version: reportLayoutKnown ? 1 : undefined,
         fecha_alternativa: reportLayoutKnown
           ? [4, 8, 25, 34, 36, 46]

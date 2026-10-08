@@ -628,13 +628,8 @@ button:disabled {
 }
 .grid thead tr:first-child th {
   top: 0;
-  height: 25px;
-  text-align: center;
-  font-size: 10px;
-  color: #64748b;
-}
-.grid thead tr:nth-child(2) th {
-  top: 25px;
+  height: 40px;
+  font-size: 12px;
 }
 .grid .col-row {
   position: sticky;
@@ -1091,4 +1086,49 @@ button:hover:not(:disabled) {
   .sap-report-stats {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* SAP overview: compact summaries with detail revealed on demand. */
+#sapView .panel { padding: 16px; margin-bottom: 10px; }
+#sapView .analysis-heading { margin-bottom: 10px; gap: 12px; }
+#sapView .analysis-heading h2 { font-size: 18px; margin: 0 0 4px; }
+#sapView .notice { margin: 8px 0; padding: 10px 12px; }
+#activeVersion .summary-grid { margin-top: 8px; gap: 8px; }
+#sapDashboard .data-table th, #sapDashboard .data-table td { padding: 8px 10px; }
+#sapDashboard .sap-number { text-align: right; font-variant-numeric: tabular-nums; }
+.sap-pivot { min-width: 720px; width: 100%; }
+.sap-pivot th:first-child { width: 52%; text-align: left; }
+.sap-pivot thead th:not(:first-child) { text-align: right; white-space: nowrap; }
+.sap-pivot thead small { display: block; font-size: 11px; font-weight: 500; color: #475569; }
+.sap-expand { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #0f172a; padding: 2px 0 2px calc(var(--depth) * 20px); border: 0; text-align: left; font-size: 12px; font-weight: inherit; }
+.sap-expand:hover { background: #eff6ff; color: #1d4ed8; }
+.sap-expand span { color: #1d4ed8; display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1px solid #bfdbfe; border-radius: 4px; }
+.sap-leaf { padding-left: calc(var(--depth) * 20px + 24px); font-weight: 500; }
+.sap-pivot-depth-1 { background: #f8fafc; }
+.sap-pivot-depth-2 th { font-weight: 600; }
+.sap-pivot-depth-3 { color: #475569; }
+.sap-grand-total { background: #eff6ff; font-weight: 800; }
+.sap-total { font-weight: 700; }
+.sap-pivot-scroll { max-height: 480px; overflow: auto; }
+.sap-pivot-scroll thead th { position: sticky; top: 0; z-index: 1; background: #eff6ff; }
+.sap-state1 td:last-child, .sap-state1 th:last-child { width: 100px; text-align: right; }
+.sap-comparison-counts { display: flex; gap: 8px; }
+.sap-comparison-counts span { display: grid; gap: 4px; min-width: 104px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px; }
+.sap-comparison-counts strong { color: #1d4ed8; font-size: 20px; font-variant-numeric: tabular-nums; }
+.sap-comparison-counts .sap-missing-count { background: #fffbeb; border-color: #fde68a; }
+.sap-missing-count strong { color: #b45309; }
+.sap-missing-pager { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; color: #64748b; font-size: 12px; }
+.sap-missing-pager button { padding: 6px 10px; margin-left: 5px; }
+.sap-secondary > summary { cursor: pointer; font-weight: 700; color: #1e3a8a; font-size: 14px; }
+.sap-secondary[open] > summary { margin-bottom: 14px; }
+.general-export-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 10px 0; }
+.general-export-bar h2, .general-export-bar p { margin: 0; }
+.general-export-bar h2 { font-size: 17px; margin-bottom: 3px; }
+.export-message:empty { display: none; }
+@media (max-width: 760px) {
+  .general-export-bar { flex-wrap: wrap; }
+  .sap-comparison-counts { width: 100%; }
+  .sap-comparison-counts span { flex: 1; min-width: 0; padding: 8px; }
+  #sapDashboard .analysis-heading { align-items: stretch; }
+  #sapDashboard button { white-space: normal; }
 }

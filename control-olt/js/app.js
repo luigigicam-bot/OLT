@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { calc, todayISO, formatDate } from "./indicators.js";
 import { MONTHS, renderKpi } from "./kpi.js";
 import { sapReportHtml } from "./sap-report-ui.js";
+import { dashboardData, sapDashboardHtml } from "./sap-dashboard.js";
 
 const SUPABASE_URL = "https://vuoqmesrwgkkdqrecxnc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_P5CjX41UyzjQgbvSdkwfwA_jXON8rI1";
@@ -53,6 +54,13 @@ let kpiData = null;
 let kpiState = { lines: "LIMA", incidents: "LIMA", transports: "" };
 let drillFilters = null;
 let appliedDates = { date_from: null, date_to: null };
+let sapDashboard = null;
+let dashboardSequence = 0;
+let expandedSap = new Set();
+let missingSapPage = 0;
+let exportBusy = false;
+let exportSequence = 0;
+let exportWorkers = new Set();
 
 const COLUMNS = [
   ["A", "nro_cargo", "Nro. De Cargo", "gestion"],
@@ -148,11 +156,21 @@ function showLogin() {
     "activeVersion",
     "sapHistory",
     "sapAnalytics",
+    "sapDashboard",
   ])
     $("#" + id).replaceChildren();
   els.modal.classList.add("hidden");
   els.password.value = "";
   reportSequence++;
+  dashboardSequence++;
+  sapDashboard = null;
+  expandedSap.clear();
+  for (const cancel of exportWorkers) cancel();
+  exportWorkers.clear();
+  exportBusy = false;
+  exportSequence++;
+  $("#downloadGeneral").disabled = false;
+  $("#generalExportMessage").textContent = "";
   sapReport = null;
   $("#sapReportContent").innerHTML = "";
   $("#sapReportFilters").classList.add("hidden");
@@ -197,7 +215,6 @@ function groupClass(group) {
 }
 function renderHeader() {
   els.tableHead.innerHTML = `
-    <tr><th class="col-row">#</th>${COLUMNS.map((c) => `<th class="${groupClass(c.group)}">${c.letter}</th>`).join("")}</tr>
     <tr><th class="col-row">Fila</th>${COLUMNS.map((c) => `<th class="${groupClass(c.group)}" title="${escapeHtml(c.label)}">${escapeHtml(c.label)}</th>`).join("")}</tr>`;
 }
 function statusClass(key, val) {
@@ -804,6 +821,88 @@ $("#clearSapReportFilters").onclick = () => {
   renderSapReport();
 };
 
+function renderSapDashboard() {
+  $("#sapDashboard").innerHTML = sapDashboardHtml(sapDashboard, expandedSap, missingSapPage);
+  $("#sapDashboard").querySelectorAll("[data-sap-expand]").forEach((button) => {
+    button.onclick = () => {
+      const key = button.dataset.sapExpand;
+      expandedSap.has(key) ? expandedSap.delete(key) : expandedSap.add(key);
+      renderSapDashboard();
+      $("#sapDashboard").querySelector(`[data-sap-expand="${key}"]`)?.focus();
+    };
+  });
+  $("#sapDashboard").querySelectorAll("[data-missing-page]").forEach((button) => {
+    button.onclick = () => { missingSapPage = Number(button.dataset.missingPage); renderSapDashboard(); };
+  });
+  const download = $("#downloadStatus1");
+  if (download) download.onclick = downloadState1;
+}
+async function loadSapDashboard() {
+  const sequence = ++dashboardSequence, owner = currentUser?.id;
+  sapDashboard = null;
+  $("#sapDashboard").innerHTML = '<section class="panel"><p class="muted">Consultando resumen de la última carga SAP…</p></section>';
+  try {
+    const report = await checked(supabase.rpc("olt_sap_dashboard_v1"));
+    if (sequence !== dashboardSequence || owner !== currentUser?.id) return;
+    sapDashboard = report;
+    expandedSap.clear(); missingSapPage = 0;
+    renderSapDashboard();
+  } catch {
+    if (sequence === dashboardSequence && owner === currentUser?.id)
+      $("#sapDashboard").innerHTML = '<section class="panel"><p class="notice error">No se pudieron consultar los reportes SAP. Pulsa Actualizar vista para reintentar.</p></section>';
+  }
+}
+async function downloadWorkbook(headers, rows, sheetName, filename, dateColumns, owner) {
+  const buffer = await new Promise((resolve, reject) => {
+    const worker = new Worker(new URL("./excel-export-worker.js", import.meta.url), { type: "module" });
+    let settled = false;
+    const finish = (error, result) => {
+      if (settled) return;
+      settled = true; worker.terminate(); exportWorkers.delete(cancel);
+      error ? reject(error) : resolve(result);
+    };
+    const cancel = () => finish(new Error("La sesión cambió. Vuelve a descargar."));
+    exportWorkers.add(cancel);
+    worker.onmessage = ({ data }) => finish(data.error ? new Error(data.error) : null, data.buffer);
+    worker.onerror = () => finish(new Error("No se pudo generar el archivo Excel."));
+    worker.postMessage({ headers, rows, sheetName, dateColumns });
+  });
+  if (owner !== currentUser?.id) throw new Error("La sesión cambió. Vuelve a descargar.");
+  const url = URL.createObjectURL(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  const link = document.createElement("a"); link.href = url; link.download = filename;
+  document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+async function downloadState1() {
+  if (!sapDashboard || !currentUser) return;
+  const owner = currentUser.id, button = $("#downloadStatus1"), report = sapDashboard;
+  button.disabled = true;
+  const message = $("#status1ExportMessage"); message.textContent = "Generando Excel…";
+  try {
+    const rows = dashboardData(report).scheduled.map((r) => [r.dt, r.et, r.dispatch_date, r.state, r.inacttrans]);
+    await downloadWorkbook(["DT", "Transporte", "Fec. Despacho", "Estado", "InActTrans"], rows, "Estado 1", `SAP_Estado_1_${report.load_id}.xlsx`, [2, 4], owner);
+    message.textContent = `Se descargaron ${rows.length} DT en estado 1.`;
+  } catch (e) { if (owner === currentUser?.id) message.textContent = e.message; }
+  finally { if (owner === currentUser?.id) button.disabled = false; }
+}
+$("#downloadGeneral").onclick = async () => {
+  if (exportBusy || !currentUser) return;
+  exportBusy = true;
+  const sequence = ++exportSequence, owner = currentUser.id, button = $("#downloadGeneral");
+  button.disabled = true;
+  const message = $("#generalExportMessage"); message.textContent = "Preparando toda la hoja General…";
+  try {
+    const result = await checked(supabase.rpc("olt_general_export_v1"));
+    if (owner !== currentUser?.id || sequence !== exportSequence) return;
+    const rows = result.rows.map((r) => COLUMNS.map((c) => r.row_data[c.key] ?? ""));
+    const dateColumns = COLUMNS.flatMap((c, i) => ["fecha", "fec_cargo", "fec_vencto", "fecha_salida_sap", "fec_reg"].includes(c.key) ? [i] : []);
+    message.textContent = `Generando Excel con ${rows.length} filas…`;
+    await downloadWorkbook(COLUMNS.map((c) => c.label), rows, "General", `General_OLT_${todayISO()}.xlsx`, dateColumns, owner);
+    if (sequence === exportSequence) message.textContent = `Se descargaron las ${rows.length} filas de General.`;
+  } catch (e) { if (owner === currentUser?.id && sequence === exportSequence) message.textContent = e.message; }
+  finally { if (sequence === exportSequence) { exportBusy = false; button.disabled = false; } }
+};
+
 async function loadSapCenter() {
   if (!currentUser) return;
   const owner = currentUser.id;
@@ -811,6 +910,7 @@ async function loadSapCenter() {
     await getActiveSapLoad();
     if (owner !== currentUser?.id) return;
     const c = activeSapLoad;
+    loadSapDashboard();
     loadStoredSapReport(c?.id);
     $("#activeVersion").innerHTML = `<h2>Última versión SAP activa</h2>${
       c
