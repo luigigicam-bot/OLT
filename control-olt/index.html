@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OLT Control</title>
+  <link rel="stylesheet" href="./css/app.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">CONTROL OLT</p>
+        <h1>Vista operativa</h1>
+      </div>
+      <button id="btnSap" type="button">Actualizar SAP</button>
+    </header>
+
+    <section class="status" aria-live="polite">
+      <span id="sapStatus">SAP: sin carga en esta versión inicial</span>
+    </section>
+
+    <section class="sheet">
+      <div class="sheet-placeholder">
+        <strong>Base del segundo proyecto creada.</strong>
+        <span>La siguiente etapa conectará Supabase, carga SAP e indicadores.</span>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
