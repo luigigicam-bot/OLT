@@ -23,7 +23,7 @@ Los builds deben utilizar el commit exacto y el proyecto correspondiente. `main`
 
 Las cuatro migraciones de auditoría de ingesta, recibos, edición y unicidad están aplicadas. Las versiones locales de archivo representan su orden; los timestamps del historial remoto pueden diferir. No ejecutarlas nuevamente en producción.
 
-La migración `20261008170707_sap_exact_active_analytics.sql` está **pendiente**, bloqueada por revisión automática: reemplaza vistas y funciones compartidas. No aplicar ni habilitar la publicación analítica SAP sin aprobación específica.
+La migración `20261008170707_sap_exact_active_analytics.sql` se aplicó el 8 de octubre de 2026 tras autorización específica del usuario. Activa la comparación y cobertura SAP, conserva RLS como invocador y corrige la fecha de salida en la vista activa. Se verificaron staging, análisis, publicación transaccional, selección de la fila más reciente, comparación idéntica sin falsos cambios y aislamiento entre propietarios; todos los datos de prueba se revirtieron. No reaplicarla en producción.
 
 `control-olt/supabase/schema-checkpoint.json` registra estructura y definiciones, sin datos de negocio. Es un checkpoint, no un instalador ni una copia de seguridad restaurada. Las migraciones dependen del esquema previo.
 
