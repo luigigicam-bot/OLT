@@ -1,90 +1,193 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OLT Control</title>
-  <link rel="stylesheet" href="./css/app.css" />
-</head>
-<body>
-  <div id="loginView" class="auth-shell">
-    <form id="loginForm" class="auth-card">
-      <div class="brand-mark">OLT</div>
-      <p class="eyebrow">CONTROL OPERATIVO</p>
-      <h1>Iniciar sesión</h1>
-      <p class="muted">Usa el mismo usuario de Supabase del sistema OLT.</p>
-      <label>Correo<input id="email" type="email" autocomplete="username" required /></label>
-      <label>Contraseña<input id="password" type="password" autocomplete="current-password" required /></label>
-      <button id="loginBtn" type="submit">Ingresar</button>
-      <p id="loginMsg" class="message" aria-live="polite"></p>
-    </form>
-  </div>
-
-  <main id="appView" class="shell hidden">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">CONTROL OLT</p>
-        <h1>Hoja operativa</h1>
-        <p class="muted">OLT + SAP + gestión + indicadores en una sola vista.</p>
-      </div>
-      <div class="top-actions">
-        <span id="userBadge" class="user-badge"></span>
-        <button id="logoutBtn" class="btn-secondary" type="button">Salir</button>
-      </div>
-    </header>
-
-    <section class="toolbar">
-      <div class="toolbar-group">
-        <button id="btnSap" type="button">Actualizar SAP</button>
-        <input id="sapFile" type="file" accept=".xlsx,.xls" hidden />
-        <button id="refreshBtn" class="btn-secondary" type="button">Actualizar vista</button>
-      </div>
-      <div class="toolbar-group grow">
-        <input id="searchInput" class="search" type="search" placeholder="Buscar entrega, cliente, línea, distrito..." />
-      </div>
-      <div class="toolbar-group">
-        <button id="prevBtn" class="btn-secondary" type="button">←</button>
-        <span id="pageInfo" class="page-info">Página 1</span>
-        <button id="nextBtn" class="btn-secondary" type="button">→</button>
-      </div>
-    </section>
-
-    <section class="statusbar">
-      <span id="sapStatus">SAP: buscando última carga válida…</span>
-      <span id="rowStatus"></span>
-    </section>
-
-    <section class="legend">
-      <span><i class="dot green"></i>Cumple / En Fecha</span>
-      <span><i class="dot red"></i>No Cumple / Fuera de Fecha</span>
-      <span><i class="dot amber"></i>Pendiente / Por vencer</span>
-      <span><i class="dot gray"></i>RECOGE CLIENTE: trazabilidad, fuera de KPI</span>
-    </section>
-
-    <section class="sheet">
-      <div id="loading" class="loading hidden">Cargando información…</div>
-      <div class="sheet-scroll">
-        <table id="oltTable" class="grid">
-          <thead id="tableHead"></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div>
-          <p class="eyebrow">ACTUALIZAR SAP</p>
-          <h2>Validación de carga</h2>
-        </div>
-        <button id="modalClose" class="icon-btn" type="button">×</button>
-      </div>
-      <div id="modalBody"></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OLT Control</title>
+    <link rel="stylesheet" href="./css/app.css" />
+  </head>
+  <body>
+    <div id="loginView" class="auth-shell">
+      <form id="loginForm" class="auth-card">
+        <div class="brand-mark">OLT</div>
+        <p class="eyebrow">CONTROL OPERATIVO</p>
+        <h1>Iniciar sesión</h1>
+        <p class="muted">Usa el mismo usuario de Supabase del sistema OLT.</p>
+        <label
+          >Correo<input
+            id="email"
+            type="email"
+            autocomplete="username"
+            required
+        /></label>
+        <label
+          >Contraseña<input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            required
+        /></label>
+        <button id="loginBtn" type="submit">Ingresar</button>
+        <p id="loginMsg" class="message" aria-live="polite"></p>
+      </form>
     </div>
-  </div>
 
-  <script type="module" src="./js/app.js"></script>
-</body>
+    <main id="appView" class="shell hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CONTROL OLT</p>
+          <h1 id="viewTitle">General / Operación OLT</h1>
+          <p class="muted">
+            OLT + SAP + gestión + indicadores en una sola vista.
+          </p>
+        </div>
+        <div class="top-actions">
+          <span id="userBadge" class="user-badge"></span>
+          <button id="logoutBtn" class="btn-secondary" type="button">
+            Salir
+          </button>
+        </div>
+      </header>
+
+      <nav class="workspace-nav" aria-label="Entornos">
+        <button id="navGeneral" aria-current="page">General</button
+        ><button id="navSap" class="btn-secondary">SAP</button>
+      </nav>
+      <p id="appMessage" class="notice hidden" role="status"></p>
+      <section id="generalView">
+        <div id="generalKpis" class="summary-grid"></div>
+        <section class="toolbar">
+          <div class="toolbar-group">
+            <button id="refreshBtn" class="btn-secondary" type="button">
+              Actualizar vista
+            </button>
+          </div>
+          <div class="toolbar-group grow">
+            <input
+              id="searchInput"
+              class="search"
+              type="search"
+              placeholder="Buscar entrega, cliente, línea, distrito..."
+            />
+          </div>
+          <div class="toolbar-group">
+            <button id="prevBtn" class="btn-secondary" type="button">←</button>
+            <span id="pageInfo" class="page-info">Página 1</span>
+            <button id="nextBtn" class="btn-secondary" type="button">→</button>
+          </div>
+        </section>
+
+        <section class="filters" aria-label="Filtros de operación">
+          <label>Periodo<input id="periodFilter" type="month" /></label>
+          <label
+            >Línea<select id="lineFilter">
+              <option value="">Todas las líneas</option>
+            </select></label
+          >
+          <label
+            >Transporte<select id="transportFilter">
+              <option value="">Todos los transportes</option>
+            </select></label
+          >
+          <label
+            >Zona<select id="zoneFilter">
+              <option value="">Lima y Provincia</option>
+              <option>LIMA</option>
+              <option>PROVINCIA</option>
+            </select></label
+          >
+          <button id="clearFilters" class="btn-secondary">
+            Limpiar filtros
+          </button>
+        </section>
+        <section class="statusbar">
+          <span id="sapStatus">SAP: buscando última carga válida…</span
+          ><button id="sapDetailLink" class="text-btn">
+            Ver detalle SAP →
+          </button>
+          <span id="rowStatus"></span>
+        </section>
+
+        <section class="legend">
+          <span><i class="dot green"></i>Cumple / En Fecha</span>
+          <span><i class="dot red"></i>No Cumple / Fuera de Fecha</span>
+          <span><i class="dot amber"></i>Pendiente / Por vencer</span>
+          <span
+            ><i class="dot gray"></i>RECOGE CLIENTE: trazabilidad, fuera de
+            KPI</span
+          >
+        </section>
+
+        <section class="sheet">
+          <div id="loading" class="loading hidden">Cargando información…</div>
+          <div class="sheet-scroll">
+            <table id="oltTable" class="grid">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+      <section id="sapView" class="hidden">
+        <div class="panel sap-heading">
+          <div>
+            <p class="eyebrow">CENTRO SAP</p>
+            <h2>Control de versiones SAP</h2>
+            <p class="muted">
+              Valida el archivo, revisa los cambios y confirma su publicación.
+            </p>
+          </div>
+          <button id="btnSap" type="button">Actualizar SAP</button
+          ><input id="sapFile" type="file" accept=".xlsx,.xls" hidden />
+        </div>
+        <div id="activeVersion" class="panel"></div>
+        <div id="sapAnalytics" aria-live="polite"></div>
+        <section class="panel">
+          <h2>Historial de cargas</h2>
+          <p class="muted">
+            Las versiones publicadas se conservan para revisión.
+          </p>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Fecha / hora</th>
+                  <th>Archivo</th>
+                  <th>Usuario</th>
+                  <th>Filas</th>
+                  <th>Referencias</th>
+                  <th>Nuevas</th>
+                  <th>Modificadas</th>
+                  <th>Estado</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="sapHistory"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div
+      id="modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+    >
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">ACTUALIZAR SAP</p>
+            <h2 id="modalTitle">Validación de carga</h2>
+          </div>
+          <button id="modalClose" class="icon-btn" type="button">×</button>
+        </div>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
 </html>
