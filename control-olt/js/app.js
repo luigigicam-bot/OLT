@@ -304,43 +304,83 @@ async function sha256(file) {
   const hash = await crypto.subtle.digest("SHA-256",buf);
   return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-function parseSapRows(workbook) {
-  const ws = workbook.Sheets[workbook.SheetNames[0]];
-  const matrix = XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+function matrixFromSapBuffer(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const isZip = bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B;
+  const isOle = bytes.length >= 8 && bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0;
+
+  if (isZip || isOle) {
+    const workbook = XLSX.read(buffer,{type:"array",cellDates:true});
+    const ws = workbook.Sheets[workbook.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+  }
+
+  // SAP puede entregar un archivo .XLS que en realidad es texto tabulado Windows-1252.
+  const text = new TextDecoder("windows-1252").decode(bytes);
+  return text.split(/\r?\n/).map(line => line.split("\t"));
+}
+
+function parseSapRowsFromBuffer(buffer) {
+  const matrix = matrixFromSapBuffer(buffer);
   const headerIndex = matrix.findIndex(r => {
     const vals = r.map(v=>String(v??"").trim());
-    return vals.includes("Columna1") && vals.includes("InActTrans") && vals.includes("HrAITr");
+    const hasKey = vals.includes("Entrega") || vals.includes("Columna1");
+    return hasKey && vals.includes("InActTrans") && vals.includes("HrAITr");
   });
-  if (headerIndex < 0) throw new Error("No encontré la cabecera SAP con Columna1, InActTrans y HrAITr.");
+  if (headerIndex < 0) throw new Error("No encontré la cabecera SAP esperada (Entrega/Columna1, InActTrans y HrAITr).");
+
   const headers = matrix[headerIndex].map(v=>String(v??"").trim());
-  const index = Object.fromEntries(headers.map((h,i)=>[h,i]));
-  const required = ["Transporte","Sts.Trp","Nombre 1","Placa","Columna1","Estatus","Fec/ Reg/","Hor. Reg.","InActTrans","HrAITr","UsuaCtrlRe"];
-  const missing = required.filter(h=>index[h]===undefined);
-  if (missing.length) throw new Error("Faltan columnas SAP: " + missing.join(", "));
+  const firstIndex = (...names) => {
+    for (const name of names) {
+      const i = headers.findIndex(h => h === name);
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+
+  const index = {
+    dt: firstIndex("Transporte"),
+    estado_viaje: firstIndex("Sts.Trp"),
+    et: firstIndex("Nombre 1"), // primer "Nombre 1": transportista
+    placa: firstIndex("Placa"),
+    referencia: firstIndex("Entrega","Columna1"),
+    estado_entrega: firstIndex("Estatus"),
+    fec_reg: firstIndex("Fec. Reg.","Fec/ Reg/"),
+    hor_reg: firstIndex("Hor. Reg."),
+    inacttrans: firstIndex("InActTrans"),
+    hraitr: firstIndex("HrAITr"),
+    usua_ctrl_re: firstIndex("UsuaCtrlRe")
+  };
+
+  const missing = Object.entries(index).filter(([,i])=>i<0).map(([k])=>k);
+  if (missing.length) throw new Error("Faltan columnas SAP requeridas: " + missing.join(", "));
 
   const rows = [];
   let invalid = 0;
   for (let i=headerIndex+1;i<matrix.length;i++) {
-    const r = matrix[i];
-    const referencia = String(r[index["Columna1"]] ?? "").trim();
+    const r = matrix[i] || [];
+    if (!r.some(v=>String(v??"").trim())) continue;
+    const referencia = String(r[index.referencia] ?? "").trim();
     if (!referencia) { invalid++; continue; }
+
     rows.push({
       fila_origen:i+1,
       referencia,
-      inacttrans:isoDate(r[index["InActTrans"]]) || null,
-      hraitr:isoTime(r[index["HrAITr"]]) || null,
-      dt:String(r[index["Transporte"]] ?? "").trim() || null,
-      et:String(r[index["Nombre 1"]] ?? "").trim() || null,
-      placa:String(r[index["Placa"]] ?? "").trim() || null,
-      fecha_salida_sap:isoDate(r[index["InActTrans"]]) || null,
-      estado_viaje:String(r[index["Sts.Trp"]] ?? "").trim() || null,
-      estado_entrega:String(r[index["Estatus"]] ?? "").trim() || null,
-      fec_reg:isoDate(r[index["Fec/ Reg/"]]) || null,
-      hor_reg:isoTime(r[index["Hor. Reg."]]) || null,
-      usua_ctrl_re:String(r[index["UsuaCtrlRe"]] ?? "").trim() || null,
+      inacttrans:isoDate(r[index.inacttrans]) || null,
+      hraitr:isoTime(r[index.hraitr]) || null,
+      dt:String(r[index.dt] ?? "").trim() || null,
+      et:String(r[index.et] ?? "").trim() || null,
+      placa:String(r[index.placa] ?? "").trim() || null,
+      fecha_salida_sap:isoDate(r[index.inacttrans]) || null,
+      estado_viaje:String(r[index.estado_viaje] ?? "").trim() || null,
+      estado_entrega:String(r[index.estado_entrega] ?? "").trim() || null,
+      fec_reg:isoDate(r[index.fec_reg]) || null,
+      hor_reg:isoTime(r[index.hor_reg]) || null,
+      usua_ctrl_re:String(r[index.usua_ctrl_re] ?? "").trim() || null,
       raw_data:{}
     });
   }
+
   const latest = new Map();
   for (const r of rows) {
     const old = latest.get(r.referencia);
@@ -387,8 +427,7 @@ async function prepareSap(file) {
     const {data:duplicate} = await supabase.from("sap_cargas").select("id,publicada_at").eq("archivo_hash",hash).eq("estado","publicada").limit(1).maybeSingle();
 
     setProgress(30,"Leyendo Excel…");
-    const workbook = XLSX.read(buffer,{type:"array",cellDates:true});
-    const parsed = parseSapRows(workbook);
+    const parsed = parseSapRowsFromBuffer(buffer);
 
     setProgress(60,"Comparando con la última versión SAP…");
     const previous = await previousSnapshotMap();
