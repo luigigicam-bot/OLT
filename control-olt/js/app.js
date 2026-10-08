@@ -455,6 +455,7 @@ async function publishSap() {
       const snapshot=pendingSap.latest.map(r=>({
         usuario_id:currentUser.id,carga_id:cargaId,referencia:r.referencia,
         inacttrans:r.inacttrans,hraitr:r.hraitr,dt:r.dt,et:r.et,placa:r.placa,
+        fecha_salida_sap:r.fecha_salida_sap,
         estado_viaje:r.estado_viaje,estado_entrega:r.estado_entrega,
         fec_reg:r.fec_reg,hor_reg:r.hor_reg,usua_ctrl_re:r.usua_ctrl_re,raw_data:{}
       }));
