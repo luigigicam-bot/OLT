@@ -99,7 +99,7 @@ test('real XLSX reader, validation, exact duplicate comparison, upload and reset
     assert.equal(p.records.length,2);assert.match($('notice').textContent,/2 registro/);
     assert.equal(p.w.totals().ok,0);assert.equal($('confirmSend').disabled,false);
     await loadExcel(p,[sample]);await $('send').onclick();
-    assert.match($('notice').textContent,/Todos los registros ya exist/);assert.equal(p.records.length,2);
+    await $('sendForm').onsubmit({preventDefault(){}});assert.match($('notice').textContent,/1 duplicado/);assert.equal(p.records.length,2);
   } finally {p.close();}
 });
 
@@ -137,4 +137,18 @@ test('stale dashboard responses cannot repaint data after logout',async()=>{
     resolve({data:{totales:{registros:999999},historial:[]},error:null});await pending;
     assert.equal(p.w.document.getElementById('dashRecords').textContent,'0');
   } finally {p.close();}
+});
+
+test('3000 rows: six RPCs, no duplicate GET passes, failed batch resumes at its offset',async()=>{
+ const p=portal({initialSession:{user:owner}});try {
+ await settle();await loadExcel(p,Array.from({length:3000},(_,i)=>({...sample,entrega:'SPEED-'+i})));
+ const $=id=>p.w.document.getElementById(id);let attempts=0;const lengths=[];
+ p.behaviors.olt_insertar_lote=async({p_rows})=>{attempts++;lengths.push(p_rows[0].entrega);if(attempts===2)return {error:{code:'57014',message:'timeout'}};return {data:{insertados:p_rows.length,duplicados:0,ultima_fecha:null}};};
+ const before=p.calls.filter(c=>c.table==='recepcion_olt').length;
+ await $('send').onclick();await $('sendForm').onsubmit({preventDefault(){}});
+ assert.match($('notice').textContent,/500 de 3000/);assert.equal($('send').disabled,false);
+ await $('send').onclick();await $('sendForm').onsubmit({preventDefault(){}});
+ assert.equal(attempts,7);assert.equal(lengths[1],lengths[2]);assert.match($('notice').textContent,/3,000 registro/);
+ assert.equal(p.calls.filter(c=>c.table==='recepcion_olt').length-before,1); // history read only after completion
+ }finally{p.close();}
 });

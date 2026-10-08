@@ -116,3 +116,12 @@ Revisar Preview y checks del commit exacto; probar login y Excel con un entorno 
 
 `index.html`, `README.md`, `styles.css`, `styles/theme-1.css`, `styles/theme-2.css`, `styles/theme-3.css`, `app.js`, `auth.js`, `config.js`, `dashboard.js`, `duplicados.js`, `envio.js`, `errores.js`, `excel.js`, `historial.js`, `supabase.js`, `validaciones.js`, `vendor/xlsx.js`, `vendor/supabase.js`, `vendor/README.md`, `package.json`, `package-lock.json`, `scripts/check.cjs`, `tests/portal.test.cjs`, `.github/workflows/checks.yml`, `.gitignore`, `.vercelignore`, `vercel.json`, `docs/arquitectura.md`, `docs/informe.md`, y las tres migraciones con versiones 20261007201834, 20261007203627 y 20261007203704.
 
+
+
+## Corrección de envío parcial — 8 octubre 2026
+
+Se reemplaza el recorrido fila a fila de olt_insertar_lote por conjuntos materializados: normalización de las 19 columnas, deduplicación dentro del lote, comparación exacta con registros del propietario e inserción del conjunto restante. Conserva SECURITY INVOKER, RLS, el bloqueo transaccional por usuario, firma/respuesta y límite de 500 por RPC. No cambia grants ni datos anteriores.
+
+La confirmación del navegador ya no consulta todas las entregas dos veces. La comprobación definitiva corresponde a Supabase. Envíos de 3.000 registros hacen seis RPC de escritura más consultas del historial al terminar. La interfaz muestra lotes/procesados/guardados/duplicados; conserva el offset confirmado por revisión y usuario y reanuda desde el lote pendiente. Si la respuesta se pierde, el servidor omite coincidencias exactas al reintentar. Tras recargar se puede enviar el archivo completo de nuevo: la deduplicación sigue en servidor.
+
+Prueba real con rol authenticated, transacción revertida: 3.000 registros sintéticos, seis lotes, reintento de 500 devuelve 500 duplicados; tiempo conjunto 643 ms en base de datos, excluye red y navegador. No se guardaron fixtures. Se mantienen las 400 filas operativas anteriores. Tests DOM cubren envío parcial/reanudación/contador de consultas, además de los cinco casos existentes.
