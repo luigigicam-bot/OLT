@@ -131,16 +131,27 @@
                   ><span id="dateRangeSummary">Todas las fechas</span
                   ><span aria-hidden="true">⌄</span>
                 </summary>
-                <div class="date-popover">
-                  <div class="date-inputs">
-                    <label>Desde<input id="dateFrom" type="date" /></label
-                    ><label>Hasta<input id="dateTo" type="date" /></label>
+                <div class="date-popover calendar-popover">
+                  <div class="calendar-head">
+                    <button id="calendarPrev" class="calendar-nav" type="button" aria-label="Mes anterior">‹</button>
+                    <strong id="calendarMonthLabel"></strong>
+                    <button id="calendarNext" class="calendar-nav" type="button" aria-label="Mes siguiente">›</button>
                   </div>
+                  <div class="calendar-weekdays" aria-hidden="true">
+                    <span>D</span><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span>
+                  </div>
+                  <div id="calendarDays" class="calendar-days" role="grid" aria-label="Calendario para seleccionar un rango"></div>
+                  <div class="calendar-selection">
+                    <span><small>Inicio</small><strong id="calendarStartLabel">—</strong></span>
+                    <span><small>Hasta</small><strong id="calendarEndLabel">—</strong></span>
+                  </div>
+                  <input id="dateFrom" type="hidden" />
+                  <input id="dateTo" type="hidden" />
                   <p id="dateError" class="message" role="status"></p>
-                  <button id="applyDates" type="button">Aplicar fechas</button>
+                  <button id="applyDates" type="button">Aplicar rango</button>
                 </div>
               </details>
-              <small>Desde / hasta · día/mes/año</small>
+              <small>1er clic: inicio · 2do clic: fin</small>
             </div>
             <label class="filter-field"
               >Línea<select id="lineFilter">
@@ -167,14 +178,14 @@
               </select></label
             >
             <label class="filter-field"
-              >Año de despacho<select id="yearFilter">
+              >AÑO OLT<select id="yearFilter">
                 <option value="">Todos los años</option></select
-              ><small>Usa Fec.Despacho</small></label
+              ><small>Fec.Despacho</small></label
             >
             <label class="filter-field"
-              >Mes de despacho (Fec.Despacho)<select id="monthFilter">
+              >MES OLT<select id="monthFilter">
                 <option value="">Todos los meses</option></select
-              ><small>Combínalo con Año para un periodo exacto</small></label
+              ><small>Mes de Fec.Despacho</small></label
             >
           </div>
           <div class="filter-footer">
