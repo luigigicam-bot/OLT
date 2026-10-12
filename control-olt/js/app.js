@@ -334,6 +334,7 @@ function filters(includeDrill = false) {
     indicator: $("#indicatorFilter").value || null,
     zone: $("#zoneFilter").value || null,
     et: $("#etFilter").value || null,
+    year: $("#yearFilter").value ? Number($("#yearFilter").value) : null,
     month: $("#monthFilter").value ? Number($("#monthFilter").value) : null,
     search: els.searchInput.value.trim() || null,
   };
@@ -347,6 +348,7 @@ async function loadFilterOptions(sequence) {
   for (const [id, values, label] of [
     ["lineFilter", options.lines, "Todas las líneas"],
     ["etFilter", options.ets, "Todos los transportistas"],
+    ["yearFilter", (options.years || []).map(String), "Todos los años"],
   ]) {
     const el = $("#" + id),
       selected = el.value;
@@ -1193,6 +1195,7 @@ for (const id of [
   "indicatorFilter",
   "etFilter",
   "zoneFilter",
+  "yearFilter",
   "monthFilter",
 ])
   $("#" + id).onchange = () => {
@@ -1225,6 +1228,7 @@ $("#clearFilters").onclick = () => {
     "indicatorFilter",
     "etFilter",
     "zoneFilter",
+    "yearFilter",
     "monthFilter",
     "dateFrom",
     "dateTo",
@@ -1358,6 +1362,7 @@ function updateFilterSummary() {
     f.indicator,
     f.zone,
     f.et,
+    f.year ? String(f.year) : "",
     f.month ? MONTHS[f.month - 1] : "",
   ].filter(Boolean);
   $("#filterCount").textContent = labels.length ? `(${labels.length})` : "";
