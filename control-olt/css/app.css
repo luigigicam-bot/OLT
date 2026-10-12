@@ -108,6 +108,102 @@
 .date-popover button {
   width: 100%;
 }
+.calendar-popover {
+  width: min(360px, 88vw);
+}
+.calendar-head {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.calendar-head strong {
+  text-align: center;
+  color: #0f172a;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.calendar-head .calendar-nav {
+  width: 38px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.calendar-weekdays,
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.calendar-weekdays {
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.calendar-weekdays span {
+  padding: 4px 0;
+}
+.calendar-days {
+  gap: 2px;
+  min-height: 210px;
+}
+.calendar-days .calendar-day {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 500;
+}
+.calendar-days .calendar-day:hover {
+  background: #dbeafe;
+}
+.calendar-days .calendar-day.in-range {
+  background: #dbeafe;
+}
+.calendar-days .calendar-day.range-start,
+.calendar-days .calendar-day.range-end {
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+}
+.calendar-blank {
+  min-height: 34px;
+}
+.calendar-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.calendar-selection span {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.calendar-selection small {
+  color: #64748b;
+  font-size: 10px;
+}
+.calendar-selection strong {
+  color: #0f172a;
+  font-size: 12px;
+}
+.line-focus-link {
+  text-align: left;
+  font-weight: 700;
+}
 #drillChip {
   display: flex;
   justify-content: space-between;
