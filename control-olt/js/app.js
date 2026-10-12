@@ -1,3 +1,4 @@
+import { createColumnFilters } from "./column-filters.js";
 import { createClient } from "@supabase/supabase-js";
 import { calc, todayISO, formatDate } from "./indicators.js";
 import { MONTHS, renderKpi } from "./kpi.js";
@@ -36,6 +37,7 @@ const els = {
   modalBody: $("#modalBody"),
 };
 
+let columnFilters = null;
 let selectedCell = null;
 let currentUser = null;
 let currentPage = 0;
@@ -144,6 +146,7 @@ function showApp(user) {
   els.appView.classList.remove("hidden");
 }
 function showLogin() {
+  columnFilters?.reset();
   currentUser = null;
   loadSequence++;
   clearTimeout(searchTimer);
@@ -296,7 +299,7 @@ function groupClass(group) {
 }
 function renderHeader() {
   els.tableHead.innerHTML = `
-    <tr><th class="col-row">Fila</th>${COLUMNS.map((c) => `<th class="${groupClass(c.group)}" title="${escapeHtml(c.label)}">${escapeHtml(c.label)}</th>`).join("")}</tr>`;
+    <tr><th class="col-row">Fila</th>${COLUMNS.map((c) => `<th data-column-key="${c.key}" class="${groupClass(c.group)}" title="${escapeHtml(c.label)}">${escapeHtml(c.label)}</th>`).join("")}</tr>`;
 }
 function statusClass(key, val) {
   if (key === "indicador")
@@ -455,10 +458,13 @@ async function loadData({
   skipSap = false,
 } = {}) {
   if (!currentUser) return;
+  columnFilters?.close(false);
   updateFilterSummary();
   const sequence = ++loadSequence;
   const requestFilters = filters(),
     pageFilters = filters(true);
+  const requestColumns = columnFilters?.values || {};
+  const hasColumnFilters = Object.keys(requestColumns).length > 0;
   const requestOffset = currentPage * PAGE_SIZE;
   showLoading(true);
   els.rowStatus.textContent = "Consultando documentos…";
@@ -466,12 +472,14 @@ async function loadData({
   const pageTask = (async () => {
     try {
       const page = await checked(
-        supabase.rpc("olt_metric_page_v2", {
+        supabase.rpc(hasColumnFilters ? "olt_column_filter_page_v1" : "olt_metric_page_v2", {
           p_filters: pageFilters,
           p_offset: requestOffset,
+          ...(hasColumnFilters ? { p_columns: requestColumns } : {}),
         }),
       );
       if (sequence !== loadSequence) return;
+      columnFilters?.updateTotal(hasColumnFilters ? Number(page.total || 0) : null);
       hasNext = page.has_next;
       currentRows = page.rows.map((x) => ({
         ...x.row_data,
@@ -583,6 +591,7 @@ function renderMetrics() {
     .forEach(
       (button) =>
         (button.onclick = () => {
+          columnFilters?.reset();
           drillFilters = render.drills[Number(button.dataset.drill)];
           currentPage = 0;
           const labels = Object.values(drillFilters)
@@ -1251,6 +1260,7 @@ async function publishSap() {
   }
 }
 function setView(view) {
+  columnFilters?.close(false);
   closeFilterDrawer(false);
   currentView = ["general", "sap", "kpi"].includes(view) ? view : "general";
   for (const key of ["general", "sap", "kpi"])
@@ -1332,6 +1342,7 @@ $("#applyDates").onclick = () => {
   loadData();
 };
 $("#clearFilters").onclick = () => {
+  columnFilters?.reset();
   for (const id of [
     "lineFilter",
     "indicatorFilter",
@@ -1441,6 +1452,14 @@ els.modal.addEventListener("click", (e) => {
 });
 
 renderHeader();
+columnFilters = createColumnFilters({
+  columns: COLUMNS,
+  formatValue: (key, value) => displayValue({ [key]: value }, key),
+  fetchOptions: (key, columns) => checked(supabase.rpc("olt_column_filter_options_v1", {
+    p_key: key, p_filters: filters(true), p_columns: columns,
+  })),
+  onChange: () => { currentPage = 0; loadData({ pageOnly: true }); },
+});
 setView(location.hash.slice(1));
 const {
   data: { session },

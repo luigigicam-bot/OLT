@@ -17,6 +17,7 @@ async function setup({
   failPublish = false,
   failMetrics = false,
   morePages = false,
+  failColumnOptions = false,
 } = {}) {
   const dom = new JSDOM(
     readFileSync(new URL("../index.html", import.meta.url), "utf8"),
@@ -36,6 +37,9 @@ async function setup({
     linea: "BIOPAS",
     transporte: "TERRESTRE",
   });
+  const columnRows = Array.from({ length: 123 }, (_, i) => ({ ...row, id: i+1, entrega: `E${i+1}`, linea: i>=120 ? 'ELEA' : 'BIOPAS', nro_cargo: i===122 ? null : '0012' }));
+  const columnBase = (f={}) => columnRows.filter(r => (!f.line || r.linea===f.line) && (!f.year || String(r.fecha).slice(0,4)===String(f.year)) && (!f.month || Number(String(r.fecha).slice(5,7))===f.month));
+  const columnMatches = (r,c={}) => Object.entries(c).every(([key,values]) => values.includes(String(r[key]??'')));
   let load = null;
   class Query {
     constructor(table) {
@@ -131,8 +135,19 @@ async function setup({
         { dt: "0001", et: "MUNDO", state: "1", dispatch_date: null, inacttrans: null, in_general: false },
         { dt: "0002", et: "ANDI", state: "6", dispatch_date: "2026-10-08", inacttrans: "2026-10-08", in_general: true },
       ] } };
-      if (name.startsWith("olt_metric_"))
+      if (name.startsWith("olt_metric_") || name.startsWith("olt_column_"))
         counters.requests.push({ name, args });
+      if (name === "olt_column_filter_options_v1") {
+        if (failColumnOptions) return {error:{message:'fixture offline'}};
+        const columns = {...args.p_columns}; delete columns[args.p_key];
+        const counts = new Map();
+        for(const r of columnBase(args.p_filters).filter(r=>columnMatches(r,columns))){const v=String(r[args.p_key]??'');counts.set(v,(counts.get(v)||0)+1);}
+        return {data:{values:[...counts].map(([value,count])=>({value,count}))}};
+      }
+      if (name === "olt_column_filter_page_v1") {
+        const rows=columnBase(args.p_filters).filter(r=>columnMatches(r,args.p_columns));
+        return {data:{total:rows.length,has_next:rows.length>args.p_offset+100,rows:rows.slice(args.p_offset,args.p_offset+100).map(r=>({id:r.id,row_data:r,cerrado:false}))}};
+      }
       if (name === "olt_cell_history_v1") return { data: [] };
       if (name === "olt_metric_options_v1")
         return { data: { lines: ["BIOPAS"], ets: ["ET"], years: [2026] } };
@@ -259,6 +274,8 @@ async function setup({
       return { data: null };
     },
   };
+  const columnSource = readFileSync(new URL("../js/column-filters.js", import.meta.url), "utf8").replace('export function', 'function');
+  w.eval(columnSource + '\nwindow.createColumnFilters = createColumnFilters;');
   w.createClient = () => api;
   w.sapReportHtml = sapReportHtml;
   w.dashboardData = dashboardData;
@@ -698,4 +715,142 @@ test("Calendario: dos clics conservan el popover y aplican el rango original", a
     assert.equal(picker.open, false);
     assert.equal(t.counters.publish, 0);
   } finally { t.dom.window.close(); }
+});
+
+async function columnSelect(t, key, values) {
+  const d = t.w.document;
+  d.querySelector(`[data-column-filter="${key}"]`).click();
+  await pause();
+  d.querySelector('[data-column-none]').click();
+  for (const value of values) {
+    const input = [...d.querySelectorAll('[data-column-values] input')].find(e => e.value === value);
+    assert.ok(input, `Value ${value} available in ${key}`);
+    input.click();
+  }
+  d.querySelector('[data-column-apply]').click();
+  await pause();
+}
+
+test('Encabezados: 43 filtros, textos originales y ninguna columna adicional', async () => {
+  const t = await setup();
+  try {
+    const d=t.w.document;
+    assert.equal(d.querySelectorAll('[data-column-filter]').length,43);
+    assert.equal(d.querySelectorAll('#tableHead th').length,44);
+    assert.equal(d.querySelector('#tableHead th:nth-child(2)').textContent,'Nro. De Cargo');
+    assert.equal(d.querySelector('#tableHead th:first-child button'),null);
+  } finally {t.dom.window.close();}
+});
+
+test('Columna: valores fuera de las 100 filas, consulta global y KPI sin cambios', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document,before=t.counters.requests.filter(r=>r.name==='olt_metric_kpi_v1').length;
+    await columnSelect(t,'entrega',['E123']);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,1);
+    assert.match(d.querySelector('#tableBody').textContent,/E123/);
+    assert.match(d.querySelector('#columnFilterSummary').textContent,/1 documentos/);
+    assert.equal(t.counters.requests.filter(r=>r.name==='olt_metric_kpi_v1').length,before);
+    const req=t.counters.requests.filter(r=>r.name==='olt_column_filter_page_v1').at(-1);
+    assert.deepEqual(Array.from(req.args.p_columns.entrega),['E123']);
+    assert.equal(req.args.p_offset,0);
+  }finally{t.dom.window.close();}
+});
+
+test('Columnas: OR de valores, AND entre columnas y quitar una conserva las demás', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document;
+    await columnSelect(t,'entrega',['E119','E123']);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,2);
+    await columnSelect(t,'linea',['ELEA']);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,1);
+    assert.match(d.querySelector('#tableBody').textContent,/E123/);
+    d.querySelector('#columnFilterSummary [aria-label="Quitar filtro de Línea"]').click();await pause();
+    assert.equal(d.querySelectorAll('#tableBody tr').length,2);
+    assert.equal(d.querySelector('[data-column-filter="entrega"]').classList.contains('is-filtered'),true);
+  }finally{t.dom.window.close();}
+});
+
+test('Columnas: Vacíos, ninguna selección y nombres accesibles', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document;
+    await columnSelect(t,'nro_cargo',['']);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,1);
+    assert.match(d.querySelector('#columnFilterSummary').textContent,/Vacíos/);
+    assert.match(d.querySelector('[data-column-filter="nro_cargo"]').getAttribute('aria-label'),/filtro activo/);
+    await columnSelect(t,'nro_cargo',[]);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,0);
+    assert.match(d.querySelector('#columnFilterSummary').textContent,/0 documentos/);
+    d.querySelector('#columnFilterSummary .filter-clear').click();await pause();
+    assert.equal(d.querySelector('#columnFilterSummary').classList.contains('hidden'),true);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,1);
+  }finally{t.dom.window.close();}
+});
+
+test('Columnas: paginación de resultados y filtros generales se combinan', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document;
+    await columnSelect(t,'linea',['BIOPAS']);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,100);
+    assert.equal(d.querySelector('#nextBtn').disabled,false);
+    d.querySelector('#nextBtn').click();await pause();
+    assert.equal(d.querySelectorAll('#tableBody tr').length,20);
+    let req=t.counters.requests.filter(r=>r.name==='olt_column_filter_page_v1').at(-1);
+    assert.equal(req.args.p_offset,100);
+    d.querySelector('#yearFilter').value='2026';d.querySelector('#yearFilter').dispatchEvent(new t.w.Event('change'));await pause();
+    req=t.counters.requests.filter(r=>r.name==='olt_column_filter_page_v1').at(-1);
+    assert.equal(req.args.p_filters.year,2026);assert.equal(req.args.p_offset,0);
+    d.querySelector('#columnFilterSummary .filter-clear').click();await pause();
+    assert.equal(d.querySelector('#yearFilter').value,'2026');
+    assert.equal(t.counters.requests.filter(r=>r.name==='olt_metric_page_v2').at(-1).args.p_filters.year,2026);
+  }finally{t.dom.window.close();}
+});
+
+test('Columnas: fallo de opciones no aplica un filtro vacío y Escape restaura foco', async () => {
+  const t=await setup({failColumnOptions:true});
+  try {
+    const d=t.w.document,button=d.querySelector('[data-column-filter="linea"]');
+    button.click();await pause();
+    assert.equal(d.querySelector('[data-column-apply]').disabled,true);
+    assert.match(d.querySelector('[data-column-message]').textContent,/No se pudieron/);
+    assert.equal(d.querySelectorAll('#tableBody tr').length,1);
+    d.querySelector('#columnFilterPanel').dispatchEvent(new t.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    assert.equal(d.querySelector('#columnFilterPanel').classList.contains('hidden'),true);
+    assert.equal(d.activeElement,button);
+  }finally{t.dom.window.close();}
+});
+
+test('Columnas: limpiar global, detalle KPI y logout eliminan filtros de tabla', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document;
+    await columnSelect(t,'entrega',['E123']);
+    d.querySelector('#clearFilters').click();await pause();
+    assert.equal(d.querySelector('#columnFilterSummary').classList.contains('hidden'),true);
+    await columnSelect(t,'entrega',['E123']);
+    d.querySelector('#navKpi').click();d.querySelector('#kpiContent [data-drill="0"]').click();await pause();
+    assert.equal(d.querySelector('#columnFilterSummary').classList.contains('hidden'),true);
+    assert.equal(t.counters.requests.filter(r=>r.name==='olt_metric_page_v2').at(-1).args.p_filters.reporting_only,true);
+    d.querySelector('[data-column-filter="entrega"]').click();await pause();
+    d.querySelector('#logoutBtn').click();await pause();
+    assert.equal(d.querySelector('[data-column-values]').children.length,0);
+    assert.equal(d.querySelector('#columnFilterPanel').classList.contains('hidden'),true);
+  }finally{t.dom.window.close();}
+});
+
+test('Columna: escribir una entrega y aplicar preselecciona el resultado de búsqueda', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document;
+    d.querySelector('[data-column-filter="entrega"]').click();await pause();
+    const search=d.querySelector('[data-column-search]');search.value='E123';search.dispatchEvent(new t.w.Event('input'));
+    assert.equal(d.querySelectorAll('[data-column-values] input:checked').length,1);
+    assert.match(d.querySelector('[data-column-apply]').textContent,/\(1\)/);
+    d.querySelector('[data-column-apply]').click();await pause();
+    assert.equal(d.querySelectorAll('#tableBody tr').length,1);
+    assert.match(d.querySelector('#tableBody').textContent,/E123/);
+  }finally{t.dom.window.close();}
 });

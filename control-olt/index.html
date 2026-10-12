@@ -224,6 +224,7 @@
         <div class="general-export-bar"><div><h2>Documentos y gestión</h2><p class="muted">43 columnas · OLT, SAP e incidencias · Edición directa de campos habilitados</p></div><button id="downloadGeneral" type="button" class="btn-secondary">Descargar todo en Excel</button></div>
         <p id="generalExportMessage" class="muted export-message" role="status"></p>
         <div id="generalKpis" class="summary-grid"></div>
+        <div id="columnFilterSummary" class="active-filters column-filter-summary hidden" aria-live="polite"></div>
         <section class="statusbar">
           <span>Operación OLT · Datos y gestión</span><button id="sapDetailLink" class="text-btn">
             Ver detalle SAP →
@@ -381,6 +382,16 @@
       </div>
     </div>
 
+    <section id="columnFilterPanel" class="column-filter-panel hidden" role="dialog" aria-modal="false" aria-labelledby="columnFilterTitle">
+      <div class="column-filter-head"><h2 id="columnFilterTitle">Filtrar columna</h2><button type="button" class="icon-btn" data-column-close aria-label="Cerrar filtro de columna">×</button></div>
+      <p class="muted">Se aplica solo a la tabla de General.</p>
+      <input type="search" data-column-search aria-label="Buscar valores de la columna" placeholder="Buscar valores…" />
+      <div class="column-selection-actions"><button type="button" class="text-btn" data-column-all>Todos</button><button type="button" class="text-btn" data-column-none>Ninguno</button></div>
+      <p class="muted" data-column-message role="status"></p>
+      <div class="column-filter-values" data-column-values></div>
+      <button type="button" class="text-btn hidden" data-column-more>Mostrar más valores</button>
+      <div class="column-filter-actions"><button type="button" class="btn-secondary" data-column-clear>Quitar filtro</button><button type="button" data-column-apply disabled>Aplicar</button></div>
+    </section>
     <script type="module" src="./js/app.js"></script>
     <script type="module" src="./js/presentation.js"></script>
   </body>
