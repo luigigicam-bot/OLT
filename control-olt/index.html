@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-PE">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,6 +20,7 @@
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial' font-size='26' font-weight='700' fill='white'%3EOLT%3C/text%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./css/app.css" />
+    <link rel="stylesheet" href="./css/product.css" />
   </head>
   <body>
     <div id="loginView" class="auth-shell">
@@ -49,18 +50,21 @@
 
     <main id="appView" class="shell hidden">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">CONTROL OLT</p>
-          <h1 id="viewTitle">General / Operación OLT</h1>
-          <p class="muted">
-            OLT + SAP + gestión + indicadores en una sola vista.
-          </p>
+        <div class="product-identity">
+          <span class="product-mark" aria-hidden="true">OLT</span>
+          <div>
+            <p class="eyebrow">CONTROL OLT</p>
+            <h1 id="viewTitle">General / Operación OLT</h1>
+          </div>
         </div>
-        <div class="top-actions">
-          <span id="userBadge" class="user-badge"></span>
-          <button id="logoutBtn" class="btn-secondary" type="button">
-            Salir
-          </button>
+        <div class="topbar-context">
+          <span id="sapStatus" class="header-sap-status" role="status">SAP: buscando última carga válida…</span>
+          <div class="top-actions">
+            <span id="userBadge" class="user-badge"></span>
+            <button id="logoutBtn" class="btn-secondary" type="button">
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 
@@ -77,7 +81,7 @@
               Actualizar vista
             </button>
           </div>
-          <div class="toolbar-group grow">
+          <div class="toolbar-group grow search-control">
             <input
               id="searchInput"
               class="search"
@@ -117,7 +121,8 @@
             </button>
           </div>
         </section>
-        <p id="activeFilterSummary" class="muted hidden"></p>
+        <p id="activeFilterSummary" class="muted hidden" aria-live="polite"></p>
+        <div id="visualFilterChips" class="active-filters hidden" aria-label="Filtros activos"></div>
         <div id="filterBackdrop" class="filter-backdrop hidden"></div>
         <aside
           id="filterDrawer"
@@ -155,7 +160,7 @@
                   <div class="calendar-weekdays" aria-hidden="true">
                     <span>D</span><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span>
                   </div>
-                  <div id="calendarDays" class="calendar-days" role="grid" aria-label="Calendario para seleccionar un rango"></div>
+                  <div id="calendarDays" class="calendar-days" role="group" aria-label="Calendario para seleccionar un rango"></div>
                   <div class="calendar-selection">
                     <span><small>Inicio</small><strong id="calendarStartLabel">—</strong></span>
                     <span><small>Hasta</small><strong id="calendarEndLabel">—</strong></span>
@@ -216,12 +221,11 @@
         <div id="drillChip" class="notice hidden"></div>
       </section>
       <section id="generalView">
-        <div class="general-export-bar"><div><h2>General</h2><p class="muted">Descarga todos los registros, con sus columnas y valores actuales.</p></div><button id="downloadGeneral" type="button" class="btn-secondary">Descargar todo en Excel</button></div>
+        <div class="general-export-bar"><div><h2>Documentos y gestión</h2><p class="muted">43 columnas · OLT, SAP e incidencias · Edición directa de campos habilitados</p></div><button id="downloadGeneral" type="button" class="btn-secondary">Descargar todo en Excel</button></div>
         <p id="generalExportMessage" class="muted export-message" role="status"></p>
         <div id="generalKpis" class="summary-grid"></div>
         <section class="statusbar">
-          <span id="sapStatus">SAP: buscando última carga válida…</span
-          ><button id="sapDetailLink" class="text-btn">
+          <span>Operación OLT · Datos y gestión</span><button id="sapDetailLink" class="text-btn">
             Ver detalle SAP →
           </button>
           <span id="rowStatus"></span>
@@ -237,10 +241,11 @@
           >
         </section>
 
-        <section class="sheet">
-          <div id="loading" class="loading hidden">Cargando información…</div>
-          <div class="sheet-scroll">
-            <table id="oltTable" class="grid">
+        <section class="sheet" aria-label="Hoja operativa OLT">
+          <div class="sheet-heading"><div class="column-groups" aria-label="Grupos de columnas"><span>Gestión</span><span>Indicadores</span><span>OLT</span><span>SAP</span><span>Incidencia / derivados</span></div><span class="sheet-hint">Desliza para ver A:AQ →</span></div>
+          <div id="loading" class="loading hidden" role="status" aria-live="polite">Cargando información…</div>
+          <div class="sheet-scroll" tabindex="0" role="region" aria-label="Tabla de documentos, desplazamiento horizontal y vertical">
+            <table id="oltTable" class="grid" aria-label="Documentos OLT, columnas A hasta AQ">
               <thead id="tableHead"></thead>
               <tbody id="tableBody"></tbody>
             </table>
@@ -273,8 +278,8 @@
           <button id="btnSap" type="button">Actualizar SAP</button
           ><input id="sapFile" type="file" accept=".xlsx,.xls" hidden />
         </div>
-        <div id="activeVersion" class="panel"></div>
-        <div id="sapDashboard" aria-live="polite"></div>
+        <div class="sap-active-region"><p class="section-overline">SAP activo</p><div id="activeVersion" class="panel"></div></div>
+        <p class="section-overline">Analítica de la carga publicada</p><div id="sapDashboard" aria-live="polite"></div>
         <details class="panel sap-secondary"><summary>Más análisis SAP y archivo local</summary>
         <section class="sap-report-section">
           <div class="analysis-heading">
@@ -370,12 +375,13 @@
             <p class="eyebrow">ACTUALIZAR SAP</p>
             <h2 id="modalTitle">Validación de carga</h2>
           </div>
-          <button id="modalClose" class="icon-btn" type="button">×</button>
+          <button id="modalClose" class="icon-btn" type="button" aria-label="Cerrar ventana">×</button>
         </div>
         <div id="modalBody"></div>
       </div>
     </div>
 
     <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/presentation.js"></script>
   </body>
 </html>
