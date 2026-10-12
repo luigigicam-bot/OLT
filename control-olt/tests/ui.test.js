@@ -135,7 +135,7 @@ async function setup({
         counters.requests.push({ name, args });
       if (name === "olt_cell_history_v1") return { data: [] };
       if (name === "olt_metric_options_v1")
-        return { data: { lines: ["BIOPAS"], ets: ["ET"] } };
+        return { data: { lines: ["BIOPAS"], ets: ["ET"], years: [2026] } };
       if (name === "olt_metric_page_v2")
         return {
           data: {
@@ -303,6 +303,7 @@ async function setup({
           : "'/sap-worker.js'",
     );
   await w.eval(`(async()=>{${source}\n})()`);
+  w.eval(readFileSync(new URL("../js/presentation.js", import.meta.url), "utf8"));
   await pause();
   async function upload() {
     const buffer = new TextEncoder().encode(sapText).buffer;
@@ -608,5 +609,93 @@ test("SAP: three latest-load reports, expand hierarchy and download only status 
     assert.equal(payload.rows.length, 1);
     assert.deepEqual(Array.from(payload.rows[0]), ['0001', 'MUNDO', null, '1', null]);
     assert.match(t.counters.filenames[0], /^SAP_Estado_1_.*\.xlsx$/);
+  } finally { t.dom.window.close(); }
+});
+
+test("Presentación: chips y limpiar todos conservan el contrato de filtros", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    d.querySelector('#lineFilter').value = 'BIOPAS';
+    d.querySelector('#lineFilter').dispatchEvent(new t.w.Event('change'));
+    d.querySelector('#yearFilter').value = '2026';
+    d.querySelector('#yearFilter').dispatchEvent(new t.w.Event('change'));
+    d.querySelector('#monthFilter').value = '10';
+    d.querySelector('#monthFilter').dispatchEvent(new t.w.Event('change'));
+    await pause();
+    assert.match(d.querySelector('#visualFilterChips').textContent, /BIOPAS/);
+    assert.match(d.querySelector('#visualFilterChips').textContent, /Octubre/);
+    assert.match(d.querySelector('#visualFilterChips').textContent, /2026/);
+    d.querySelector('#visualFilterChips button').click();
+    await pause();
+    const request = t.counters.requests.filter(r => r.name === 'olt_metric_kpi_v1').at(-1);
+    assert.equal(request.args.p_filters.line, null);
+    assert.equal(request.args.p_filters.month, null);
+    assert.equal(d.querySelector('#visualFilterChips').classList.contains('hidden'), true);
+    assert.equal(t.counters.publish, 0);
+  } finally { t.dom.window.close(); }
+});
+
+test("Presentación: foco de línea y volver al total reutilizan el evento original", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    d.querySelector('#navKpi').click();
+    d.querySelector('[data-kpi-line="BIOPAS"]').click();
+    await pause();
+    assert.match(d.querySelector('.line-focus-banner').textContent, /BIOPAS/);
+    assert.match(d.querySelector('.line-focus-banner').textContent, /50%/);
+    const before = t.counters.requests.length;
+    d.querySelector('[data-reset-line]').click();
+    await pause();
+    assert.equal(d.querySelector('.line-focus-banner'), null);
+    assert.equal(d.querySelector('#lineFilter').value, '');
+    const requests = t.counters.requests.slice(before).filter(r => r.name === 'olt_metric_kpi_v1');
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].args.p_filters.line, null);
+  } finally { t.dom.window.close(); }
+});
+
+test("Presentación: logout/login y nombres accesibles de edición permanecen operativos", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    const ids = [...d.querySelectorAll('[id]')].map(e => e.id);
+    assert.equal(new Set(ids).size, ids.length);
+    assert.match(d.querySelector('[data-key="nro_cargo"]').getAttribute('aria-label'), /Cargo, fila 1/);
+    d.querySelector('#logoutBtn').click();
+    await pause();
+    assert.equal(d.querySelector('#loginView').classList.contains('hidden'), false);
+    d.querySelector('#email').value = 'fixture@example.test';
+    d.querySelector('#password').value = 'fixture-only';
+    d.querySelector('#loginForm').dispatchEvent(new t.w.Event('submit', {cancelable:true}));
+    await pause();
+    assert.equal(d.querySelector('#appView').classList.contains('hidden'), false);
+    assert.equal(d.querySelectorAll('#tableHead th').length, 44);
+  } finally { t.dom.window.close(); }
+});
+
+test("Calendario: dos clics conservan el popover y aplican el rango original", async () => {
+  const t = await setup();
+  try {
+    const d = t.w.document;
+    d.querySelector('#openFilters').click();
+    const picker = d.querySelector('#dateRangePicker');
+    picker.open = true;
+    picker.dispatchEvent(new t.w.Event('toggle'));
+    const days = [...d.querySelectorAll('[data-calendar-date]')];
+    const from = days[0].dataset.calendarDate, to = days[4].dataset.calendarDate;
+    days[0].click();
+    assert.equal(picker.open, true);
+    d.querySelector(`[data-calendar-date="${to}"]`).click();
+    assert.equal(picker.open, true);
+    assert.equal(d.querySelectorAll('.calendar-day.in-range').length, 5);
+    d.querySelector('#applyDates').click();
+    await pause();
+    const request = t.counters.requests.filter(r => r.name === 'olt_metric_kpi_v1').at(-1);
+    assert.equal(request.args.p_filters.date_from, from);
+    assert.equal(request.args.p_filters.date_to, to);
+    assert.equal(picker.open, false);
+    assert.equal(t.counters.publish, 0);
   } finally { t.dom.window.close(); }
 });
