@@ -54,6 +54,11 @@ let kpiData = null;
 let kpiState = { lines: "LIMA", incidents: "LIMA", transports: "" };
 let drillFilters = null;
 let appliedDates = { date_from: null, date_to: null };
+let calendarDraft = { from: null, to: null };
+let calendarCursor = (() => {
+  const d = dateFromISO(todayISO()) || new Date();
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+})();
 let sapDashboard = null;
 let dashboardSequence = 0;
 let expandedSap = new Set();
@@ -201,6 +206,82 @@ function dateToISO(d) {
   return d
     ? `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`
     : "";
+}
+function calendarHuman(iso) {
+  return iso ? iso.split("-").reverse().join("/") : "—";
+}
+function syncCalendarDraft() {
+  calendarDraft = {
+    from: $("#dateFrom").value || appliedDates.date_from || null,
+    to: $("#dateTo").value || appliedDates.date_to || null,
+  };
+  const focus = calendarDraft.from || calendarDraft.to || todayISO();
+  const d = dateFromISO(focus) || new Date();
+  calendarCursor = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  $("#dateFrom").value = calendarDraft.from || "";
+  $("#dateTo").value = calendarDraft.to || "";
+}
+function renderRangeCalendar() {
+  const host = $("#calendarDays");
+  if (!host) return;
+  const year = calendarCursor.getUTCFullYear();
+  const month = calendarCursor.getUTCMonth();
+  $("#calendarMonthLabel").textContent = `${MONTHS[month].toUpperCase()} ${year}`;
+  $("#calendarStartLabel").textContent = calendarHuman(calendarDraft.from);
+  $("#calendarEndLabel").textContent = calendarHuman(calendarDraft.to);
+  const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
+  const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i++)
+    cells.push('<span class="calendar-blank" aria-hidden="true"></span>');
+  for (let day = 1; day <= days; day++) {
+    const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const isStart = calendarDraft.from === iso;
+    const isEnd = calendarDraft.to === iso;
+    const inRange =
+      calendarDraft.from &&
+      calendarDraft.to &&
+      iso >= calendarDraft.from &&
+      iso <= calendarDraft.to;
+    const cls = [
+      "calendar-day",
+      inRange ? "in-range" : "",
+      isStart ? "range-start" : "",
+      isEnd ? "range-end" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    cells.push(
+      `<button type="button" class="${cls}" data-calendar-date="${iso}" aria-pressed="${isStart || isEnd}">${day}</button>`,
+    );
+  }
+  host.innerHTML = cells.join("");
+  host.querySelectorAll("[data-calendar-date]").forEach((button) => {
+    button.onclick = () => {
+      const iso = button.dataset.calendarDate;
+      if (!calendarDraft.from || calendarDraft.to) {
+        calendarDraft = { from: iso, to: null };
+      } else if (iso < calendarDraft.from) {
+        calendarDraft = { from: iso, to: null };
+      } else {
+        calendarDraft.to = iso;
+      }
+      $("#dateFrom").value = calendarDraft.from || "";
+      $("#dateTo").value = calendarDraft.to || "";
+      $("#dateError").textContent = "";
+      renderRangeCalendar();
+    };
+  });
+}
+function shiftCalendarMonth(delta) {
+  calendarCursor = new Date(
+    Date.UTC(
+      calendarCursor.getUTCFullYear(),
+      calendarCursor.getUTCMonth() + delta,
+      1,
+    ),
+  );
+  renderRangeCalendar();
 }
 function groupClass(group) {
   return group === "gestion"
@@ -469,7 +550,10 @@ function renderMetrics() {
     ["Fuera de Fecha", t.fuera_fecha],
     ["Sin indicador", t.sin_indicador],
   ]);
-  const render = renderKpi(kpiData, kpiState);
+  const render = renderKpi(kpiData, {
+    ...kpiState,
+    selectedLine: $("#lineFilter").value || "",
+  });
   $("#kpiContent").innerHTML = render.html;
   $("#kpiAsOf").textContent =
     `Actualizado ${stamp(kpiData.generated_at)} · Lima`;
@@ -480,6 +564,18 @@ function renderMetrics() {
         (button.onclick = () => {
           kpiState[button.dataset.kpiTab] = button.dataset.zone;
           renderMetrics();
+        }),
+    );
+  $("#kpiContent")
+    .querySelectorAll("[data-kpi-line]")
+    .forEach(
+      (button) =>
+        (button.onclick = () => {
+          const line = button.dataset.kpiLine || "";
+          $("#lineFilter").value = line;
+          clearDrill();
+          currentPage = 0;
+          loadData();
         }),
     );
   $("#kpiContent")
@@ -1206,12 +1302,25 @@ for (const id of [
 $("#monthFilter").innerHTML =
   '<option value="">Todos los meses</option>' +
   MONTHS.map((name, i) => `<option value="${i + 1}">${name}</option>`).join("");
+$("#calendarPrev").onclick = () => shiftCalendarMonth(-1);
+$("#calendarNext").onclick = () => shiftCalendarMonth(1);
+$("#dateRangePicker").addEventListener("toggle", () => {
+  if ($("#dateRangePicker").open) {
+    syncCalendarDraft();
+    renderRangeCalendar();
+  }
+});
 $("#applyDates").onclick = () => {
-  const from = $("#dateFrom").value || null,
-    to = $("#dateTo").value || null;
+  const from = $("#dateFrom").value || null;
+  let to = $("#dateTo").value || null;
+  if (from && !to) {
+    to = from;
+    $("#dateTo").value = to;
+    calendarDraft.to = to;
+  }
   if (from && to && from > to) {
     $("#dateError").textContent =
-      "La fecha Hasta debe ser igual o posterior a Desde.";
+      "La fecha final debe ser igual o posterior a la inicial.";
     return;
   }
   $("#dateError").textContent = "";
@@ -1235,10 +1344,13 @@ $("#clearFilters").onclick = () => {
   ])
     $("#" + id).value = "";
   appliedDates = { date_from: null, date_to: null };
+  calendarDraft = { from: null, to: null };
   els.searchInput.value = "";
   $("#dateError").textContent = "";
   $("#dateRangePicker").open = false;
   dateRangeLabel();
+  syncCalendarDraft();
+  renderRangeCalendar();
   clearDrill();
   currentPage = 0;
   loadData();
