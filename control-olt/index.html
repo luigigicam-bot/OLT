@@ -265,7 +265,12 @@
           </div>
           <p id="kpiAsOf" class="muted"></p>
         </div>
-        <div id="kpiContent" aria-live="polite"></div>
+        <div class="zone-tabs kpi-summary-tabs" role="tablist" aria-label="Análisis KPI">
+          <button id="kpiOperationalTab" type="button" role="tab" aria-selected="true" aria-controls="kpiContent">Indicadores</button>
+          <button id="kpiHistoryTab" type="button" role="tab" aria-selected="false" aria-controls="historicalSummary" class="btn-secondary">Resumen histórico</button>
+        </div>
+        <div id="kpiContent" role="tabpanel" aria-labelledby="kpiOperationalTab" aria-live="polite"></div>
+        <div id="historicalSummary" class="hidden" role="tabpanel" aria-labelledby="kpiHistoryTab" aria-live="polite"></div>
       </section>
       <section id="sapView" class="hidden">
         <div class="panel sap-heading">

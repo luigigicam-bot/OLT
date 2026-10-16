@@ -1228,3 +1228,4 @@ button:hover:not(:disabled) {
   #sapDashboard .analysis-heading { align-items: stretch; }
   #sapDashboard button { white-space: normal; }
 }
+.kpi-summary-tabs{margin:12px 0 18px}.summary-table{font-size:12px;min-width:1080px}.summary-table th:first-child{min-width:170px}.summary-table td{text-align:right;white-space:nowrap}.summary-table thead th{text-align:right}.summary-table thead th:first-child{text-align:left}.summary-section-row{background:#eff6ff;color:#1e3a8a;font-weight:700}.summary-spark{display:grid;grid-template-columns:repeat(12,minmax(42px,1fr));gap:10px;overflow-x:auto;margin:14px 0 20px;padding:8px 0}.summary-spark>div{text-align:center;font-size:11px;min-width:42px}.summary-track{height:58px;display:flex;align-items:flex-end;justify-content:center;background:#f8fafc;border-radius:4px;margin:5px 0}.summary-track i{display:block;width:60%;background:#2563eb;border-radius:4px 4px 0 0;min-height:0}.summary-spark small{color:#64748b}

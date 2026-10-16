@@ -7,6 +7,7 @@ import { calc, todayISO, formatDate } from "../js/indicators.js";
 import { reportFromBuffer } from "../js/sap-report.js";
 import { sapReportHtml } from "../js/sap-report-ui.js";
 import { MONTHS, renderKpi } from "../js/kpi.js";
+import { historicalSummaryHtml } from "../js/historical-summary.js";
 import { parseSapRowsFromBuffer } from "../js/sap-parser.js";
 import { dashboardData, sapDashboardHtml } from "../js/sap-dashboard.js";
 const pause = () => new Promise((r) => setTimeout(r, 15));
@@ -130,7 +131,16 @@ async function setup({
       signInWithPassword: async () => ({ data: { user } }),
     },
     rpc: async (name, args) => {
-      if (name === "olt_general_export_v1") return { data: { rows: Array.from({ length: 123 }, (_, i) => ({ id: i + 1, row_data: { ...row, entrega: `E${i}`, linea: i % 2 ? "OTRA" : "BIOPAS" } })) } };
+      if (name === 'olt_monthly_summary_v1') {
+        counters.requests.push({name,args});
+        return {data:{monthly:[{year:2026,month:1,zona:'LIMA',total:2,en_fecha:1,fuera_fecha:1,historical:2}],incidents:[],target:null}};
+      }
+      if (name === 'olt_general_export_page_v1') {
+        counters.requests.push({name,args});
+        const start=args.p_before_id == null ? 0 : 70;
+        const rows=Array.from({length:123},(_,i)=>({id:123-i,row_data:{...row,entrega:`E${i}`,linea:i%2 ? 'OTRA' : 'BIOPAS'}})).slice(start,start+70);
+        return {data:{rows,next_before_id:rows.at(-1)?.id,has_more:start===0}};
+      }
       if (name === "olt_sap_dashboard_v1") return { data: { load_id: load?.estado === "publicada" ? load.id : null, filename: "20.XLS", dispatch_column_present: true, rows: [
         { dt: "0001", et: "MUNDO", state: "1", dispatch_date: null, inacttrans: null, in_general: false },
         { dt: "0002", et: "ANDI", state: "6", dispatch_date: "2026-10-08", inacttrans: "2026-10-08", in_general: true },
@@ -285,6 +295,7 @@ async function setup({
   w.HTMLAnchorElement.prototype.click = function () { counters.filenames.push(this.download); };
   w.MONTHS = MONTHS;
   w.renderKpi = renderKpi;
+  w.historicalSummaryHtml = historicalSummaryHtml;
   w.calc = calc;
   w.todayISO = todayISO;
   w.formatDate = formatDate;
@@ -605,6 +616,10 @@ test("General: one descriptive header and full export ignores visible filters an
     assert.equal(t.counters.exports.length, 1);
     assert.equal(t.counters.exports[0].rows.length, 123);
     assert.equal(t.counters.exports[0].headers.length, 43);
+    const pages=t.counters.requests.filter(r=>r.name==='olt_general_export_page_v1');
+    assert.equal(pages.length,2);
+    assert.equal(pages[1].args.p_before_id,54);
+    assert.equal(pages[0].args.p_filters,undefined);
     assert.equal(t.counters.exports[0].rows[1][16], 'OTRA');
     assert.match(t.counters.filenames[0], /^General_OLT_.*\.xlsx$/);
   } finally { t.dom.window.close(); }
@@ -838,6 +853,24 @@ test('Columnas: limpiar global, detalle KPI y logout eliminan filtros de tabla',
     d.querySelector('#logoutBtn').click();await pause();
     assert.equal(d.querySelector('[data-column-values]').children.length,0);
     assert.equal(d.querySelector('#columnFilterPanel').classList.contains('hidden'),true);
+  }finally{t.dom.window.close();}
+});
+
+test('Resumen histórico: pestaña, filtros compartidos y limpieza al cerrar sesión', async () => {
+  const t=await setup();
+  try {
+    const d=t.w.document;
+    d.querySelector('#navKpi').click();
+    d.querySelector('#kpiHistoryTab').click();await pause();
+    assert.equal(d.querySelector('#kpiContent').classList.contains('hidden'),true);
+    assert.equal(d.querySelector('#kpiHistoryTab').getAttribute('aria-selected'),'true');
+    assert.match(d.querySelector('#historicalSummary').textContent,/Resultados 2026/);
+    const line=d.querySelector('#lineFilter');line.value='BIOPAS';line.dispatchEvent(new t.w.Event('change'));await pause();await pause();
+    assert.equal(t.counters.requests.filter(r=>r.name==='olt_monthly_summary_v1').at(-1).args.p_filters.line,'BIOPAS');
+    d.querySelector('#kpiOperationalTab').click();
+    assert.equal(d.querySelector('#historicalSummary').classList.contains('hidden'),true);
+    d.querySelector('#logoutBtn').click();await pause();
+    assert.equal(d.querySelector('#historicalSummary').textContent,'');
   }finally{t.dom.window.close();}
 });
 

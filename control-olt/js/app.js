@@ -1,4 +1,5 @@
 import { createColumnFilters } from "./column-filters.js";
+import { historicalSummaryHtml } from "./historical-summary.js";
 import { createClient } from "@supabase/supabase-js";
 import { calc, todayISO, formatDate } from "./indicators.js";
 import { MONTHS, renderKpi } from "./kpi.js";
@@ -53,6 +54,8 @@ let migrationReady = false;
 let returnFocus = null;
 let currentView = "general";
 let kpiData = null;
+let kpiTab = 'operational';
+let historicalSequence = 0;
 let kpiState = { lines: "LIMA", incidents: "LIMA", transports: "" };
 let drillFilters = null;
 let appliedDates = { date_from: null, date_to: null };
@@ -154,6 +157,10 @@ function showLogin() {
   selectedCell = null;
   $("#cellHistory").disabled = true;
   kpiData = null;
+  historicalSequence++;
+  kpiTab = 'operational';
+  $('#historicalSummary').replaceChildren();
+  setKpiTab('operational', false);
   activeSapLoad = null;
   pendingSap = null;
   hasNext = false;
@@ -547,7 +554,40 @@ async function loadData({
           })
           .catch(() => {});
   await Promise.allSettled([pageTask, metricsTask, optionsTask, sapTask]);
+  if (sequence === loadSequence && !pageOnly && kpiTab === 'history') await loadHistoricalSummary();
 }
+
+async function loadHistoricalSummary() {
+  const owner = currentUser?.id;
+  if (!owner) return;
+  const sequence = ++historicalSequence;
+  const panel = $('#historicalSummary');
+  panel.setAttribute('aria-busy','true');
+  panel.innerHTML = '<p class="muted">Actualizando resumen mensual…</p>';
+  try {
+    const data = await checked(supabase.rpc('olt_monthly_summary_v1', {p_filters:filters()}));
+    if (sequence !== historicalSequence || owner !== currentUser?.id) return;
+    panel.innerHTML = historicalSummaryHtml(data);
+  } catch {
+    if (sequence !== historicalSequence || owner !== currentUser?.id) return;
+    panel.innerHTML = '<div class="notice error">No se pudo actualizar el resumen. Pulsa Actualizar vista para intentarlo nuevamente.</div>';
+  } finally {
+    if (sequence === historicalSequence) panel.removeAttribute('aria-busy');
+  }
+}
+function setKpiTab(tab, load = true) {
+  kpiTab = tab;
+  const history = tab === 'history';
+  $('#kpiContent').classList.toggle('hidden', history);
+  $('#historicalSummary').classList.toggle('hidden', !history);
+  for (const [id,active] of [['kpiOperationalTab',!history],['kpiHistoryTab',history]]) {
+    $('#'+id).setAttribute('aria-selected', String(active));
+    $('#'+id).classList.toggle('btn-secondary', !active);
+  }
+  if (history && load) loadHistoricalSummary();
+}
+$('#kpiOperationalTab').onclick = () => setKpiTab('operational');
+$('#kpiHistoryTab').onclick = () => setKpiTab('history');
 
 function renderMetrics() {
   if (!kpiData) return;
@@ -999,9 +1039,19 @@ $("#downloadGeneral").onclick = async () => {
   button.disabled = true;
   const message = $("#generalExportMessage"); message.textContent = "Preparando toda la hoja General…";
   try {
-    const result = await checked(supabase.rpc("olt_general_export_v1"));
-    if (owner !== currentUser?.id || sequence !== exportSequence) return;
-    const rows = result.rows.map((r) => COLUMNS.map((c) => r.row_data[c.key] ?? ""));
+    const records = [];
+    let before = null;
+    for (;;) {
+      const page = await checked(supabase.rpc('olt_general_export_page_v1', {p_before_id:before, p_limit:1000}));
+      if (owner !== currentUser?.id || sequence !== exportSequence) return;
+      records.push(...page.rows);
+      message.textContent = `Recopilando General: ${records.length.toLocaleString('es-PE')} registros…`;
+      if (!page.has_more) break;
+      const next = Number(page.next_before_id);
+      if (!Number.isSafeInteger(next) || next <= 0 || (before !== null && next >= before)) throw new Error('No se pudo continuar la exportación. Actualiza la vista e inténtalo nuevamente.');
+      before = next;
+    }
+    const rows = records.map((r) => COLUMNS.map((c) => r.row_data[c.key] ?? ""));
     const dateColumns = COLUMNS.flatMap((c, i) => ["fecha", "fec_cargo", "fec_vencto", "fecha_salida_sap", "fec_reg"].includes(c.key) ? [i] : []);
     message.textContent = `Generando Excel con ${rows.length} filas…`;
     await downloadWorkbook(COLUMNS.map((c) => c.label), rows, "General", `General_OLT_${todayISO()}.xlsx`, dateColumns, owner);
@@ -1290,7 +1340,10 @@ function setView(view) {
   );
   history.replaceState(null, "", "#" + currentView);
   if (currentView === "sap") loadSapCenter();
-  if (currentView === "kpi") renderMetrics();
+  if (currentView === "kpi") {
+    renderMetrics();
+    if (kpiTab === 'history') loadHistoricalSummary();
+  }
 }
 $("#navGeneral").onclick = () => setView("general");
 $("#navSap").onclick = () => setView("sap");
