@@ -42,6 +42,7 @@ async function setup({
   const columnBase = (f={}) => columnRows.filter(r => (!f.line || r.linea===f.line) && (!f.year || String(r.fecha).slice(0,4)===String(f.year)) && (!f.month || Number(String(r.fecha).slice(5,7))===f.month));
   const columnMatches = (r,c={}) => Object.entries(c).every(([key,values]) => values.includes(String(r[key]??'')));
   let load = null;
+  let pageGate = null;
   class Query {
     constructor(table) {
       this.table = table;
@@ -147,6 +148,7 @@ async function setup({
       ] } };
       if (name.startsWith("olt_metric_") || name.startsWith("olt_column_"))
         counters.requests.push({ name, args });
+      if (name === "olt_metric_page_v2" && pageGate) await pageGate;
       if (name === "olt_column_filter_options_v1") {
         if (failColumnOptions) return {error:{message:'fixture offline'}};
         const columns = {...args.p_columns}; delete columns[args.p_key];
@@ -348,7 +350,7 @@ async function setup({
     for (let i = 0; i < 30 && !w.document.querySelector("#publishSap"); i++)
       await pause();
   }
-  return { w, dom, counters, upload };
+  return { w, dom, counters, upload, holdPage(promise) { pageGate = promise; } };
 }
 test("General: 43 columnas, navegación SAP y edición solo por RPC", async () => {
   const t = await setup();
@@ -886,4 +888,20 @@ test('Columna: escribir una entrega y aplicar preselecciona el resultado de bús
     assert.equal(d.querySelectorAll('#tableBody tr').length,1);
     assert.match(d.querySelector('#tableBody').textContent,/E123/);
   }finally{t.dom.window.close();}
+});
+
+
+test('General renders before KPI and filter requests start', async () => {
+  const t = await setup();
+  let release;
+  try {
+    const before = t.counters.requests.filter(x => x.name === 'olt_metric_kpi_v1').length;
+    t.holdPage(new Promise(resolve => { release = resolve; }));
+    t.w.document.querySelector('#refreshBtn').click();
+    await pause();
+    assert.equal(t.counters.requests.filter(x => x.name === 'olt_metric_kpi_v1').length, before);
+    release(); await pause(); await pause();
+    assert.equal(t.counters.requests.filter(x => x.name === 'olt_metric_kpi_v1').length, before + 1);
+    assert.equal(t.w.document.querySelectorAll('#tableBody tr').length, 1);
+  } finally { release?.(); t.dom.window.close(); }
 });

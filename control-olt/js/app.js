@@ -56,6 +56,7 @@ let currentView = "general";
 let kpiData = null;
 let kpiTab = 'operational';
 let historicalSequence = 0;
+let dataRequests = Promise.resolve();
 let kpiState = { lines: "LIMA", incidents: "LIMA", transports: "" };
 let drillFilters = null;
 let appliedDates = { date_from: null, date_to: null };
@@ -517,6 +518,8 @@ async function loadData({
     ? Promise.resolve()
     : (async () => {
         try {
+          await pageTask;
+          if (sequence !== loadSequence) return;
           const metrics = await checked(
             supabase.rpc("olt_metric_kpi_v1", { p_filters: requestFilters }),
           );
@@ -539,7 +542,9 @@ async function loadData({
   const optionsTask =
     pageOnly || skipOptions
       ? Promise.resolve()
-      : loadFilterOptions(sequence).catch(() => {
+      : metricsTask.then(() => {
+          if (sequence === loadSequence) return loadFilterOptions(sequence);
+        }).catch(() => {
           if (sequence === loadSequence)
             els.rowStatus.textContent +=
               " · No se actualizaron las opciones de filtros.";
@@ -553,7 +558,8 @@ async function loadData({
               return loadSapCenter();
           })
           .catch(() => {});
-  await Promise.allSettled([pageTask, metricsTask, optionsTask, sapTask]);
+  dataRequests = Promise.allSettled([pageTask, metricsTask, optionsTask, sapTask]);
+  await dataRequests;
   if (sequence === loadSequence && !pageOnly && kpiTab === 'history') await loadHistoricalSummary();
 }
 
@@ -565,6 +571,8 @@ async function loadHistoricalSummary() {
   panel.setAttribute('aria-busy','true');
   panel.innerHTML = '<p class="muted">Actualizando resumen mensual…</p>';
   try {
+    await dataRequests;
+    if (sequence !== historicalSequence || owner !== currentUser?.id) return;
     const data = await checked(supabase.rpc('olt_monthly_summary_v1', {p_filters:filters()}));
     if (sequence !== historicalSequence || owner !== currentUser?.id) return;
     panel.innerHTML = historicalSummaryHtml(data);
