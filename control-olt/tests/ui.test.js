@@ -502,6 +502,10 @@ test("General se muestra aunque falle la consulta KPI", async () => {
       /independiente/,
     );
     assert.match(
+      t.w.document.querySelector("#kpiContent").textContent,
+      /La consulta tardó demasiado/,
+    );
+    assert.match(
       t.w.document.querySelector("#rowStatus").textContent,
       /1 filas visibles/,
     );

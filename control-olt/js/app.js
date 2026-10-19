@@ -50,7 +50,6 @@ let pendingSap = null;
 let busySap = false;
 let holidays = new Set();
 let loadSequence = 0;
-let migrationReady = false;
 let returnFocus = null;
 let currentView = "general";
 let kpiData = null;
@@ -525,14 +524,12 @@ async function loadData({
           );
           if (sequence !== loadSequence) return;
           kpiData = metrics;
-          migrationReady = true;
           renderMetrics();
         } catch (e) {
           if (sequence !== loadSequence) return;
           kpiData = null;
-          migrationReady = false;
           $("#kpiContent").innerHTML =
-            '<div class="notice error">No se pudieron actualizar los indicadores. La tabla se carga de forma independiente.</div>';
+            `<div class="notice error">No se pudieron actualizar los indicadores. La tabla se carga de forma independiente. ${escapeHtml(readFailureReason(e))}</div>`;
           $("#generalKpis").innerHTML = "";
         } finally {
           if (sequence === loadSequence)
@@ -576,9 +573,9 @@ async function loadHistoricalSummary() {
     const data = await checked(supabase.rpc('olt_monthly_summary_v1', {p_filters:filters()}));
     if (sequence !== historicalSequence || owner !== currentUser?.id) return;
     panel.innerHTML = historicalSummaryHtml(data);
-  } catch {
+  } catch (e) {
     if (sequence !== historicalSequence || owner !== currentUser?.id) return;
-    panel.innerHTML = '<div class="notice error">No se pudo actualizar el resumen. Pulsa Actualizar vista para intentarlo nuevamente.</div>';
+    panel.innerHTML = `<div class="notice error">No se pudo actualizar el resumen. ${escapeHtml(readFailureReason(e))}</div>`;
   } finally {
     if (sequence === historicalSequence) panel.removeAttribute('aria-busy');
   }
@@ -681,6 +678,19 @@ async function checked(promise) {
   const { data, error } = await promise;
   if (error) throw error;
   return data;
+}
+function readFailureReason(error) {
+  if (error?.code === "57014" || /timeout|statement timeout/i.test(error?.message || ""))
+    return "La consulta tardó demasiado. Pulsa Actualizar vista para reintentar.";
+  if (["PGRST301", "PGRST303"].includes(error?.code) || /JWT.*expired/i.test(error?.message || ""))
+    return "La sesión venció. Vuelve a ingresar.";
+  if (error?.code === "42501")
+    return "Tu usuario no tiene permiso para consultar esta información.";
+  if (error?.code === "PGRST202")
+    return "El servicio de consulta necesita una actualización.";
+  if (/fetch|network|connection/i.test(error?.message || ""))
+    return "No se pudo conectar con el servidor. Comprueba tu conexión y pulsa Actualizar vista.";
+  return "Pulsa Actualizar vista para reintentar.";
 }
 function stamp(value) {
   return value
