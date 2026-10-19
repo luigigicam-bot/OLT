@@ -61,3 +61,15 @@ Además se recorrió la exportación completa mediante las mismas llamadas por c
 ## Límites y seguimiento
 
 No se amplió el límite global de consultas: se mantiene en ocho segundos. Los tiempos son mediciones, no una garantía permanente ante cualquier carga o filtro. Las referencias históricas genéricas pendientes de conciliación (`RECOJO`/`-`) son un asunto de integridad separado de esta corrección de carga y no se incorporaron aquí.
+
+## Revisión previa a publicar una nueva 20 SAP
+
+Se reprodujo además un timeout en `olt_sap_analysis` con una carga real en estado `validando`. La interfaz interpretaba cualquier error de esta función como una migración ausente, aunque la función estaba instalada. La prueba anterior del panel SAP no cubría esta consulta previa a la publicación.
+
+La comparación ahora lee únicamente las columnas SAP comparables y campos base de General para cobertura, sin recalcular indicadores ni construir el JSON completo de cada documento. Conserva el orden de selección por InActTrans, HrAITr y fila física, y limita la cobertura al mismo universo vigente de General. La carga real respondió en **2,96 segundos** con el límite de ocho segundos. Un usuario ajeno obtiene `null`, sin acceso a la carga.
+
+La interfaz diferencia el error de tiempo de consulta de una función no disponible y conserva el bloqueo hasta completar la revisión. **57 pruebas aprobadas**, incluida una regresión que comprueba que un timeout no se presenta como una migración ausente y nunca publica automáticamente.
+
+En la carga revisada: 11.072 filas y 10.012 entregas consolidadas; 102 entregas con más de un DT; 1.589 entregas incompletas (1.432 sin placa y 355 sin InActTrans, con intersección entre grupos). No faltaban DT ni nombres de transporte. Los 962 empates mostrados por el lector cuentan filas repetidas, mientras que el análisis del servidor cuenta 837 grupos empatados. Ninguno de estos avisos equivale por sí mismo a una publicación fallida.
+
+No se publicó ni rechazó la carga pendiente desde esta revisión. Para repetir el análisis desde la interfaz, cancelar la revisión y seleccionar nuevamente el archivo mantiene intacta la versión SAP publicada; la publicación nueva sigue requiriendo confirmación explícita del usuario.

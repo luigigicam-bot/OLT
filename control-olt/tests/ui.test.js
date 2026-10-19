@@ -15,6 +15,7 @@ const sapText =
   "Entrega\tTransporte\tNombre 1\tPlaca\tInActTrans\tSts.Trp\tEstatus\tFec. Reg.\tHor. Reg.\tUsuaCtrlRe\tHrAITr\n1\tDT1\tET\tABC\t08.10.2026\tV\tE\t08.10.2026\t09:00:00\tUSER\t10:00:00";
 async function setup({
   missingMigration = false,
+  analysisError = null,
   failPublish = false,
   failMetrics = false,
   morePages = false,
@@ -235,8 +236,10 @@ async function setup({
           },
         };
       if (name === "olt_sap_analysis")
-        return missingMigration
-          ? { error: { message: "Function unavailable" } }
+        return analysisError
+          ? { error: analysisError }
+          : missingMigration
+          ? { error: { code: "PGRST202", message: "Function unavailable" } }
           : { data: analysis };
       if (name === "olt_save_cell_v2") {
         counters.save++;
@@ -908,4 +911,17 @@ test('General renders before KPI and filter requests start', async () => {
     assert.equal(t.counters.requests.filter(x => x.name === 'olt_metric_kpi_v1').length, before + 1);
     assert.equal(t.w.document.querySelectorAll('#tableBody tr').length, 1);
   } finally { release?.(); t.dom.window.close(); }
+});
+
+
+test('SAP: a comparison timeout stays blocked and does not claim a missing migration', async () => {
+  const t = await setup({ analysisError: { code: '57014', message: 'canceling statement due to statement timeout' } });
+  try {
+    await t.upload();
+    const text = t.w.document.querySelector('#modalBody').textContent;
+    assert.match(text, /La consulta tardó demasiado/);
+    assert.doesNotMatch(text, /activar la migración/);
+    assert.equal(t.w.document.querySelector('#publishSap').disabled, true);
+    assert.equal(t.counters.publish, 0);
+  } finally { t.dom.window.close(); }
 });
