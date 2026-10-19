@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { isoDate, matrixFromSapBuffer } from "./sap-parser.js";
+import { isoDate, isoTime, isNewerSap, matrixFromSapBuffer } from "./sap-parser.js";
 export function consolidateDt(matrix, miData = null) {
   const header = matrix.findIndex(
     (r) =>
@@ -21,6 +21,7 @@ export function consolidateDt(matrix, miData = null) {
           : -1;
   const et = idx("Nombre 1"),
     date = idx("InActTrans"),
+    hour = idx("HrAITr"),
     placa = idx("Placa"),
     entrega = idx("Entrega") >= 0 ? idx("Entrega") : idx("Columna1");
   if ([d, s, et, date, placa, entrega].some((i) => i < 0))
@@ -60,9 +61,7 @@ export function consolidateDt(matrix, miData = null) {
             .sort()
             .at(-1) || null
         : null;
-    const old = map.get(dt) || { dt, first: null, alternative: null };
-    if (alt && (!old.alternative || alt > old.alternative))
-      old.alternative = alt;
+    const old = map.get(dt) || { dt, selected: null };
     const omit =
       String(r[37] ?? "")
         .trim()
@@ -71,27 +70,32 @@ export function consolidateDt(matrix, miData = null) {
         .trim()
         .startsWith("500");
     if (omit) excluded++;
-    else if (!old.first)
-      old.first = {
+    else {
+      const candidate = {
         dt,
         state: String(r[s] ?? "").trim() || "Sin estado",
         et: String(r[et] ?? "").trim() || "Sin transportista",
         plate: String(r[placa] ?? "").trim(),
         inacttrans: isoDate(r[date]) || null,
+        hraitr: isoTime(r[hour]) || null,
+        fila_origen: i + 1,
         source_row: i + 1,
+        alternative: alt,
       };
+      if (!old.selected || isNewerSap(candidate, old.selected)) old.selected = candidate;
+    }
     map.set(dt, old);
   }
   return {
     rows: [...map.values()]
-      .filter((r) => r.first)
+      .filter((r) => r.selected)
       .map((r) => ({
-        ...r.first,
-        alternative: r.alternative,
-        date: r.first.inacttrans || r.alternative,
-        date_type: r.first.inacttrans
+        ...r.selected,
+        alternative: r.selected.alternative,
+        date: r.selected.inacttrans || r.selected.alternative,
+        date_type: r.selected.inacttrans
           ? "InActTrans"
-          : r.alternative
+          : r.selected.alternative
             ? "Fecha alternativa"
             : "Sin fecha",
         in_tracking: known.has(r.dt),
